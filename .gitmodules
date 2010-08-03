@@ -1,0 +1,3 @@
+[submodule "vendor/node-xml"]
+	path = vendor/node-xml
+	url = git://github.com/robrighter/node-xml.git
