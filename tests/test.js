@@ -1,7 +1,7 @@
 var sys = require("sys");
 var path = require("path");
 var assert = require("assert");
-var plist = require("../lib/node-plist");
+var plist = require("../lib/plist");
 
 // The Plist file to parse...
 var file = path.join(__dirname, "iTunes-small.xml");
