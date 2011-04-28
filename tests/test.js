@@ -4,7 +4,7 @@ var assert = require("assert");
 var plist = require("../lib/plist");
 
 // The Plist file to parse...
-var file = path.join(__dirname, "iTunes-small.xml");
+var file = path.join(path.dirname, "iTunes-small.xml");
 
 var startTime = new Date();
 
@@ -26,3 +26,14 @@ plist.parseFile(file, function(err, dicts) {
   
 });
 
+var plistFile = path.join(path.dirname, "tests/sample2.plist");
+
+plist.parseFile(plistFile, function(err, dicts) {
+  if (err) {
+    throw err;
+  }
+
+  var dict = dicts[0];
+
+  assert.equal(dict['PopupMenu'][2]['Key'], "\n        #import &lt;Cocoa/Cocoa.h&gt;\n\n#import &lt;MacRuby/MacRuby.h&gt;\n\nint main(int argc, char *argv[])\n{\n  return macruby_main(\"rb_main.rb\", argc, argv);\n}\n");
+});
