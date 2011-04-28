@@ -18,6 +18,21 @@
 			<key>Title</key>
 			<string>iPad</string>
 		</dict>
+		<dict>
+			<key>Key</key>
+      <string>
+        <![CDATA[
+        #import &lt;Cocoa/Cocoa.h&gt;
+
+#import &lt;MacRuby/MacRuby.h&gt;
+
+int main(int argc, char *argv[])
+{
+  return macruby_main("rb_main.rb", argc, argv);
+}
+]]>
+</string>
+		</dict>
 	</array>
 	<key>TemplateSelection</key>
 	<dict>
