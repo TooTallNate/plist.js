@@ -1,6 +1,0 @@
-[submodule "vendor/node-xml"]
-	path = vendor/node-xml
-	url = git://github.com/robrighter/node-xml.git
-[submodule "vendor/libxmljs"]
-	path = vendor/libxmljs
-	url = git://github.com/polotek/libxmljs.git
