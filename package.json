@@ -6,7 +6,7 @@
   "keywords": ["apple", "mac", "plist", "parser", "xml"],
   "main": "./lib/plist",
   "dependencies": {
-    "libxmljs": ">= 0.4.0"
+    "node-xml": ">= 0.4.0"
   },
   "engines": { "node": ">= 0.1.100" }
 }
