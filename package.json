@@ -19,6 +19,9 @@
   "dependencies": {
     "sax": "0.1.x"
   },
+  "scripts": {
+    "test": "for i in tests/test*.js; do node \"$i\"; done"
+  },
   "engines": {
     "node": ">= 0.1.100"
   },
