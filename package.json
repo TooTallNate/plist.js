@@ -17,7 +17,7 @@
   ],
   "main": "./lib/plist",
   "dependencies": {
-    "sax": ">= 0.1.2"
+    "sax": "0.1.x"
   },
   "engines": {
     "node": ">= 0.1.100"
