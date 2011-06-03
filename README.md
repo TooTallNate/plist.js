@@ -12,12 +12,27 @@ a native JavaScript Object.
 Usage
 -----
 
-    var plist = require("plist");
-    
-    plist.parseFile("myPlist.plist", function(err, obj) {
-      if (err) {
-        throw err;
-      }
-    
-      console.log(JSON.stringify(obj));
-    });
+Exported are `parseFile` and `parseString` functions. Here's some examples:
+
+``` javascript
+var plist = require('plist');
+
+plist.parseFile('myPlist.plist', function(err, obj) {
+  if (err) throw err;
+
+  console.log(JSON.stringify(obj));
+});
+```
+
+Just a `String` payload works as well:
+
+``` javascript
+var plist = require('plist');
+
+plist.parseString('<plist><string>Hello World!</string></plist>', function(err, obj) {
+  if (err) throw err;
+
+  console.log(obj[0]);
+  // Hello World!
+});
+```
