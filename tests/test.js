@@ -34,6 +34,6 @@ plist.parseFile(file2, function(err, dicts) {
   console.log('Parsed "' + file2 + '" in ' + (endTime - startTime2) + 'ms');
 
   var dict = dicts[0];
-  assert.equal(dict['PopupMenu'][2]['Key'], "\n        #import &lt;Cocoa/Cocoa.h&gt;\n\n#import &lt;MacRuby/MacRuby.h&gt;\n\nint main(int argc, char *argv[])\n{\n  return macruby_main(\"rb_main.rb\", argc, argv);\n}\n");
+  assert.equal(dict['PopupMenu'][2]['Key'], "\n        \n        #import &lt;Cocoa/Cocoa.h&gt;\n\n#import &lt;MacRuby/MacRuby.h&gt;\n\nint main(int argc, char *argv[])\n{\n  return macruby_main(\"rb_main.rb\", argc, argv);\n}\n\n");
 
 });

@@ -1,8 +1,13 @@
 {
   "name": "plist",
   "description": "Mac OS X Plist parser for NodeJS. Convert a Plist file or string into a native JS object",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "author": "Nathan Rajlich <nathan@tootallnate.net>",
+  "contributors": [ "Hans Huebner <hans.huebner@gmail.com>" ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/TooTallNate/node-plist.git"
+  },
   "keywords": [
     "apple",
     "mac",
@@ -12,7 +17,7 @@
   ],
   "main": "./lib/plist",
   "dependencies": {
-    "node-xml": ">= 0.4.0"
+    "sax": ">= 0.1.2"
   },
   "engines": {
     "node": ">= 0.1.100"
