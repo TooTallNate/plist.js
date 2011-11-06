@@ -37,3 +37,22 @@ plist.parseFile(file2, function(err, dicts) {
   assert.equal(dict['PopupMenu'][2]['Key'], "\n        \n        #import &lt;Cocoa/Cocoa.h&gt;\n\n#import &lt;MacRuby/MacRuby.h&gt;\n\nint main(int argc, char *argv[])\n{\n  return macruby_main(\"rb_main.rb\", argc, argv);\n}\n\n");
 
 });
+
+
+// Third test...
+var file3 = path.join(__dirname, "airplay.xml");
+var startTime3 = new Date();
+
+plist.parseFile(file3, function(err, dicts) {
+  if (err) {
+    throw err;
+  }
+
+  var endTime = new Date();
+  console.log('Parsed "' + file3 + '" in ' + (endTime - startTime3) + 'ms');
+
+  var dict = dicts[0];
+  assert.equal(dict['duration'], 5555.0495000000001);
+  assert.equal(dict['position'], 4.6269989039999997);
+
+});
