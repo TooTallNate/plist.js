@@ -1,4 +1,5 @@
 var path = require("path");
+var fs = require("fs");
 var assert = require("assert");
 var plist = require("../");
 
@@ -13,11 +14,25 @@ plist.parseFile(file, function(err, dicts) {
 
   var endTime = new Date();
   console.log('Parsed "' + file + '" in ' + (endTime - startTime1) + 'ms');
-
+  
   var dict = dicts[0];
   assert.equal(dict['Application Version'], "9.0.3");
   assert.equal(dict['Library Persistent ID'], "6F81D37F95101437");
+  
+  // Fourth test - build
+   
+  var doc = plist.build(dict);
+  var fileContent = fs.readFileSync(file);
 
+  function flattenXMLForAssert(instr) {
+      return instr.toString().split(' ').join('').split('\t').join('').split('\r').join('').split('\n').join('');
+  }
+  
+  //assert.equal(flattenXMLForAssert(doc.toString()), flattenXMLForAssert(fileContent.toString()));
+  //console.log(flattenXMLForAssert(doc.toString()));
+  //console.log("------");
+  //console.log(flattenXMLForAssert(fileContent.toString()));
+  console.log(plist.build({foo : "bar"}).toString());
 });
 
 

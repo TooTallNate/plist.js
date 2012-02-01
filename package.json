@@ -17,7 +17,8 @@
   ],
   "main": "./lib/plist",
   "dependencies": {
-    "sax": "0.1.x"
+    "sax": "0.1.x",
+    "xmlbuilder" : ">= 0.3.1"
   },
   "scripts": {
     "test": "for i in tests/test*.js; do node \"$i\"; done"
