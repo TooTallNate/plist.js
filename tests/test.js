@@ -25,14 +25,22 @@ plist.parseFile(file, function(err, dicts) {
   var fileContent = fs.readFileSync(file);
 
   function flattenXMLForAssert(instr) {
-      return instr.toString().split(' ').join('').split('\t').join('').split('\r').join('').split('\n').join('');
+      return instr.replace(/\s/g,'');
   }
   
-  //assert.equal(flattenXMLForAssert(doc.toString()), flattenXMLForAssert(fileContent.toString()));
-  //console.log(flattenXMLForAssert(doc.toString()));
-  //console.log("------");
-  //console.log(flattenXMLForAssert(fileContent.toString()));
-  console.log(plist.build({foo : "bar"}).toString());
+  var s1 = flattenXMLForAssert(doc.toString());
+  var s2 = flattenXMLForAssert(fileContent.toString());
+  
+  for (var i=0;i<s1.length; i++) {
+      if (s1[i]!==s2[i]) {
+          console.log("Mismatch at char "+i);
+          return;
+      }
+  }
+  
+  assert.equal(s1,s2);
+  console.log('Built plist from parsed "' + file + '"" and revalidated against original file.');
+  
 });
 
 
