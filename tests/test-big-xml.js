@@ -1,31 +1,28 @@
-var path = require("path");
-var assert = require("assert");
-var plist = require("../");
+var path = require('path')
+  , plist = require('../')
+  , file = path.join(__dirname, 'iTunes-BIG.xml')
+  , startTime = new Date();
 
-var file = path.join(__dirname, "iTunes-BIG.xml");
-var startTime = new Date();
+exports.textBigXML = function(test) {
+  plist.parseFile(file, function(err, dicts) {
+    var dict = dicts[0];
 
-plist.parseFile(file, function(err, dicts) {
-  if (err) {
-    throw err;
-  }
+    test.ifError(err);
 
-  var endTime = new Date();
-  console.log('Parsed "' + file + '" in ' + (endTime - startTime) + 'ms');
+    test.equal(dicts.length, 1);
+    test.equal(dict['Application Version'], '9.2.1');
+    test.deepEqual(Object.keys(dict), [
+        'Major Version'
+      , 'Minor Version'
+      , 'Application Version'
+      , 'Features'
+      , 'Show Content Ratings'
+      , 'Music Folder'
+      , 'Library Persistent ID'
+      , 'Tracks'
+      , 'Playlists'
+    ]);
 
-  var dict = dicts[0];
-  assert.equal(dicts.length, 1);
-  assert.equal(dict['Application Version'], "9.2.1");
-  assert.deepEqual(Object.keys(dict), [
-      'Major Version'
-    , 'Minor Version'
-    , 'Application Version'
-    , 'Features'
-    , 'Show Content Ratings'
-    , 'Music Folder'
-    , 'Library Persistent ID'
-    , 'Tracks'
-    , 'Playlists'
-  ]);
-
-});
+    test.done();
+  });
+}
