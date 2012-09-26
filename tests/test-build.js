@@ -2,6 +2,7 @@ var path = require('path')
   , fs = require('fs')
   , plist = require('../');
  
+
 /*
 // TODO These assertions fail because CDATA entities get converted in the process
 exports.testBuildFromPlistFile = function(test) {
@@ -11,15 +12,16 @@ exports.testBuildFromPlistFile = function(test) {
     var dict = dicts[0];
     test.ifError(err);
 
-    testBuildIdentity(test, dict, file, function(){
-      testBuildAgainstFile(test, dict, file);
+    // Try re-stringifying and re-parsing
+    plist.parseString(plist.build(dict), function(err, dicts2) {
+      test.ifError(err);
+      test.deepEqual(dicts,dicts2);
       test.done();
     });
-
-    test.done();
   });
 }
 */
+
 
 exports.testBuildFromSmallItunesXML = function(test) {
   var file = path.join(__dirname, 'iTunes-small.xml');
@@ -28,54 +30,74 @@ exports.testBuildFromSmallItunesXML = function(test) {
 
     test.ifError(err);
 
-    testBuildIdentity(test, dict, file, function(){
-      testBuildAgainstFile(test, dict, file);
+    // Try re-stringifying and re-parsing
+    plist.parseString(plist.build(dict), function(err, dicts2) {
+      test.ifError(err);
+      test.deepEqual(dicts,dicts2);
       test.done();
     });
   });
 }
 
-/*
-// TODO The following test fails because float rounding 
+
 exports.testBuildAirplayXML = function(test) {
   var file = path.join(__dirname, 'airplay.xml');
 
   plist.parseFile(file, function(err, dicts) {
-    var dict;
+    var dict = dicts[0];
     test.ifError(err);
-    dict = dicts[0];
     
-    testBuildIdentity(test, dict, file, function(){
-      testBuildAgainstFile(test, dict, file);
+    // Try re-stringifying and re-parsing
+    plist.parseString(plist.build(dict), function(err, dicts2) {
+      test.ifError(err);
+      test.deepEqual(dicts,dicts2);
       test.done();
     });
-
-    test.done();
   });
 }
-*/
 
-/*
-// TODO: finish this test
 exports.testBuildPhoneGapPlist = function(test) {
   var file = path.join(__dirname, 'Xcode-PhoneGap.plist');
 
   plist.parseFile(file, function(err, dicts) {
-    var build = plist.build(dicts);
-    test.done();
+    var dict = dicts[0];
+    test.ifError(err);
+    
+    test.equal(dict['ExternalHosts'][0], "*");
+    test.equal(dict['Plugins']['com.phonegap.accelerometer'], "PGAccelerometer");
+
+    // Try re-stringifying and re-parsing
+    plist.parseString(plist.build(dict), function(err, dicts2) {
+      test.ifError(err);
+      test.deepEqual(dicts,dicts2);
+      test.done();
+    });
   });
 }
-*/
 
-// Builder test A - build plist from JS object, then re-parse plist and compare both JS objects 
-function testBuildIdentity(test, dict, infile, callback) {
-    var build = plist.build(dict);    
-    plist.parseString(build.toString(), function(err, dicts2) { 
-        test.deepEqual(dict,dicts2[0]);
-        callback();
+exports.testBuildXcodeInfoPlist = function(test) {
+  var file = path.join(__dirname, 'Xcode-Info.plist');
+
+  plist.parseFile(file, function(err, dicts) {
+    var dict = dicts[0];
+    test.ifError(err);
+    
+    test.equal(dict['CFBundleAllowMixedLocalizations'], true);
+    test.equal(dict['CFBundleExecutable'], "${EXECUTABLE_NAME}");
+    test.equal(dict['UISupportedInterfaceOrientations~ipad'][0], "UIInterfaceOrientationPortrait");
+
+    // Try re-stringifying and re-parsing
+    plist.parseString(plist.build(dict), function(err, dicts2) {
+      test.ifError(err);
+      test.deepEqual(dicts,dicts2);
+      test.done();
     });
+  });
 }
 
+// this code does a string to string comparison. It's not very useful right 
+// now because CDATA sections arent supported. save for later I guess
+/*
 function flattenXMLForAssert(instr) {
     return instr.replace(/\s/g,'');
 }
@@ -94,6 +116,5 @@ function testBuildAgainstFile(test, dict, infile) {
             break;
         }
     }
-  
     test.equal(s1, s2, 'file mismatch in "' + infile + mismatch);
-}
+}*/
