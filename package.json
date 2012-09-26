@@ -18,7 +18,7 @@
   "main": "./lib/plist",
   "dependencies": {
     "sax": "0.1.x",
-    "xmlbuilder" : ">= 0.3.1"
+    "xmlbuilder" : "0.4.x"
   },
   "devDependencies": {
     "nodeunit" : "0.7.x"
