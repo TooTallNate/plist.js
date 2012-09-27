@@ -21,6 +21,17 @@ exports.testBuildFromPlistFile = function(test) {
 }
 */
 
+exports.testBuildFromObjectWithFunctions = function(test) {
+  var test_object = { 'a': 'test stringy thingy', 'b': function(c,d){ return 'neat'; } };
+
+  // Try stringifying
+  plist.parseString(plist.build(test_object), function(err, dicts) {
+    test.equal(dicts[0].b, undefined);
+    test.equal(dicts[0].a, 'test stringy thingy');
+    test.done();
+  });
+}
+
 
 exports.testBuildFromSmallItunesXML = function(test) {
   var file = path.join(__dirname, 'iTunes-small.xml');
