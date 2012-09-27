@@ -2,7 +2,6 @@ var path = require('path')
   , fs = require('fs')
   , plist = require('../');
  
-
 /*
 // TODO These assertions fail because CDATA entities get converted in the process
 exports.testBuildFromPlistFile = function(test) {
@@ -39,7 +38,6 @@ exports.testBuildFromSmallItunesXML = function(test) {
   });
 }
 
-
 exports.testBuildAirplayXML = function(test) {
   var file = path.join(__dirname, 'airplay.xml');
 
@@ -56,16 +54,36 @@ exports.testBuildAirplayXML = function(test) {
   });
 }
 
+exports.testCordovaPlist = function(test) {
+  var file = path.join(__dirname, 'Cordova.plist');
+
+  plist.parseFile(file, function(err, dicts) {
+    var dict = dicts[0];
+    test.ifError(err);
+    test.equal(dict['TopActivityIndicator'], 'gray');
+    test.equal(dict['Plugins']['Device'], 'CDVDevice');
+
+    // Try re-stringifying and re-parsing
+    plist.parseString(plist.build(dict), function(err, dicts2) {
+      test.ifError(err);
+      test.deepEqual(dicts,dicts2);
+      test.done();
+    });
+  });
+}
+
 exports.testBuildPhoneGapPlist = function(test) {
   var file = path.join(__dirname, 'Xcode-PhoneGap.plist');
 
   plist.parseFile(file, function(err, dicts) {
     var dict = dicts[0];
     test.ifError(err);
-    
+  
     test.equal(dict['ExternalHosts'][0], "*");
     test.equal(dict['Plugins']['com.phonegap.accelerometer'], "PGAccelerometer");
 
+    //console.log('like they were', dict);
+    //console.log('hmm', plist.build(dict));
     // Try re-stringifying and re-parsing
     plist.parseString(plist.build(dict), function(err, dicts2) {
       test.ifError(err);
@@ -94,6 +112,7 @@ exports.testBuildXcodeInfoPlist = function(test) {
     });
   });
 }
+
 
 // this code does a string to string comparison. It's not very useful right 
 // now because CDATA sections arent supported. save for later I guess
