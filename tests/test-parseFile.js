@@ -7,6 +7,7 @@ exports.testParseFileSmallItunesXML = function(test) {
     var dict = dicts[0];
 
     test.ifError(err);
+   // console.log('women', dict);
     test.equal(dict['Application Version'], '9.0.3');
     test.equal(dict['Library Persistent ID'], '6F81D37F95101437');
 
@@ -20,7 +21,7 @@ exports.testParseFile = function(test) {
   plist.parseFile(file, function(err, dicts) {
     var dict = dicts[0];
     test.ifError(err);
-  
+
     test.equal(dict['PopupMenu'][2]['Key'], "\n        \n        #import &lt;Cocoa/Cocoa.h&gt;\n\n#import &lt;MacRuby/MacRuby.h&gt;\n\nint main(int argc, char *argv[])\n{\n  return macruby_main(\"rb_main.rb\", argc, argv);\n}\n\n");
   
     test.done();
