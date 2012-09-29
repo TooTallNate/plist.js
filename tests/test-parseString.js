@@ -8,6 +8,22 @@ exports.testString = function(test) {
   });
 }
 
+exports.testParseStringSync = function(test) {
+  test.doesNotThrow(function(){
+    var res = plist.parseStringSync('<plist><dict><key>test</key><integer>101</integer></dict></plist>');
+    test.equal(Object.keys(res)[0], 'test');
+    test.equal(res.test, 101);
+    test.done();
+  });
+}
+
+exports.testParseStringSyncFailsOnInvalidXML = function(test) {
+  test.throws(function(){
+    var res = plist.parseStringSync('<string>Hello World!</string>');
+  });
+  test.done();
+}
+
 exports.testDict = function(test) {
   plist.parseString('<plist><dict><key>test</key><integer>101</integer></dict></plist>', function(err, res) {
     test.ifError(err);

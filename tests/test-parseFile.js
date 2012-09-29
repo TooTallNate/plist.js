@@ -27,6 +27,15 @@ exports.testParseFile = function(test) {
   });
 }
 
+exports.testParseFileSync = function(test) {
+  var file = path.join(__dirname, 'sample2.plist');
+  test.doesNotThrow(function(){
+    var dict = plist.parseFileSync(file);
+    test.equal(dict['PopupMenu'][2]['Key'], "\n        \n        #import &lt;Cocoa/Cocoa.h&gt;\n\n#import &lt;MacRuby/MacRuby.h&gt;\n\nint main(int argc, char *argv[])\n{\n  return macruby_main(\"rb_main.rb\", argc, argv);\n}\n\n");
+  });
+  test.done();
+}
+
 exports.testParseFileAirplayXML = function(test) {
   var file = path.join(__dirname, 'airplay.xml');
 
