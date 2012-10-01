@@ -16,7 +16,6 @@ var plist = require('plist');
 
 var obj = plist.parseFileSync('myPlist.plist');
 console.log(JSON.stringify(obj));
-});
 ```
 
 Parsing a plist from string payload
@@ -25,7 +24,6 @@ var plist = require('plist');
 
 var obj = plist.parseStringSync('<plist><string>Hello World!</string></plist>');
 console.log(obj);  // Hello World!
-});
 ```
 
 Given an existing JavaScript Object, you can turn it into an XML document that complies with the plist DTD
