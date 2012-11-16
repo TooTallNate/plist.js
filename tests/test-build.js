@@ -21,8 +21,29 @@ exports.testBuildFromPlistFile = function(test) {
 }
 */
 
+
+exports.testNonBase64StringsAsData = function(test) {
+  var test_object = { 'a': 'test stringy thingy', 'b': 'this contains non base64 ✔ ' };
+
+  var result = plist.build(test_object);
+  var DOMParser = require('xmldom').DOMParser;
+  var doc = new DOMParser().parseFromString(result);
+
+  test.equal('a', doc.documentElement.childNodes[1].childNodes[1].childNodes[0].nodeValue);
+  test.equal('string',              doc.documentElement.childNodes[1].childNodes[3].nodeName);
+  test.equal('test stringy thingy', doc.documentElement.childNodes[1].childNodes[3].childNodes[0].nodeValue);
+
+  test.equal('b', doc.documentElement.childNodes[1].childNodes[5].childNodes[0].nodeValue);
+  test.equal ('string', doc.documentElement.childNodes[1].childNodes[7].nodeName);
+  test.equal ('this contains non base64 ✔ ', doc.documentElement.childNodes[1].childNodes[7].childNodes[0].nodeValue);
+
+  test.done();
+}
+
+
+
 exports.testBuildFromObjectWithFunctions = function(test) {
-  var test_object = { 'a': 'test stringy thingy', 'b': function(c,d){ return 'neat'; } };
+  var test_object = { 'a': 'test stringy thingy', 'b': function(c, d){ return 'neat'; } };
 
   // Try stringifying
   plist.parseString(plist.build(test_object), function(err, dicts) {
