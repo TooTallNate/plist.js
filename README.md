@@ -15,7 +15,7 @@ to JSON. A valid Plist file is representable as a native JavaScript Object and v
 ## Usage
 Parsing a plist from filename
 ``` javascript
-var plist = require('plist');
+var plist = require('plist-ex');
 
 var obj = plist.parseFileSync('myPlist.plist');
 console.log(JSON.stringify(obj));
@@ -23,7 +23,7 @@ console.log(JSON.stringify(obj));
 
 Parsing a plist from string payload
 ``` javascript
-var plist = require('plist');
+var plist = require('plist-ex');
 
 var obj = plist.parseStringSync('<plist><string>Hello World!</string></plist>');
 console.log(obj);  // Hello World!
@@ -32,9 +32,10 @@ console.log(obj);  // Hello World!
 Given an existing JavaScript Object, you can turn it into an XML document that complies with the plist DTD
 
 ``` javascript
-var plist = require('plist');
+var plist = require('plist-ex');
 
 console.log(plist.build({'foo' : 'bar'}).toString());
+console.log(plist.build({'foo' : 'bar'}, { dtd: true }).toString());
 ```
 
 
@@ -44,7 +45,7 @@ These functions work, but may be removed in a future release. version 0.4.x adde
 
 Parsing a plist from filename
 ``` javascript
-var plist = require('plist');
+var plist = require('plist-ex');
 
 plist.parseFile('myPlist.plist', function(err, obj) {
   if (err) throw err;
@@ -55,7 +56,7 @@ plist.parseFile('myPlist.plist', function(err, obj) {
 
 Parsing a plist from string payload
 ``` javascript
-var plist = require('plist');
+var plist = require('plist-ex');
 
 plist.parseString('<plist><string>Hello World!</string></plist>', function(err, obj) {
   if (err) throw err;
