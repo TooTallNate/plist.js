@@ -1,3 +1,6 @@
+# install
+npm install plist-ex
+
 # node-plist
 
 Provides facilities for reading and writing Mac OS X Plist (property list) files. These are often used in programming OS X and iOS applications, as well as the iTunes
