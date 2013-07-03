@@ -36,6 +36,22 @@ exports.testDict = function(test) {
   });
 }
 
+exports.testArray = function (test) {
+  
+  plist.parseString('<plist><dict><key>test</key><array><integer>0</integer><integer>1</integer><false/><true/></array></dict></plist>', function (err, res) {
+    
+    test.ifError(err);
+
+    test.ok(Array.isArray(res));
+    test.equal(res[0].test.length, 4);
+    test.strictEqual(res[0].test[0], 0);
+    test.strictEqual(res[0].test[1], 1);
+    test.strictEqual(res[0].test[2], false);
+    test.strictEqual(res[0].test[3], true);
+    test.done();
+  });
+}
+
 exports.testCDATA = function(test) {
   plist.parseString('<string><![CDATA[Hello World!&lt;M]]></string>', function(err, res) {
     test.ifError(err);
