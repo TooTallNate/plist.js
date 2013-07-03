@@ -27,11 +27,27 @@ exports.testParseStringSyncFailsOnInvalidXML = function(test) {
 exports.testDict = function(test) {
   plist.parseString('<plist><dict><key>test</key><integer>101</integer></dict></plist>', function(err, res) {
     test.ifError(err);
-  
+
     test.ok(Array.isArray(res));
     test.equal(res.length, 1);
     test.equal(Object.keys(res[0])[0], 'test');
     test.equal(res[0].test, 101);
+    test.done();
+  });
+}
+
+exports.testArray = function (test) {
+
+  plist.parseString('<plist><dict><key>test</key><array><integer>0</integer><integer>1</integer><false/><true/></array></dict></plist>', function (err, res) {
+
+    test.ifError(err);
+
+    test.ok(Array.isArray(res));
+    test.equal(res[0].test.length, 4);
+    test.strictEqual(res[0].test[0], 0);
+    test.strictEqual(res[0].test[1], 1);
+    test.strictEqual(res[0].test[2], false);
+    test.strictEqual(res[0].test[3], true);
     test.done();
   });
 }
