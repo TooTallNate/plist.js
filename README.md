@@ -34,9 +34,56 @@ var plist = require('plist');
 console.log(plist.build({'foo' : 'bar'}).toString());
 ```
 
+## Command Line
 
+This package also comes bundled with a command line utility called `plist`.  Pass filenames as arguments
+or have it read from standard input
 
-### Deprecated methods
+```
+$ plist tests/utf8data.xml
+{
+  "Smart Info": "✓ à la mode",
+  "Newlines": "✓ à la mode"
+}
+$ cat tests/utf8data.xml | plist
+{
+  "Smart Info": "✓ à la mode",
+  "Newlines": "✓ à la mode"
+}
+```
+
+Supply a `-p` argument to convert from JSON to plist format and go full circle (plist->json->plist)
+
+```
+$ cat tests/utf8data.xml | plist | plist -p
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Smart Info</key>
+    <string>✓ à la mode</string>
+    <key>Newlines</key>
+    <string>✓ à la mode</string>
+  </dict>
+</plist>
+```
+
+### Usage
+
+```
+$ plist -h
+Usage: plist [-j] [filename]
+
+Convert plist->json or json->plist on the command line
+passed in as a file or standard input
+
+Options
+  -h   print this message and exit
+  -j   convert from plist to json (assumed)
+  -p   convert from json to plist
+```
+
+## Deprecated methods
 These functions work, but may be removed in a future release. version 0.4.x added Sync versions of these functions.
 
 Parsing a plist from filename
