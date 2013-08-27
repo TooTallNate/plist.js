@@ -31,9 +31,11 @@ switch (args[0]) {
     process.exit(0);
   case '-j':
     args.shift();
+    break;
   case '-p':
     toJSON = false;
     args.shift();
+    break;
 }
 
 // default to stdin if no file is specified
