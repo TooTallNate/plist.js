@@ -32,6 +32,9 @@
   "scripts": {
     "test": "nodeunit tests"
   },
+  "bin": {
+    "plist": "./bin/plist.js"
+  },
   "engines": {
     "node": ">= 0.1.100"
   }
