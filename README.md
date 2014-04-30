@@ -1,6 +1,6 @@
 node-plist
 ==========
-### Mac OS X Plist parser/builder for Node.js. Convert a plist String into a native JS object and back
+### Mac OS X Plist parser/builder for Node.js and browsers
 
 Provides facilities for reading and writing Mac OS X Plist (property list) files. These are often used in programming OS X and iOS applications, as well as the iTunes
 configuration XML file.
