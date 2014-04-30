@@ -11,7 +11,7 @@ NODE ?= node
 NPM ?= $(NODE) $(shell which npm)
 BROWSERIFY ?= $(NODE) $(BIN)/browserify
 
-all: dist/plist.js
+all: dist/plist.js dist/plist-build.js dist/plist-parse.js
 
 install: node_modules
 
@@ -20,6 +20,16 @@ clean:
 
 dist:
 	@mkdir -p $@
+
+dist/plist-build.js: node_modules lib/build.js dist
+	@$(BROWSERIFY) \
+		--standalone plist \
+		lib/build.js > $@
+
+dist/plist-parse.js: node_modules lib/parse.js dist
+	@$(BROWSERIFY) \
+		--standalone plist \
+		lib/parse.js > $@
 
 dist/plist.js: node_modules lib/*.js dist
 	@$(BROWSERIFY) \
