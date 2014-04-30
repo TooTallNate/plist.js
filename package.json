@@ -21,7 +21,7 @@
     "parser",
     "xml"
   ],
-  "main": "./lib/plist",
+  "main": "lib/plist.js",
   "dependencies": {
     "xmlbuilder": "0.4.x",
     "xmldom": "0.1.x"
