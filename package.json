@@ -1,6 +1,6 @@
 {
   "name": "plist",
-  "description": "Mac OS X Plist parser/builder for NodeJS. Convert a Plist file or string into a native JS object and native JS object into a Plist file.",
+  "description": "Mac OS X Plist parser/builder for Node.js. Convert a plist String into a native JS object and back.",
   "version": "0.4.3",
   "author": "Nathan Rajlich <nathan@tootallnate.net>",
   "contributors": [
