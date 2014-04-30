@@ -34,7 +34,7 @@ dist/plist-parse.js: node_modules lib/parse.js dist
 dist/plist.js: node_modules lib/*.js dist
 	@$(BROWSERIFY) \
 		--standalone plist \
-		--exclude lib/node.js \
+		--exclude ./node.js \
 		lib/plist.js > $@
 
 node_modules: package.json
