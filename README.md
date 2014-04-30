@@ -1,20 +1,53 @@
-node-plist
-==========
+plist.js
+========
 ### Mac OS X Plist parser/builder for Node.js and browsers
 
-Provides facilities for reading and writing Mac OS X Plist (property list) files. These are often used in programming OS X and iOS applications, as well as the iTunes
-configuration XML file.
+Provides facilities for reading and writing Mac OS X Plist (property list)
+files. These are often used in programming OS X and iOS applications, as
+well as the iTunes configuration XML file.
 
 Plist files represent stored programming "object"s. They are very similar
-to JSON. A valid Plist file is representable as a native JavaScript Object and vice-versa.
-
-
-## Tests
-
-`npm test`
+to JSON. A valid Plist file is representable as a native JavaScript Object
+and vice-versa.
 
 
 ## Usage
+
+### Node.JS
+
+Install using `npm`:
+
+``` bash
+$ npm install --save plist
+```
+
+Then `require()` the _plist_ module in your file:
+
+``` js
+var plist = require('plist');
+
+// now use the `parse()` and `build()` functions
+var val = plist.parse('<plist><string>Hello World!</string></plist>');
+console.log(val);  // "Hello World!"
+```
+
+### Browser
+
+Include the `dist/plist.js` in a `<script>` tag in your HTML file:
+
+``` html
+<script src="plist.js"></script>
+<script>
+  // now use the `parse()` and `build()` functions
+  var val = plist.parse('<plist><string>Hello World!</string></plist>');
+  console.log(val);  // "Hello World!"
+</script>
+```
+
+
+## API
+
+### Parsing
 
 Parsing a plist from filename
 
@@ -34,7 +67,10 @@ var obj = plist.parseStringSync('<plist><string>Hello World!</string></plist>');
 console.log(obj);  // Hello World!
 ```
 
-Given an existing JavaScript Object, you can turn it into an XML document that complies with the plist DTD
+### Building
+
+Given an existing JavaScript Object, you can turn it into an XML document
+that complies with the plist DTD:
 
 ``` javascript
 var plist = require('plist');
@@ -43,35 +79,7 @@ console.log(plist.build({'foo' : 'bar'}).toString());
 ```
 
 
-### Deprecated methods
-
-These functions work, but may be removed in a future release. version 0.4.x added Sync versions of these functions.
-
-Parsing a plist from filename
-``` javascript
-var plist = require('plist');
-
-plist.parseFile('myPlist.plist', function(err, obj) {
-  if (err) throw err;
-
-  console.log(JSON.stringify(obj));
-});
-```
-
-Parsing a plist from string payload
-``` javascript
-var plist = require('plist');
-
-plist.parseString('<plist><string>Hello World!</string></plist>', function(err, obj) {
-  if (err) throw err;
-
-  console.log(obj[0]);  // Hello World!
-});
-```
-
-
-License
--------
+## License
 
 (The MIT License)
 
