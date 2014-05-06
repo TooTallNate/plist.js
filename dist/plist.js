@@ -5,6 +5,7 @@
  * Module dependencies.
  */
 
+var base64 = _dereq_('base64-js');
 var xmlbuilder = _dereq_('xmlbuilder');
 
 /**
@@ -25,30 +26,19 @@ function ISODateString(d){
     + pad(d.getUTCSeconds())+'Z';
 }
 
-// instanceof is horribly unreliable so we use these hackish but safer checks
-// http://perfectionkills.com/instanceof-considered-harmful-or-how-to-write-a-robust-isarray
-function isArray(obj) {
-  return Object.prototype.toString.call(obj) === '[object Array]';
-}
+/**
+ * Returns the internal "type" of `obj` via the
+ * `Object.prototype.toString()` trick.
+ *
+ * @param {Mixed} obj - any value
+ * @returns {String} the internal "type" name
+ * @api private
+ */
 
-function isDate(obj) {
-  return Object.prototype.toString.call(obj) === '[object Date]';
-}
-
-function isBoolean(obj) {
-  return (obj === true || obj === false || toString.call(obj) == '[object Boolean]');
-}
-
-function isNumber(obj) {
-  return Object.prototype.toString.call(obj) === '[object Number]';
-}
-
-function isObject(obj) {
-  return Object.prototype.toString.call(obj) === '[object Object]';
-}
-
-function isString(obj) {
-  return Object.prototype.toString.call(obj) === '[object String]';
+var toString = Object.prototype.toString;
+function type (obj) {
+  var m = toString.call(obj).match(/\[object (.*)\]/);
+  return m ? m[1] : m;
 }
 
 /**
@@ -81,48 +71,54 @@ function build (obj) {
 
 function walk_obj(next, next_child) {
   var tag_type, i, prop;
+  var name = type(next);
 
-  if (isArray(next)) {
+  if (Array.isArray(next)) {
     next_child = next_child.ele('array');
-    for(i=0 ;i < next.length;i++) {
+    for (i = 0; i < next.length; i++) {
       walk_obj(next[i], next_child);
     }
-  } else if (isObject(next)) {
-    if (Buffer.isBuffer(next)) {
-      next_child.ele('data').raw(next.toString('base64'));
-    } else {
-      next_child = next_child.ele('dict');
-      for(prop in next) {
-        if (next.hasOwnProperty(prop)) {
-          next_child.ele('key').txt(prop);
-          walk_obj(next[prop], next_child);
-        }
+
+  } else if (Buffer.isBuffer(next)) {
+    next_child.ele('data').raw(next.toString('base64'));
+
+  } else if ('Object' == name) {
+    next_child = next_child.ele('dict');
+    for (prop in next) {
+      if (next.hasOwnProperty(prop)) {
+        next_child.ele('key').txt(prop);
+        walk_obj(next[prop], next_child);
       }
     }
-  } else if (isNumber(next)) {
+
+  } else if ('Number' == name) {
     // detect if this is an integer or real
-    tag_type =(next % 1 === 0) ? 'integer' : 'real';
+    // TODO: add an ability to force one way or another via a "cast"
+    tag_type = (next % 1 === 0) ? 'integer' : 'real';
     next_child.ele(tag_type).txt(next.toString());
-  } else if (isDate(next)) {
-    next_child.ele('date').raw(ISODateString(new Date(next)));
-  } else if (isBoolean(next)) {
+
+  } else if ('Date' == name) {
+    next_child.ele('date').txt(ISODateString(new Date(next)));
+
+  } else if ('Boolean' == name) {
     val = next ? 'true' : 'false';
     next_child.ele(val);
-  } else if (isString(next)) {
-    //if (str!=obj || str.indexOf("\n")>=0) str = "<![CDATA["+str+"]]>";
-    var base64Matcher = new RegExp("^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$");
-    if (base64Matcher.test(next.replace(/\s/g,''))) {
-      // data is base 64 encoded so assume it's a <data> node
-      next_child.ele('data').raw(new Buffer(next, 'utf8').toString('base64'));
-    } else {
-      // it's not base 64 encoded, assume it's a <string> node
-      next_child.ele('string').raw(next);
-    }
+
+  } else if ('String' == name) {
+    next_child.ele('string').txt(next);
+
+  } else if ('ArrayBuffer' == name) {
+    next_child.ele('data').raw(base64.fromByteArray(next));
+
+  } else if (next.buffer && 'ArrayBuffer' == type(next.buffer)) {
+    // a typed array
+    next_child.ele('data').raw(base64.fromByteArray(new Uint8Array(next.buffer), next_child));
+
   }
 }
 
 }).call(this,_dereq_("buffer").Buffer)
-},{"buffer":5,"xmlbuilder":11}],2:[function(_dereq_,module,exports){
+},{"base64-js":4,"buffer":6,"xmlbuilder":11}],2:[function(_dereq_,module,exports){
 (function (Buffer){
 
 /**
@@ -255,7 +251,7 @@ function parsePlistXML (node) {
       // ignore comment nodes (text)
       if (node.childNodes[i].nodeType !== 3) {
         res = parsePlistXML(node.childNodes[i]);
-        if (res) new_arr.push( res );
+        if (null != res) new_arr.push(res);
       }
     }
     return new_arr;
@@ -297,14 +293,8 @@ function parsePlistXML (node) {
       }
     }
 
-    // validate that the string is encoded as base64
-    var base64Matcher = new RegExp("^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$");
-    if (!base64Matcher.test(res.replace(/\s/g,'')) ) {
-      throw new Error('malformed document. <data> element is not base64 encoded');
-    }
-
-    // decode base64 data as utf8 string
-    return new Buffer(res, 'base64').toString('utf8');
+    // decode base64 data to a Buffer instance
+    return new Buffer(res, 'base64');
   }
   else if (node.nodeName === 'date') {
     return new Date(node.childNodes[0].nodeValue);
@@ -318,7 +308,7 @@ function parsePlistXML (node) {
 }
 
 }).call(this,_dereq_("buffer").Buffer)
-},{"buffer":5,"util-deprecate":8,"xmldom":12}],3:[function(_dereq_,module,exports){
+},{"buffer":6,"util-deprecate":8,"xmldom":12}],3:[function(_dereq_,module,exports){
 
 var i;
 
@@ -343,9 +333,132 @@ for (i in builderFunctions) exports[i] = builderFunctions[i];
 var nodeFunctions = _dereq_('./node');
 for (i in nodeFunctions) exports[i] = nodeFunctions[i];
 
-},{"./build":1,"./node":4,"./parse":2}],4:[function(_dereq_,module,exports){
+},{"./build":1,"./node":5,"./parse":2}],4:[function(_dereq_,module,exports){
+var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+;(function (exports) {
+	'use strict';
+
+  var Arr = (typeof Uint8Array !== 'undefined')
+    ? Uint8Array
+    : Array
+
+	var ZERO   = '0'.charCodeAt(0)
+	var PLUS   = '+'.charCodeAt(0)
+	var SLASH  = '/'.charCodeAt(0)
+	var NUMBER = '0'.charCodeAt(0)
+	var LOWER  = 'a'.charCodeAt(0)
+	var UPPER  = 'A'.charCodeAt(0)
+
+	function decode (elt) {
+		var code = elt.charCodeAt(0)
+		if (code === PLUS)
+			return 62 // '+'
+		if (code === SLASH)
+			return 63 // '/'
+		if (code < NUMBER)
+			return -1 //no match
+		if (code < NUMBER + 10)
+			return code - NUMBER + 26 + 26
+		if (code < UPPER + 26)
+			return code - UPPER
+		if (code < LOWER + 26)
+			return code - LOWER + 26
+	}
+
+	function b64ToByteArray (b64) {
+		var i, j, l, tmp, placeHolders, arr
+
+		if (b64.length % 4 > 0) {
+			throw new Error('Invalid string. Length must be a multiple of 4')
+		}
+
+		// the number of equal signs (place holders)
+		// if there are two placeholders, than the two characters before it
+		// represent one byte
+		// if there is only one, then the three characters before it represent 2 bytes
+		// this is just a cheap hack to not do indexOf twice
+		var len = b64.length
+		placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
+
+		// base64 is 4/3 + up to two characters of the original data
+		arr = new Arr(b64.length * 3 / 4 - placeHolders)
+
+		// if there are placeholders, only get up to the last complete 4 chars
+		l = placeHolders > 0 ? b64.length - 4 : b64.length
+
+		var L = 0
+
+		function push (v) {
+			arr[L++] = v
+		}
+
+		for (i = 0, j = 0; i < l; i += 4, j += 3) {
+			tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
+			push((tmp & 0xFF0000) >> 16)
+			push((tmp & 0xFF00) >> 8)
+			push(tmp & 0xFF)
+		}
+
+		if (placeHolders === 2) {
+			tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
+			push(tmp & 0xFF)
+		} else if (placeHolders === 1) {
+			tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
+			push((tmp >> 8) & 0xFF)
+			push(tmp & 0xFF)
+		}
+
+		return arr
+	}
+
+	function uint8ToBase64 (uint8) {
+		var i,
+			extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
+			output = "",
+			temp, length
+
+		function encode (num) {
+			return lookup.charAt(num)
+		}
+
+		function tripletToBase64 (num) {
+			return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
+		}
+
+		// go through the array every three bytes, we'll deal with trailing stuff later
+		for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
+			temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
+			output += tripletToBase64(temp)
+		}
+
+		// pad the end with zeros, but make sure to not forget the extra bytes
+		switch (extraBytes) {
+			case 1:
+				temp = uint8[uint8.length - 1]
+				output += encode(temp >> 2)
+				output += encode((temp << 4) & 0x3F)
+				output += '=='
+				break
+			case 2:
+				temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
+				output += encode(temp >> 10)
+				output += encode((temp >> 4) & 0x3F)
+				output += encode((temp << 2) & 0x3F)
+				output += '='
+				break
+		}
+
+		return output
+	}
+
+	module.exports.toByteArray = b64ToByteArray
+	module.exports.fromByteArray = uint8ToBase64
+}())
 
 },{}],5:[function(_dereq_,module,exports){
+
+},{}],6:[function(_dereq_,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -1456,130 +1569,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":6,"ieee754":7}],6:[function(_dereq_,module,exports){
-var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
-;(function (exports) {
-	'use strict';
-
-  var Arr = (typeof Uint8Array !== 'undefined')
-    ? Uint8Array
-    : Array
-
-	var ZERO   = '0'.charCodeAt(0)
-	var PLUS   = '+'.charCodeAt(0)
-	var SLASH  = '/'.charCodeAt(0)
-	var NUMBER = '0'.charCodeAt(0)
-	var LOWER  = 'a'.charCodeAt(0)
-	var UPPER  = 'A'.charCodeAt(0)
-
-	function decode (elt) {
-		var code = elt.charCodeAt(0)
-		if (code === PLUS)
-			return 62 // '+'
-		if (code === SLASH)
-			return 63 // '/'
-		if (code < NUMBER)
-			return -1 //no match
-		if (code < NUMBER + 10)
-			return code - NUMBER + 26 + 26
-		if (code < UPPER + 26)
-			return code - UPPER
-		if (code < LOWER + 26)
-			return code - LOWER + 26
-	}
-
-	function b64ToByteArray (b64) {
-		var i, j, l, tmp, placeHolders, arr
-
-		if (b64.length % 4 > 0) {
-			throw new Error('Invalid string. Length must be a multiple of 4')
-		}
-
-		// the number of equal signs (place holders)
-		// if there are two placeholders, than the two characters before it
-		// represent one byte
-		// if there is only one, then the three characters before it represent 2 bytes
-		// this is just a cheap hack to not do indexOf twice
-		var len = b64.length
-		placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
-
-		// base64 is 4/3 + up to two characters of the original data
-		arr = new Arr(b64.length * 3 / 4 - placeHolders)
-
-		// if there are placeholders, only get up to the last complete 4 chars
-		l = placeHolders > 0 ? b64.length - 4 : b64.length
-
-		var L = 0
-
-		function push (v) {
-			arr[L++] = v
-		}
-
-		for (i = 0, j = 0; i < l; i += 4, j += 3) {
-			tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
-			push((tmp & 0xFF0000) >> 16)
-			push((tmp & 0xFF00) >> 8)
-			push(tmp & 0xFF)
-		}
-
-		if (placeHolders === 2) {
-			tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
-			push(tmp & 0xFF)
-		} else if (placeHolders === 1) {
-			tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
-			push((tmp >> 8) & 0xFF)
-			push(tmp & 0xFF)
-		}
-
-		return arr
-	}
-
-	function uint8ToBase64 (uint8) {
-		var i,
-			extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
-			output = "",
-			temp, length
-
-		function encode (num) {
-			return lookup.charAt(num)
-		}
-
-		function tripletToBase64 (num) {
-			return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
-		}
-
-		// go through the array every three bytes, we'll deal with trailing stuff later
-		for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
-			temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
-			output += tripletToBase64(temp)
-		}
-
-		// pad the end with zeros, but make sure to not forget the extra bytes
-		switch (extraBytes) {
-			case 1:
-				temp = uint8[uint8.length - 1]
-				output += encode(temp >> 2)
-				output += encode((temp << 4) & 0x3F)
-				output += '=='
-				break
-			case 2:
-				temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
-				output += encode(temp >> 10)
-				output += encode((temp >> 4) & 0x3F)
-				output += encode((temp << 2) & 0x3F)
-				output += '='
-				break
-		}
-
-		return output
-	}
-
-	module.exports.toByteArray = b64ToByteArray
-	module.exports.fromByteArray = uint8ToBase64
-}())
-
-},{}],7:[function(_dereq_,module,exports){
+},{"base64-js":4,"ieee754":7}],7:[function(_dereq_,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
