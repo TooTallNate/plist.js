@@ -23,6 +23,7 @@
   ],
   "main": "lib/plist.js",
   "dependencies": {
+    "base64-js": "0.0.6",
     "xmlbuilder": "0.4.x",
     "xmldom": "0.1.x",
     "util-deprecate": "1.0.0"
