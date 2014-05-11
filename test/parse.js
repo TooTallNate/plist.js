@@ -7,7 +7,12 @@ describe('plist', function () {
 
   describe('parse()', function () {
 
-    it('should parse a <string> node into a String', function () {
+    it('should parse a minimal <string> node into a String', function () {
+      var parsed = parse('<plist><string>Hello World!</string></plist>');
+      assert.strictEqual(parsed, 'Hello World!');
+    });
+
+    it('should parse a full XML <string> node into a String', function () {
       var xml = multiline(function () {/*
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -86,6 +91,91 @@ describe('plist', function () {
       var parsed = parse(xml);
       assert(Buffer.isBuffer(parsed));
       assert.strictEqual(parsed.toString('utf8'), '✓ à la mode');
+    });
+
+    it('should parse a <true> node into a Boolean `true` value', function () {
+      var xml = multiline(function () {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <true/>
+</plist>
+*/});
+      var parsed = parse(xml);
+      assert.strictEqual(parsed, true);
+    });
+
+    it('should parse a <false> node into a Boolean `false` value', function () {
+      var xml = multiline(function () {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <false/>
+</plist>
+*/});
+      var parsed = parse(xml);
+      assert.strictEqual(parsed, false);
+    });
+
+    it('should parse an <array> node into an Array', function () {
+      var xml = multiline(function () {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <array>
+    <dict>
+      <key>duration</key>
+      <real>5555.0495000000001</real>
+      <key>start</key>
+      <real>0.0</real>
+    </dict>
+  </array>
+</plist>
+*/});
+      var parsed = parse(xml);
+      assert.deepEqual(parsed, [
+        {
+          duration: 5555.0495,
+          start: 0
+        }
+      ]);
+    });
+
+    it('should parse a plist file with XML comments', function () {
+      var xml = multiline(function () {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>CFBundleName</key>
+    <string>Emacs</string>
+
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+
+    <!-- This should be the emacs version number. -->
+
+    <key>CFBundleShortVersionString</key>
+    <string>24.3</string>
+
+    <key>CFBundleSignature</key>
+    <string>EMAx</string>
+
+    <!-- This SHOULD be a build number. -->
+
+    <key>CFBundleVersion</key>
+    <string>9.0</string>
+  </dict>
+</plist>
+*/});
+      var parsed = parse(xml);
+      assert.deepEqual(parsed, {
+        CFBundleName: 'Emacs',
+        CFBundlePackageType: 'APPL',
+        CFBundleShortVersionString: '24.3',
+        CFBundleSignature: 'EMAx',
+        CFBundleVersion: '9.0'
+      });
     });
 
     it('should parse an example "Cordova.plist" file', function () {
