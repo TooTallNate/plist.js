@@ -7,7 +7,7 @@ describe('plist', function () {
 
   describe('parse()', function () {
 
-    it('should parse a basic <string> node', function () {
+    it('should parse a <string> node', function () {
       var xml = multiline(function () {/*
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -16,7 +16,31 @@ describe('plist', function () {
 </plist>
 */});
       var parsed = parse(xml);
-      assert.equal(parsed, 'gray');
+      assert.strictEqual(parsed, 'gray');
+    });
+
+    it('should parse an <integer> node', function () {
+      var xml = multiline(function () {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<integer>14</integer>
+</plist>
+*/});
+      var parsed = parse(xml);
+      assert.strictEqual(parsed, 14);
+    });
+
+    it('should parse a <real> node', function () {
+      var xml = multiline(function () {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<real>3.14</real>
+</plist>
+*/});
+      var parsed = parse(xml);
+      assert.strictEqual(parsed, 3.14);
     });
 
     it('should parse an example "Cordova.plist" file', function () {
