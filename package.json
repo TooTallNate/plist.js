@@ -29,10 +29,21 @@
     "util-deprecate": "1.0.0"
   },
   "devDependencies": {
-    "nodeunit": "0.7.x",
+    "mocha": "1.18.2",
     "browserify": "3.44.2"
   },
   "scripts": {
-    "test": "nodeunit tests"
+    "test": "mocha -gc --reporter spec test/*.js"
+  },
+  "testling": {
+    "browsers": [
+        "ie9", "ie10", "ie11",
+        "firefox/15",
+        "chrome/22",
+        "opera/12",
+        "safari/5.1"
+    ],
+    "harness" : "mocha",
+    "files": "test/*.js"
   }
 }
