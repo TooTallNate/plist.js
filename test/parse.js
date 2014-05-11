@@ -24,7 +24,7 @@ describe('plist', function () {
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<integer>14</integer>
+  <integer>14</integer>
 </plist>
 */});
       var parsed = parse(xml);
@@ -36,11 +36,24 @@ describe('plist', function () {
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<real>3.14</real>
+  <real>3.14</real>
 </plist>
 */});
       var parsed = parse(xml);
       assert.strictEqual(parsed, 3.14);
+    });
+
+    it('should parse a <date> node', function () {
+      var xml = multiline(function () {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <date>2010-02-08T21:41:23Z</date>
+</plist>
+*/});
+      var parsed = parse(xml);
+      assert(parsed instanceof Date);
+      assert.strictEqual(parsed.getTime(), 1265665283000);
     });
 
     it('should parse an example "Cordova.plist" file', function () {
