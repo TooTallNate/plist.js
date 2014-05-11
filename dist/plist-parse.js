@@ -19,6 +19,22 @@ exports.parseStringSync = deprecate(parseStringSync, '`parseStringSync()` is ' +
   'deprecated. Use `parse()` instead.');
 
 /**
+ * We ignore raw text (usually whitespace), <!-- xml comments -->,
+ * and raw CDATA nodes.
+ *
+ * @param {Element} node
+ * @returns {Boolean}
+ * @api private
+ */
+
+function shouldIgnoreNode (node) {
+  return node.nodeType === 3 // text
+    || node.nodeType === 8   // comment
+    || node.nodeType === 4;  // cdata
+}
+
+
+/**
  * Parses a Plist XML string. Returns an Object.
  *
  * @param {String} xml - the XML String to decode
@@ -96,25 +112,26 @@ function parseStringSync (xml) {
 
 function parsePlistXML (node) {
   var i, new_obj, key, val, new_arr, res, d;
+
   if (!node)
     return null;
 
   if (node.nodeName === 'plist') {
     new_arr = [];
-    for (i=0;i < node.childNodes.length;i++) {
+    for (i=0; i < node.childNodes.length; i++) {
       // ignore comment nodes (text)
-      if (node.childNodes[i].nodeType !== 3) {
+      if (!shouldIgnoreNode(node.childNodes[i])) {
         new_arr.push( parsePlistXML(node.childNodes[i]));
       }
     }
     return new_arr;
-  }
-  else if (node.nodeName === 'dict') {
+
+  } else if (node.nodeName === 'dict') {
     new_obj = {};
     key = null;
-    for (i=0;i < node.childNodes.length;i++) {
+    for (i=0; i < node.childNodes.length; i++) {
       // ignore comment nodes (text)
-      if (node.childNodes[i].nodeType !== 3) {
+      if (!shouldIgnoreNode(node.childNodes[i])) {
         if (key === null) {
           key = parsePlistXML(node.childNodes[i]);
         } else {
@@ -124,50 +141,47 @@ function parsePlistXML (node) {
       }
     }
     return new_obj;
-  }
-  else if (node.nodeName === 'array') {
+
+  } else if (node.nodeName === 'array') {
     new_arr = [];
-    for (i=0;i < node.childNodes.length;i++) {
+    for (i=0; i < node.childNodes.length; i++) {
       // ignore comment nodes (text)
-      if (node.childNodes[i].nodeType !== 3) {
+      if (!shouldIgnoreNode(node.childNodes[i])) {
         res = parsePlistXML(node.childNodes[i]);
         if (null != res) new_arr.push(res);
       }
     }
     return new_arr;
-  }
-  else if (node.nodeName === '#text') {
+
+  } else if (node.nodeName === '#text') {
     // TODO: what should we do with text types? (CDATA sections)
-  }
-  else if (node.nodeName === 'key') {
+
+  } else if (node.nodeName === 'key') {
     return node.childNodes[0].nodeValue;
-  }
-  else if (node.nodeName === 'string') {
+
+  } else if (node.nodeName === 'string') {
     res = '';
-    for (d=0; d < node.childNodes.length; d++)
-    {
+    for (d=0; d < node.childNodes.length; d++) {
       res += node.childNodes[d].nodeValue;
     }
     return res;
-  }
-  else if (node.nodeName === 'integer') {
+
+  } else if (node.nodeName === 'integer') {
     // parse as base 10 integer
     return parseInt(node.childNodes[0].nodeValue, 10);
-  }
-  else if (node.nodeName === 'real') {
+
+  } else if (node.nodeName === 'real') {
     res = '';
-    for (d=0; d < node.childNodes.length; d++)
-    {
+    for (d=0; d < node.childNodes.length; d++) {
       if (node.childNodes[d].nodeType === 3) {
         res += node.childNodes[d].nodeValue;
       }
     }
     return parseFloat(res);
-  }
-  else if (node.nodeName === 'data') {
+
+  } else if (node.nodeName === 'data') {
     res = '';
-    for (d=0; d < node.childNodes.length; d++)
-    {
+    for (d=0; d < node.childNodes.length; d++) {
       if (node.childNodes[d].nodeType === 3) {
         res += node.childNodes[d].nodeValue;
       }
@@ -175,14 +189,14 @@ function parsePlistXML (node) {
 
     // decode base64 data to a Buffer instance
     return new Buffer(res, 'base64');
-  }
-  else if (node.nodeName === 'date') {
+
+  } else if (node.nodeName === 'date') {
     return new Date(node.childNodes[0].nodeValue);
-  }
-  else if (node.nodeName === 'true') {
+
+  } else if (node.nodeName === 'true') {
     return true;
-  }
-  else if (node.nodeName === 'false') {
+
+  } else if (node.nodeName === 'false') {
     return false;
   }
 }
