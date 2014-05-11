@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>CFBundleName</key>
+    <string>Emacs</string>
+
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+
+    <!-- This should be the emacs version number. -->
+
+    <key>CFBundleShortVersionString</key>
+    <string>24.3</string>
+
+    <key>CFBundleSignature</key>
+    <string>EMAx</string>
+
+    <!-- This SHOULD be a build number. -->
+
+    <key>CFBundleVersion</key>
+    <string>9.0</string>
+  </dict>
+</plist>

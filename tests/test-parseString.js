@@ -1,3 +1,4 @@
+var fs = require('fs');
 var plist = require('../');
 
 exports.testString = function(test) {
@@ -58,4 +59,17 @@ exports.testCDATA = function(test) {
     test.equal(res, 'Hello World!&lt;M');
     test.done();
   });
+}
+
+exports.testComments = function(test) {
+  var xml = fs.readFileSync(__dirname + '/xml-comments.plist', 'utf8');
+  var obj = plist.parse(xml);
+  test.deepEqual(obj, {
+    CFBundleName: 'Emacs',
+    CFBundlePackageType: 'APPL',
+    CFBundleShortVersionString: '24.3',
+    CFBundleSignature: 'EMAx',
+    CFBundleVersion: '9.0'
+  });
+  test.done();
 }
