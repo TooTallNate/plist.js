@@ -178,6 +178,66 @@ describe('plist', function () {
       });
     });
 
+    it('should parse a plist file with CDATA content', function () {
+      var xml = multiline(function () {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>OptionsLabel</key>
+	<string>Product</string>
+	<key>PopupMenu</key>
+	<array>
+		<dict>
+			<key>Key</key>
+			<string>iPhone</string>
+			<key>Title</key>
+			<string>iPhone</string>
+		</dict>
+		<dict>
+			<key>Key</key>
+			<string>iPad</string>
+			<key>Title</key>
+			<string>iPad</string>
+		</dict>
+		<dict>
+			<key>Key</key>
+      <string>
+        <![CDATA[
+        #import &lt;Cocoa/Cocoa.h&gt;
+
+#import &lt;MacRuby/MacRuby.h&gt;
+
+int main(int argc, char *argv[])
+{
+  return macruby_main("rb_main.rb", argc, argv);
+}
+]]>
+</string>
+		</dict>
+	</array>
+	<key>TemplateSelection</key>
+	<dict>
+		<key>iPhone</key>
+		<string>Tab Bar iPhone Application</string>
+		<key>iPad</key>
+		<string>Tab Bar iPad Application</string>
+	</dict>
+</dict>
+</plist>
+*/});
+      var parsed = parse(xml);
+      assert.deepEqual(parsed, { OptionsLabel: 'Product',
+        PopupMenu:
+         [ { Key: 'iPhone', Title: 'iPhone' },
+           { Key: 'iPad', Title: 'iPad' },
+           { Key: '\n        \n        #import &lt;Cocoa/Cocoa.h&gt;\n\n#import &lt;MacRuby/MacRuby.h&gt;\n\nint main(int argc, char *argv[])\n{\n  return macruby_main("rb_main.rb", argc, argv);\n}\n\n' } ],
+        TemplateSelection:
+         { iPhone: 'Tab Bar iPhone Application',
+           iPad: 'Tab Bar iPad Application' }
+      });
+    });
+
     it('should parse an example "Cordova.plist" file', function () {
       var xml = multiline(function () {/*
 <?xml version="1.0" encoding="UTF-8"?>
@@ -300,6 +360,86 @@ describe('plist', function () {
           SplashScreen: 'CDVSplashScreen',
           Battery: 'CDVBattery'
         }
+      });
+    });
+
+    it('should parse an example "Xcode-Info.plist" file', function () {
+      var xml = multiline(function () {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>${PRODUCT_NAME}</string>
+	<key>CFBundleExecutable</key>
+	<string>${EXECUTABLE_NAME}</string>
+	<key>CFBundleIconFiles</key>
+	<array/>
+	<key>CFBundleIdentifier</key>
+	<string>com.joshfire.ads</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>${PRODUCT_NAME}</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>1.0</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>armv7</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>CFBundleAllowMixedLocalizations</key>
+	<true/>
+</dict>
+</plist>
+*/});
+      var parsed = parse(xml);
+      assert.deepEqual(parsed, {
+        CFBundleDevelopmentRegion: 'en',
+        CFBundleDisplayName: '${PRODUCT_NAME}',
+        CFBundleExecutable: '${EXECUTABLE_NAME}',
+        CFBundleIconFiles: [],
+        CFBundleIdentifier: 'com.joshfire.ads',
+        CFBundleInfoDictionaryVersion: '6.0',
+        CFBundleName: '${PRODUCT_NAME}',
+        CFBundlePackageType: 'APPL',
+        CFBundleShortVersionString: '1.0',
+        CFBundleSignature: '????',
+        CFBundleVersion: '1.0',
+        LSRequiresIPhoneOS: true,
+        UIRequiredDeviceCapabilities: [ 'armv7' ],
+        UISupportedInterfaceOrientations:
+         [ 'UIInterfaceOrientationPortrait',
+           'UIInterfaceOrientationLandscapeLeft',
+           'UIInterfaceOrientationLandscapeRight' ],
+        'UISupportedInterfaceOrientations~ipad':
+         [ 'UIInterfaceOrientationPortrait',
+           'UIInterfaceOrientationPortraitUpsideDown',
+           'UIInterfaceOrientationLandscapeLeft',
+           'UIInterfaceOrientationLandscapeRight' ],
+        CFBundleAllowMixedLocalizations: true
       });
     });
 
