@@ -77,7 +77,10 @@ describe('plist', function () {
   <data>4pyTIMOgIGxhIG
   
   
-  1vZGU=</data>
+  1v
+  
+  ZG
+  U=</data>
 </plist>
 */});
       var parsed = parse(xml);
