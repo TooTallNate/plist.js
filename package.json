@@ -43,7 +43,7 @@
         "opera/12..latest",
         "safari/5.1..latest"
     ],
-    "harness" : "mocha-tdd",
+    "harness" : "mocha",
     "files": "test/*.js"
   }
 }
