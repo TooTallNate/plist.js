@@ -7,7 +7,7 @@ describe('plist', function () {
 
   describe('parse()', function () {
 
-    it('should parse a <string> node', function () {
+    it('should parse a <string> node into a String', function () {
       var xml = multiline(function () {/*
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -19,7 +19,7 @@ describe('plist', function () {
       assert.strictEqual(parsed, 'gray');
     });
 
-    it('should parse an <integer> node', function () {
+    it('should parse an <integer> node into a Number', function () {
       var xml = multiline(function () {/*
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -31,7 +31,7 @@ describe('plist', function () {
       assert.strictEqual(parsed, 14);
     });
 
-    it('should parse a <real> node', function () {
+    it('should parse a <real> node into a Number', function () {
       var xml = multiline(function () {/*
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -43,7 +43,7 @@ describe('plist', function () {
       assert.strictEqual(parsed, 3.14);
     });
 
-    it('should parse a <date> node', function () {
+    it('should parse a <date> node into a Date', function () {
       var xml = multiline(function () {/*
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -54,6 +54,35 @@ describe('plist', function () {
       var parsed = parse(xml);
       assert(parsed instanceof Date);
       assert.strictEqual(parsed.getTime(), 1265665283000);
+    });
+
+    it('should parse a <data> node into a Buffer', function () {
+      var xml = multiline(function () {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <data>4pyTIMOgIGxhIG1vZGU=</data>
+</plist>
+*/});
+      var parsed = parse(xml);
+      assert(Buffer.isBuffer(parsed));
+      assert.strictEqual(parsed.toString('utf8'), '✓ à la mode');
+    });
+
+    it('should parse a <data> node with newlines into a Buffer', function () {
+      var xml = multiline(function () {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <data>4pyTIMOgIGxhIG
+  
+  
+  1vZGU=</data>
+</plist>
+*/});
+      var parsed = parse(xml);
+      assert(Buffer.isBuffer(parsed));
+      assert.strictEqual(parsed.toString('utf8'), '✓ à la mode');
     });
 
     it('should parse an example "Cordova.plist" file', function () {
