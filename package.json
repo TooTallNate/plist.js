@@ -37,13 +37,13 @@
   },
   "testling": {
     "browsers": [
-        "ie9", "ie10", "ie11",
-        "firefox/15",
-        "chrome/22",
-        "opera/12",
-        "safari/5.1"
+        "ie/8..latest",
+        "chrome/15..latest",
+        "firefox/22..latest",
+        "opera/12..latest",
+        "safari/5.1..latest"
     ],
-    "harness" : "mocha",
+    "harness" : "mocha-tdd",
     "files": "test/*.js"
   }
 }
