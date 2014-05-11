@@ -2,13 +2,24 @@
 var assert = require('assert');
 var parse = require('../').parse;
 var multiline = require('multiline');
-var resolve = require('path').resolve;
 
 describe('plist', function () {
 
   describe('parse()', function () {
 
-    it('should parse "Cordova.plist"', function () {
+    it('should parse a basic <string> node', function () {
+      var xml = multiline(function () {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<string>gray</string>
+</plist>
+*/});
+      var parsed = parse(xml);
+      assert.equal(parsed, 'gray');
+    });
+
+    it('should parse an example "Cordova.plist" file', function () {
       var xml = multiline(function () {/*
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
