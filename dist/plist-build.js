@@ -53,11 +53,12 @@ function type (obj) {
  * Generate an XML plist string from the input object `obj`.
  *
  * @param {Object} obj - the object to convert
+ * @param {Object} [opts] - optional options object
  * @returns {String} converted plist XML string
  * @api public
  */
 
-function build (obj) {
+function build (obj, opts) {
   var XMLHDR = {
     version: '1.0',
     encoding: 'UTF-8'
@@ -72,12 +73,14 @@ function build (obj) {
 
   doc.dec(XMLHDR.version, XMLHDR.encoding, XMLHDR.standalone);
   doc.dtd(XMLDTD.pubid, XMLDTD.sysid);
+  doc.att('version', '1.0');
 
   walk_obj(obj, doc);
 
-  return doc.end({
-    pretty: true
-  });
+  if (!opts) opts = {};
+  // default `pretty` to `true`
+  opts.pretty = opts.pretty !== false;
+  return doc.end(opts);
 }
 
 /**

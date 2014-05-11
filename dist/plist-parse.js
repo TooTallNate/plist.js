@@ -183,7 +183,7 @@ function parsePlistXML (node) {
     res = '';
     for (d=0; d < node.childNodes.length; d++) {
       if (node.childNodes[d].nodeType === 3) {
-        res += node.childNodes[d].nodeValue;
+        res += node.childNodes[d].nodeValue.replace(/\s+/g, '');
       }
     }
 
