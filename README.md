@@ -54,21 +54,22 @@ Include the `dist/plist.js` in a `<script>` tag in your HTML file:
 
 ### Parsing
 
-Parsing a plist from filename
+Parsing a plist from filename:
 
 ``` javascript
+var fs = require('fs');
 var plist = require('plist');
 
-var obj = plist.parseFileSync('myPlist.plist');
+var obj = plist.parse(fs.readFileSync('myPlist.plist', 'utf8'));
 console.log(JSON.stringify(obj));
 ```
 
-Parsing a plist from string payload
+Parsing a plist from string payload:
 
 ``` javascript
 var plist = require('plist');
 
-var obj = plist.parseStringSync('<plist><string>Hello World!</string></plist>');
+var obj = plist.parse('<plist><string>Hello World!</string></plist>');
 console.log(obj);  // Hello World!
 ```
 
@@ -80,7 +81,7 @@ that complies with the plist DTD:
 ``` javascript
 var plist = require('plist');
 
-console.log(plist.build({'foo' : 'bar'}).toString());
+console.log(plist.build({ foo: 'bar' }));
 ```
 
 
