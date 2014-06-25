@@ -1,4 +1,14 @@
 
+1.0.1 / 2014-06-25
+==================
+
+  * add .zuul.yml file for browser testing
+  * remove Testling stuff
+  * build: fix global variable `val` leak
+  * package: use --check-leaks when running mocha tests
+  * README: update examples to use preferred API
+  * package: add "browser" keyword
+
 1.0.0 / 2014-05-20
 ==================
 
