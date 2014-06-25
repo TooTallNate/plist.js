@@ -35,7 +35,7 @@
     "multiline": "0.3.4"
   },
   "scripts": {
-    "test": "mocha -gc --reporter spec test/*.js"
+    "test": "mocha -gc --reporter spec --check-leaks test/*.js"
   },
   "testling": {
     "browsers": [
