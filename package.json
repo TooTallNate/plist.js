@@ -36,18 +36,5 @@
   },
   "scripts": {
     "test": "mocha -gc --reporter spec --check-leaks test/*.js"
-  },
-  "testling": {
-    "browsers": [
-      "ie/8..latest",
-      "chrome/15..latest",
-      "firefox/22..latest",
-      "opera/12..latest",
-      "safari/5.1..latest",
-      "iphone/6..latest",
-      "ipad/6..latest"
-    ],
-    "harness": "mocha",
-    "files": "test/*.js"
   }
 }
