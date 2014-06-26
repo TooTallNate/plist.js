@@ -11,18 +11,6 @@ matrix:
   - node_js: '0.10'
     env: BROWSER="chrome latest"
   - node_js: '0.10'
-    env: BROWSER="chrome 35"
-  - node_js: '0.10'
-    env: BROWSER="chrome 34"
-  - node_js: '0.10'
-    env: BROWSER="chrome 33"
-  - node_js: '0.10'
-    env: BROWSER="chrome 32"
-  - node_js: '0.10'
-    env: BROWSER="chrome 31"
-  - node_js: '0.10'
-    env: BROWSER="chrome 30"
-  - node_js: '0.10'
     env: BROWSER="chrome 29"
   - node_js: '0.10'
     env: BROWSER="firefox latest"
@@ -40,5 +28,7 @@ matrix:
     env: BROWSER="ie 10"
   - node_js: '0.10'
     env: BROWSER="ie 9"
+  - node_js: '0.10'
+    env: BROWSER="iphone 7.0"
   - node_js: '0.10'
     env: BROWSER="iphone 6.0"
