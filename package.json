@@ -38,6 +38,6 @@
   "scripts": {
     "test": "if [ \"x$BROWSER\" = \"x\" ]; then npm run test-node; else npm run test-zuul; fi",
     "test-node": "mocha -gc --reporter spec --check-leaks test/*.js",
-    "test-zuul": "echo $BROWSER"
+    "test-zuul": "echo \"ui: mocha-bdd\nbrowsers:\n  - name: `awk '{print $1}' <<< $BROWSER`\n    version: `awk '{print $2}' <<< $BROWSER`\" | tee .zuul.yml && zuul -- test/*.js"
   }
 }
