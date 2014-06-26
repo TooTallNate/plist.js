@@ -7,3 +7,5 @@ matrix:
   include:
     - node_js: "0.10"
       env: BROWSER="foo"
+    - node_js: "0.10"
+      env: BROWSER="bar"

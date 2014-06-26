@@ -30,11 +30,14 @@
     "util-deprecate": "1.0.0"
   },
   "devDependencies": {
-    "mocha": "1.18.2",
     "browserify": "4.1.11",
-    "multiline": "0.3.4"
+    "mocha": "1.18.2",
+    "multiline": "0.3.4",
+    "zuul": "1.7.0"
   },
   "scripts": {
-    "test": "mocha -gc --reporter spec --check-leaks test/*.js"
+    "test": "if [ \"x$BROWSER\" == \"x\" ]; then npm run test-node; else npm run test-zuul; fi",
+    "test-node": "mocha -gc --reporter spec --check-leaks test/*.js",
+    "test-zuul": "echo $BROWSER"
   }
 }
