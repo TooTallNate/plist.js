@@ -9,6 +9,18 @@ env:
 matrix:
   include:
   - node_js: '0.10'
-    env: BROWSER="chrome 29"
+    env: BROWSER="chrome latest"
   - node_js: '0.10'
     env: BROWSER="firefox latest"
+  - node_js: '0.10'
+    env: BROWSER="opera latest"
+  - node_js: '0.10'
+    env: BROWSER="safari latest"
+  - node_js: '0.10'
+    env: BROWSER="ie 11"
+  - node_js: '0.10'
+    env: BROWSER="ie 10"
+  - node_js: '0.10'
+    env: BROWSER="ie 9"
+  - node_js: '0.10'
+    env: BROWSER="iphone 6.0"
