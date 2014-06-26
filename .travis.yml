@@ -1,11 +1,14 @@
 language: node_js
 node_js:
-  - "0.10"
-  - "0.11"
-
+- '0.10'
+- '0.11'
+env:
+  global:
+  - secure: JyPBoYrcVeJMb83oRf1DOA6UMWk9oABe0QvLwQtjAbs8NMsbiT2+5nId1BYF4z+737B1FbyaOoPlNyJXkMEpXgix/qrzB50QsAHfRJDsP4+ts/kF+VFq5Mzd369h2mVU3ByQD/h8FBwoaer+UmmtlGOBE/3rWsXmT7iJ2rUeLD0=
+  - secure: XEYo0lALoRMbt9KA7muGSEb7tJXjFd+rYYehOtAEpXOux+Wr1XKL5CtZbQkJT9E8rqX96zMIBYk1jkrJ4FdJWuYoGr4RTN/eUWGzfdBXUkrPW7o7UxolooklcAqN6D27vMknkNEy9u5UnXpr+5R14jDz/oDzheuSrruHSHF7aWI=
 matrix:
   include:
-    - node_js: "0.10"
-      env: BROWSER="chrome 29"
-    - node_js: "0.10"
-      env: BROWSER="firefox latest"
+  - node_js: '0.10'
+    env: BROWSER="chrome 29"
+  - node_js: '0.10'
+    env: BROWSER="firefox latest"
