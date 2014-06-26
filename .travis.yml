@@ -11,11 +11,29 @@ matrix:
   - node_js: '0.10'
     env: BROWSER="chrome latest"
   - node_js: '0.10'
+    env: BROWSER="chrome 35"
+  - node_js: '0.10'
+    env: BROWSER="chrome 34"
+  - node_js: '0.10'
+    env: BROWSER="chrome 33"
+  - node_js: '0.10'
+    env: BROWSER="chrome 32"
+  - node_js: '0.10'
+    env: BROWSER="chrome 31"
+  - node_js: '0.10'
+    env: BROWSER="chrome 30"
+  - node_js: '0.10'
+    env: BROWSER="chrome 29"
+  - node_js: '0.10'
     env: BROWSER="firefox latest"
   - node_js: '0.10'
     env: BROWSER="opera latest"
   - node_js: '0.10'
     env: BROWSER="safari latest"
+  - node_js: '0.10'
+    env: BROWSER="safari 6"
+  - node_js: '0.10'
+    env: BROWSER="safari 5"
   - node_js: '0.10'
     env: BROWSER="ie 11"
   - node_js: '0.10'
