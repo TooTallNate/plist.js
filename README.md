@@ -17,7 +17,7 @@ and vice-versa.
 
 ## Usage
 
-### Node.JS
+### Node.js
 
 Install using `npm`:
 
