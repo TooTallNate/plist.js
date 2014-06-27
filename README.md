@@ -2,9 +2,9 @@ plist.js
 ========
 ### Mac OS X Plist parser/builder for Node.js and browsers
 
-[![Build Status](https://travis-ci.org/TooTallNate/plist.js.svg?branch=master)](https://travis-ci.org/TooTallNate/plist.js)
-[![Sauce Test Status](https://saucelabs.com/buildstatus/plistjs)](https://saucelabs.com/u/plistjs)
+[![Sauce Test Status](https://saucelabs.com/browser-matrix/plistjs.svg)](https://saucelabs.com/u/plistjs)
 
+[![Build Status](https://travis-ci.org/TooTallNate/plist.js.svg?branch=master)](https://travis-ci.org/TooTallNate/plist.js)
 
 Provides facilities for reading and writing Mac OS X Plist (property list)
 files. These are often used in programming OS X and iOS applications, as
