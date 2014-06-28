@@ -19,6 +19,8 @@ matrix:
   - node_js: '0.10'
     env: BROWSER="safari latest"
   - node_js: '0.10'
+    env: BROWSER="safari 7"
+  - node_js: '0.10'
     env: BROWSER="safari 6"
   - node_js: '0.10'
     env: BROWSER="safari 5"
@@ -29,6 +31,3 @@ matrix:
   - node_js: '0.10'
     env: BROWSER="ie 9"
   - node_js: '0.10'
-    env: BROWSER="iphone 7.0"
-  - node_js: '0.10'
-    env: BROWSER="iphone 6.0"
