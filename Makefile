@@ -10,6 +10,10 @@ BIN := $(THIS_DIR)/node_modules/.bin
 NODE ?= node
 NPM ?= $(NODE) $(shell which npm)
 BROWSERIFY ?= $(NODE) $(BIN)/browserify
+MOCHA ?= $(NODE) $(BIN)/mocha
+ZUUL ?= $(NODE) $(BIN)/zuul
+
+REPORTER ?= spec
 
 all: dist/plist.js dist/plist-build.js dist/plist-parse.js
 
@@ -41,4 +45,30 @@ node_modules: package.json
 	@NODE_ENV= $(NPM) install
 	@touch node_modules
 
-.PHONY: all install clean
+test:
+	@if [ "x$(BROWSER_NAME)" = "x" ]; then \
+		$(MAKE) test-node; \
+		else \
+		$(MAKE) test-zuul; \
+	fi
+
+test-node:
+	@$(MOCHA) \
+		--reporter $(REPORTER) \
+		test/*.js
+
+test-zuul:
+	@if [ "x$(BROWSER_PLATFORM)" = "x" ]; then \
+		$(ZUUL) \
+		--browser-name $(BROWSER_NAME) \
+		--browser-version $(BROWSER_VERSION) \
+		test/*.js; \
+		else \
+		$(ZUUL) \
+		--browser-name $(BROWSER_NAME) \
+		--browser-version $(BROWSER_VERSION) \
+		--browser-platform "$(BROWSER_PLATFORM)" \
+		test/*.js; \
+	fi
+
+.PHONY: all install clean test test-node test-zuul

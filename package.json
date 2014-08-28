@@ -33,11 +33,9 @@
     "browserify": "5.10.1",
     "mocha": "1.18.2",
     "multiline": "0.3.4",
-    "zuul": "1.7.0"
+    "zuul": "1.10.2"
   },
   "scripts": {
-    "test": "if [ \"x$BROWSER\" = \"x\" ]; then npm run test-node; else npm run test-zuul; fi",
-    "test-node": "mocha -gc --reporter spec --check-leaks test/*.js",
-    "test-zuul": "echo \"ui: mocha-bdd\nbrowsers:\n  - name: `echo $BROWSER | awk '{print $1}'`\n    version: `echo $BROWSER | awk '{print $2}'`\" | tee .zuul.yml && zuul -- test/*.js"
+    "test": "make test"
   }
 }
