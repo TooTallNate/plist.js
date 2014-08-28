@@ -1,12 +1,12 @@
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.plist=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.plist=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 (function (Buffer){
 
 /**
  * Module dependencies.
  */
 
-var base64 = _dereq_('base64-js');
-var xmlbuilder = _dereq_('xmlbuilder');
+var base64 = require('base64-js');
+var xmlbuilder = require('xmlbuilder');
 
 /**
  * Module exports.
@@ -137,16 +137,67 @@ function walk_obj(next, next_child) {
   }
 }
 
-}).call(this,_dereq_("buffer").Buffer)
-},{"base64-js":4,"buffer":6,"xmlbuilder":25}],2:[function(_dereq_,module,exports){
+}).call(this,require("buffer").Buffer)
+},{"base64-js":5,"buffer":7,"xmlbuilder":26}],2:[function(require,module,exports){
+/**
+ * Module dependencies.
+ */
+
+var fs = require('fs');
+var parse = require('./parse');
+var deprecate = require('util-deprecate');
+
+/**
+ * Module exports.
+ */
+
+exports.parseFile = deprecate(parseFile, '`parseFile()` is deprecated. ' +
+  'Use `parseString()` instead.');
+exports.parseFileSync = deprecate(parseFileSync, '`parseFileSync()` is deprecated. ' +
+  'Use `parseStringSync()` instead.');
+
+/**
+ * Parses file `filename` as a .plist file.
+ * Invokes `fn` callback function when done.
+ *
+ * @param {String} filename - name of the file to read
+ * @param {Function} fn - callback function
+ * @api public
+ * @deprecated use parseString() instead
+ */
+
+function parseFile (filename, fn) {
+  fs.readFile(filename, { encoding: 'utf8' }, onread);
+  function onread (err, inxml) {
+    if (err) return fn(err);
+    parse.parseString(inxml, fn);
+  }
+}
+
+/**
+ * Parses file `filename` as a .plist file.
+ * Returns a  when done.
+ *
+ * @param {String} filename - name of the file to read
+ * @param {Function} fn - callback function
+ * @api public
+ * @deprecated use parseStringSync() instead
+ */
+
+function parseFileSync (filename) {
+  var inxml = fs.readFileSync(filename, 'utf8');
+  return parse.parseStringSync(inxml);
+}
+
+},{"./parse":3,"fs":6,"util-deprecate":9}],3:[function(require,module,exports){
 (function (Buffer){
 
 /**
  * Module dependencies.
  */
 
-var deprecate = _dereq_('util-deprecate');
-var DOMParser = _dereq_('xmldom').DOMParser;
+var deprecate = require('util-deprecate');
+var DOMParser = require('xmldom').DOMParser;
 
 /**
  * Module exports.
@@ -341,8 +392,8 @@ function parsePlistXML (node) {
   }
 }
 
-}).call(this,_dereq_("buffer").Buffer)
-},{"buffer":6,"util-deprecate":8,"xmldom":201}],3:[function(_dereq_,module,exports){
+}).call(this,require("buffer").Buffer)
+},{"buffer":7,"util-deprecate":9,"xmldom":202}],4:[function(require,module,exports){
 
 var i;
 
@@ -350,24 +401,24 @@ var i;
  * Parser functions.
  */
 
-var parserFunctions = _dereq_('./parse');
+var parserFunctions = require('./parse');
 for (i in parserFunctions) exports[i] = parserFunctions[i];
 
 /**
  * Builder functions.
  */
 
-var builderFunctions = _dereq_('./build');
+var builderFunctions = require('./build');
 for (i in builderFunctions) exports[i] = builderFunctions[i];
 
 /**
  * Add Node.js-specific functions (they're deprecated…).
  */
 
-var nodeFunctions = _dereq_('./node');
+var nodeFunctions = require('./node');
 for (i in nodeFunctions) exports[i] = nodeFunctions[i];
 
-},{"./build":1,"./node":5,"./parse":2}],4:[function(_dereq_,module,exports){
+},{"./build":1,"./node":2,"./parse":3}],5:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -490,9 +541,9 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	module.exports.fromByteArray = uint8ToBase64
 }())
 
-},{}],5:[function(_dereq_,module,exports){
+},{}],6:[function(require,module,exports){
 
-},{}],6:[function(_dereq_,module,exports){
+},{}],7:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -500,8 +551,8 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
  * @license  MIT
  */
 
-var base64 = _dereq_('base64-js')
-var ieee754 = _dereq_('ieee754')
+var base64 = require('base64-js')
+var ieee754 = require('ieee754')
 
 exports.Buffer = Buffer
 exports.SlowBuffer = Buffer
@@ -509,22 +560,35 @@ exports.INSPECT_MAX_BYTES = 50
 Buffer.poolSize = 8192
 
 /**
- * If `Buffer._useTypedArrays`:
+ * If `TYPED_ARRAY_SUPPORT`:
  *   === true    Use Uint8Array implementation (fastest)
- *   === false   Use Object implementation (compatible down to IE6)
+ *   === false   Use Object implementation (most compatible, even IE6)
+ *
+ * Browsers that support typed arrays are IE 10+, Firefox 4+, Chrome 7+, Safari 5.1+,
+ * Opera 11.6+, iOS 4.2+.
+ *
+ * Note:
+ *
+ * - Implementation must support adding new properties to `Uint8Array` instances.
+ *   Firefox 4-29 lacked support, fixed in Firefox 30+.
+ *   See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438.
+ *
+ *  - Chrome 9-10 is missing the `TypedArray.prototype.subarray` function.
+ *
+ *  - IE10 has a broken `TypedArray.prototype.subarray` function which returns arrays of
+ *    incorrect length in some situations.
+ *
+ * We detect these buggy browsers and set `TYPED_ARRAY_SUPPORT` to `false` so they will
+ * get the Object implementation, which is slower but will work correctly.
  */
-Buffer._useTypedArrays = (function () {
-  // Detect if browser supports Typed Arrays. Supported browsers are IE 10+, Firefox 4+,
-  // Chrome 7+, Safari 5.1+, Opera 11.6+, iOS 4.2+. If the browser does not support adding
-  // properties to `Uint8Array` instances, then that's the same as no `Uint8Array` support
-  // because we need to be able to add all the node Buffer API methods. This is an issue
-  // in Firefox 4-29. Now fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=695438
+var TYPED_ARRAY_SUPPORT = (function () {
   try {
     var buf = new ArrayBuffer(0)
     var arr = new Uint8Array(buf)
     arr.foo = function () { return 42 }
-    return 42 === arr.foo() &&
-        typeof arr.subarray === 'function' // Chrome 9-10 lack `subarray`
+    return 42 === arr.foo() && // typed array instances can be augmented
+        typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
+        new Uint8Array(1).subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
   } catch (e) {
     return false
   }
@@ -557,14 +621,14 @@ function Buffer (subject, encoding, noZero) {
       subject = base64clean(subject)
     length = Buffer.byteLength(subject, encoding)
   } else if (type === 'object' && subject !== null) { // assume object is array-like
-    if (subject.type === 'Buffer' && Array.isArray(subject.data))
+    if (subject.type === 'Buffer' && isArray(subject.data))
       subject = subject.data
     length = +subject.length > 0 ? Math.floor(+subject.length) : 0
   } else
     throw new Error('First argument needs to be a number, array or string.')
 
   var buf
-  if (Buffer._useTypedArrays) {
+  if (TYPED_ARRAY_SUPPORT) {
     // Preferred: Return an augmented `Uint8Array` instance for best performance
     buf = Buffer._augment(new Uint8Array(length))
   } else {
@@ -575,7 +639,7 @@ function Buffer (subject, encoding, noZero) {
   }
 
   var i
-  if (Buffer._useTypedArrays && typeof subject.byteLength === 'number') {
+  if (TYPED_ARRAY_SUPPORT && typeof subject.byteLength === 'number') {
     // Speed optimization -- use set if we're copying from a typed array
     buf._set(subject)
   } else if (isArrayish(subject)) {
@@ -589,7 +653,7 @@ function Buffer (subject, encoding, noZero) {
     }
   } else if (type === 'string') {
     buf.write(subject, 0, encoding)
-  } else if (type === 'number' && !Buffer._useTypedArrays && !noZero) {
+  } else if (type === 'number' && !TYPED_ARRAY_SUPPORT && !noZero) {
     for (i = 0; i < length; i++) {
       buf[i] = 0
     }
@@ -896,7 +960,7 @@ Buffer.prototype.copy = function (target, target_start, start, end) {
 
   var len = end - start
 
-  if (len < 100 || !Buffer._useTypedArrays) {
+  if (len < 100 || !TYPED_ARRAY_SUPPORT) {
     for (var i = 0; i < len; i++) {
       target[i + target_start] = this[i + start]
     }
@@ -990,7 +1054,7 @@ Buffer.prototype.slice = function (start, end) {
   if (end < start)
     end = start
 
-  if (Buffer._useTypedArrays) {
+  if (TYPED_ARRAY_SUPPORT) {
     return Buffer._augment(this.subarray(start, end))
   } else {
     var sliceLen = end - start
@@ -1449,7 +1513,7 @@ Buffer.prototype.inspect = function () {
  */
 Buffer.prototype.toArrayBuffer = function () {
   if (typeof Uint8Array !== 'undefined') {
-    if (Buffer._useTypedArrays) {
+    if (TYPED_ARRAY_SUPPORT) {
       return (new Buffer(this)).buffer
     } else {
       var buf = new Uint8Array(this.length)
@@ -1650,7 +1714,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":4,"ieee754":7}],7:[function(_dereq_,module,exports){
+},{"base64-js":5,"ieee754":8}],8:[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -1736,7 +1800,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],8:[function(_dereq_,module,exports){
+},{}],9:[function(require,module,exports){
 (function (global){
 
 /**
@@ -1794,13 +1858,13 @@ function config (name) {
   return String(val).toLowerCase() === 'true';
 }
 
-}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],9:[function(_dereq_,module,exports){
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],10:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var XMLAttribute, _;
 
-  _ = _dereq_('lodash-node');
+  _ = require('lodash-node');
 
   module.exports = XMLAttribute = (function() {
     function XMLAttribute(parent, name, value) {
@@ -1829,20 +1893,20 @@ function config (name) {
 
 }).call(this);
 
-},{"lodash-node":99}],10:[function(_dereq_,module,exports){
+},{"lodash-node":100}],11:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var XMLBuilder, XMLDeclaration, XMLDocType, XMLElement, XMLStringifier, _;
 
-  _ = _dereq_('lodash-node');
+  _ = require('lodash-node');
 
-  XMLStringifier = _dereq_('./XMLStringifier');
+  XMLStringifier = require('./XMLStringifier');
 
-  XMLDeclaration = _dereq_('./XMLDeclaration');
+  XMLDeclaration = require('./XMLDeclaration');
 
-  XMLDocType = _dereq_('./XMLDocType');
+  XMLDocType = require('./XMLDocType');
 
-  XMLElement = _dereq_('./XMLElement');
+  XMLElement = require('./XMLElement');
 
   module.exports = XMLBuilder = (function() {
     function XMLBuilder(name, options) {
@@ -1901,16 +1965,16 @@ function config (name) {
 
 }).call(this);
 
-},{"./XMLDeclaration":17,"./XMLDocType":18,"./XMLElement":19,"./XMLStringifier":23,"lodash-node":99}],11:[function(_dereq_,module,exports){
+},{"./XMLDeclaration":18,"./XMLDocType":19,"./XMLElement":20,"./XMLStringifier":24,"lodash-node":100}],12:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var XMLCData, XMLNode, _,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  _ = _dereq_('lodash-node');
+  _ = require('lodash-node');
 
-  XMLNode = _dereq_('./XMLNode');
+  XMLNode = require('./XMLNode');
 
   module.exports = XMLCData = (function(_super) {
     __extends(XMLCData, _super);
@@ -1951,16 +2015,16 @@ function config (name) {
 
 }).call(this);
 
-},{"./XMLNode":20,"lodash-node":99}],12:[function(_dereq_,module,exports){
+},{"./XMLNode":21,"lodash-node":100}],13:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var XMLComment, XMLNode, _,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  _ = _dereq_('lodash-node');
+  _ = require('lodash-node');
 
-  XMLNode = _dereq_('./XMLNode');
+  XMLNode = require('./XMLNode');
 
   module.exports = XMLComment = (function(_super) {
     __extends(XMLComment, _super);
@@ -2001,12 +2065,12 @@ function config (name) {
 
 }).call(this);
 
-},{"./XMLNode":20,"lodash-node":99}],13:[function(_dereq_,module,exports){
+},{"./XMLNode":21,"lodash-node":100}],14:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var XMLDTDAttList, _;
 
-  _ = _dereq_('lodash-node');
+  _ = require('lodash-node');
 
   module.exports = XMLDTDAttList = (function() {
     function XMLDTDAttList(parent, elementName, attributeName, attributeType, defaultValueType, defaultValue) {
@@ -2074,12 +2138,12 @@ function config (name) {
 
 }).call(this);
 
-},{"lodash-node":99}],14:[function(_dereq_,module,exports){
+},{"lodash-node":100}],15:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var XMLDTDElement, _;
 
-  _ = _dereq_('lodash-node');
+  _ = require('lodash-node');
 
   module.exports = XMLDTDElement = (function() {
     function XMLDTDElement(parent, name, value) {
@@ -2125,12 +2189,12 @@ function config (name) {
 
 }).call(this);
 
-},{"lodash-node":99}],15:[function(_dereq_,module,exports){
+},{"lodash-node":100}],16:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var XMLDTDEntity, _;
 
-  _ = _dereq_('lodash-node');
+  _ = require('lodash-node');
 
   module.exports = XMLDTDEntity = (function() {
     function XMLDTDEntity(parent, pe, name, value) {
@@ -2212,12 +2276,12 @@ function config (name) {
 
 }).call(this);
 
-},{"lodash-node":99}],16:[function(_dereq_,module,exports){
+},{"lodash-node":100}],17:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var XMLDTDNotation, _;
 
-  _ = _dereq_('lodash-node');
+  _ = require('lodash-node');
 
   module.exports = XMLDTDNotation = (function() {
     function XMLDTDNotation(parent, name, value) {
@@ -2273,16 +2337,16 @@ function config (name) {
 
 }).call(this);
 
-},{"lodash-node":99}],17:[function(_dereq_,module,exports){
+},{"lodash-node":100}],18:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var XMLDeclaration, XMLNode, _,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  _ = _dereq_('lodash-node');
+  _ = require('lodash-node');
 
-  XMLNode = _dereq_('./XMLNode');
+  XMLNode = require('./XMLNode');
 
   module.exports = XMLDeclaration = (function(_super) {
     __extends(XMLDeclaration, _super);
@@ -2345,12 +2409,12 @@ function config (name) {
 
 }).call(this);
 
-},{"./XMLNode":20,"lodash-node":99}],18:[function(_dereq_,module,exports){
+},{"./XMLNode":21,"lodash-node":100}],19:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var XMLDocType, _;
 
-  _ = _dereq_('lodash-node');
+  _ = require('lodash-node');
 
   module.exports = XMLDocType = (function() {
     function XMLDocType(parent, pubID, sysID) {
@@ -2378,7 +2442,7 @@ function config (name) {
 
     XMLDocType.prototype.element = function(name, value) {
       var XMLDTDElement, child;
-      XMLDTDElement = _dereq_('./XMLDTDElement');
+      XMLDTDElement = require('./XMLDTDElement');
       child = new XMLDTDElement(this, name, value);
       this.children.push(child);
       return this;
@@ -2386,7 +2450,7 @@ function config (name) {
 
     XMLDocType.prototype.attList = function(elementName, attributeName, attributeType, defaultValueType, defaultValue) {
       var XMLDTDAttList, child;
-      XMLDTDAttList = _dereq_('./XMLDTDAttList');
+      XMLDTDAttList = require('./XMLDTDAttList');
       child = new XMLDTDAttList(this, elementName, attributeName, attributeType, defaultValueType, defaultValue);
       this.children.push(child);
       return this;
@@ -2394,7 +2458,7 @@ function config (name) {
 
     XMLDocType.prototype.entity = function(name, value) {
       var XMLDTDEntity, child;
-      XMLDTDEntity = _dereq_('./XMLDTDEntity');
+      XMLDTDEntity = require('./XMLDTDEntity');
       child = new XMLDTDEntity(this, false, name, value);
       this.children.push(child);
       return this;
@@ -2402,7 +2466,7 @@ function config (name) {
 
     XMLDocType.prototype.pEntity = function(name, value) {
       var XMLDTDEntity, child;
-      XMLDTDEntity = _dereq_('./XMLDTDEntity');
+      XMLDTDEntity = require('./XMLDTDEntity');
       child = new XMLDTDEntity(this, true, name, value);
       this.children.push(child);
       return this;
@@ -2410,7 +2474,7 @@ function config (name) {
 
     XMLDocType.prototype.notation = function(name, value) {
       var XMLDTDNotation, child;
-      XMLDTDNotation = _dereq_('./XMLDTDNotation');
+      XMLDTDNotation = require('./XMLDTDNotation');
       child = new XMLDTDNotation(this, name, value);
       this.children.push(child);
       return this;
@@ -2418,7 +2482,7 @@ function config (name) {
 
     XMLDocType.prototype.cdata = function(value) {
       var XMLCData, child;
-      XMLCData = _dereq_('./XMLCData');
+      XMLCData = require('./XMLCData');
       child = new XMLCData(this, value);
       this.children.push(child);
       return this;
@@ -2426,7 +2490,7 @@ function config (name) {
 
     XMLDocType.prototype.comment = function(value) {
       var XMLComment, child;
-      XMLComment = _dereq_('./XMLComment');
+      XMLComment = require('./XMLComment');
       child = new XMLComment(this, value);
       this.children.push(child);
       return this;
@@ -2434,7 +2498,7 @@ function config (name) {
 
     XMLDocType.prototype.instruction = function(target, value) {
       var XMLProcessingInstruction, child;
-      XMLProcessingInstruction = _dereq_('./XMLProcessingInstruction');
+      XMLProcessingInstruction = require('./XMLProcessingInstruction');
       child = new XMLProcessingInstruction(this, target, value);
       this.children.push(child);
       return this;
@@ -2530,20 +2594,20 @@ function config (name) {
 
 }).call(this);
 
-},{"./XMLCData":11,"./XMLComment":12,"./XMLDTDAttList":13,"./XMLDTDElement":14,"./XMLDTDEntity":15,"./XMLDTDNotation":16,"./XMLProcessingInstruction":21,"lodash-node":99}],19:[function(_dereq_,module,exports){
+},{"./XMLCData":12,"./XMLComment":13,"./XMLDTDAttList":14,"./XMLDTDElement":15,"./XMLDTDEntity":16,"./XMLDTDNotation":17,"./XMLProcessingInstruction":22,"lodash-node":100}],20:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var XMLAttribute, XMLElement, XMLNode, XMLProcessingInstruction, _,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  _ = _dereq_('lodash-node');
+  _ = require('lodash-node');
 
-  XMLNode = _dereq_('./XMLNode');
+  XMLNode = require('./XMLNode');
 
-  XMLAttribute = _dereq_('./XMLAttribute');
+  XMLAttribute = require('./XMLAttribute');
 
-  XMLProcessingInstruction = _dereq_('./XMLProcessingInstruction');
+  XMLProcessingInstruction = require('./XMLProcessingInstruction');
 
   module.exports = XMLElement = (function(_super) {
     __extends(XMLElement, _super);
@@ -2722,13 +2786,13 @@ function config (name) {
 
 }).call(this);
 
-},{"./XMLAttribute":9,"./XMLNode":20,"./XMLProcessingInstruction":21,"lodash-node":99}],20:[function(_dereq_,module,exports){
+},{"./XMLAttribute":10,"./XMLNode":21,"./XMLProcessingInstruction":22,"lodash-node":100}],21:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var XMLNode, _,
     __hasProp = {}.hasOwnProperty;
 
-  _ = _dereq_('lodash-node');
+  _ = require('lodash-node');
 
   module.exports = XMLNode = (function() {
     function XMLNode(parent) {
@@ -2843,7 +2907,7 @@ function config (name) {
       if (!_.isObject(attributes)) {
         _ref = [attributes, text], text = _ref[0], attributes = _ref[1];
       }
-      XMLElement = _dereq_('./XMLElement');
+      XMLElement = require('./XMLElement');
       child = new XMLElement(this, name, attributes);
       if (text != null) {
         child.text(text);
@@ -2854,7 +2918,7 @@ function config (name) {
 
     XMLNode.prototype.text = function(value) {
       var XMLText, child;
-      XMLText = _dereq_('./XMLText');
+      XMLText = require('./XMLText');
       child = new XMLText(this, value);
       this.children.push(child);
       return this;
@@ -2862,7 +2926,7 @@ function config (name) {
 
     XMLNode.prototype.cdata = function(value) {
       var XMLCData, child;
-      XMLCData = _dereq_('./XMLCData');
+      XMLCData = require('./XMLCData');
       child = new XMLCData(this, value);
       this.children.push(child);
       return this;
@@ -2870,7 +2934,7 @@ function config (name) {
 
     XMLNode.prototype.comment = function(value) {
       var XMLComment, child;
-      XMLComment = _dereq_('./XMLComment');
+      XMLComment = require('./XMLComment');
       child = new XMLComment(this, value);
       this.children.push(child);
       return this;
@@ -2878,7 +2942,7 @@ function config (name) {
 
     XMLNode.prototype.raw = function(value) {
       var XMLRaw, child;
-      XMLRaw = _dereq_('./XMLRaw');
+      XMLRaw = require('./XMLRaw');
       child = new XMLRaw(this, value);
       this.children.push(child);
       return this;
@@ -2887,7 +2951,7 @@ function config (name) {
     XMLNode.prototype.declaration = function(version, encoding, standalone) {
       var XMLDeclaration, doc, xmldec;
       doc = this.document();
-      XMLDeclaration = _dereq_('./XMLDeclaration');
+      XMLDeclaration = require('./XMLDeclaration');
       xmldec = new XMLDeclaration(doc, version, encoding, standalone);
       doc.xmldec = xmldec;
       return doc.root();
@@ -2896,7 +2960,7 @@ function config (name) {
     XMLNode.prototype.doctype = function(pubID, sysID) {
       var XMLDocType, doc, doctype;
       doc = this.document();
-      XMLDocType = _dereq_('./XMLDocType');
+      XMLDocType = require('./XMLDocType');
       doctype = new XMLDocType(doc, pubID, sysID);
       doc.doctype = doctype;
       return doctype;
@@ -3028,12 +3092,12 @@ function config (name) {
 
 }).call(this);
 
-},{"./XMLCData":11,"./XMLComment":12,"./XMLDeclaration":17,"./XMLDocType":18,"./XMLElement":19,"./XMLRaw":22,"./XMLText":24,"lodash-node":99}],21:[function(_dereq_,module,exports){
+},{"./XMLCData":12,"./XMLComment":13,"./XMLDeclaration":18,"./XMLDocType":19,"./XMLElement":20,"./XMLRaw":23,"./XMLText":25,"lodash-node":100}],22:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var XMLProcessingInstruction, _;
 
-  _ = _dereq_('lodash-node');
+  _ = require('lodash-node');
 
   module.exports = XMLProcessingInstruction = (function() {
     function XMLProcessingInstruction(parent, target, value) {
@@ -3080,16 +3144,16 @@ function config (name) {
 
 }).call(this);
 
-},{"lodash-node":99}],22:[function(_dereq_,module,exports){
+},{"lodash-node":100}],23:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var XMLNode, XMLRaw, _,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  _ = _dereq_('lodash-node');
+  _ = require('lodash-node');
 
-  XMLNode = _dereq_('./XMLNode');
+  XMLNode = require('./XMLNode');
 
   module.exports = XMLRaw = (function(_super) {
     __extends(XMLRaw, _super);
@@ -3130,7 +3194,7 @@ function config (name) {
 
 }).call(this);
 
-},{"./XMLNode":20,"lodash-node":99}],23:[function(_dereq_,module,exports){
+},{"./XMLNode":21,"lodash-node":100}],24:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var XMLStringifier,
@@ -3295,16 +3359,16 @@ function config (name) {
 
 }).call(this);
 
-},{}],24:[function(_dereq_,module,exports){
+},{}],25:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var XMLNode, XMLText, _,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  _ = _dereq_('lodash-node');
+  _ = require('lodash-node');
 
-  XMLNode = _dereq_('./XMLNode');
+  XMLNode = require('./XMLNode');
 
   module.exports = XMLText = (function(_super) {
     __extends(XMLText, _super);
@@ -3346,14 +3410,14 @@ function config (name) {
 
 }).call(this);
 
-},{"./XMLNode":20,"lodash-node":99}],25:[function(_dereq_,module,exports){
+},{"./XMLNode":21,"lodash-node":100}],26:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var XMLBuilder, _;
 
-  _ = _dereq_('lodash-node');
+  _ = require('lodash-node');
 
-  XMLBuilder = _dereq_('./XMLBuilder');
+  XMLBuilder = require('./XMLBuilder');
 
   module.exports.create = function(name, xmldec, doctype, options) {
     options = _.extend({}, xmldec, doctype, options);
@@ -3362,7 +3426,7 @@ function config (name) {
 
 }).call(this);
 
-},{"./XMLBuilder":10,"lodash-node":99}],26:[function(_dereq_,module,exports){
+},{"./XMLBuilder":11,"lodash-node":100}],27:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -3373,38 +3437,38 @@ function config (name) {
  */
 
 module.exports = {
-  'compact': _dereq_('./arrays/compact'),
-  'difference': _dereq_('./arrays/difference'),
-  'drop': _dereq_('./arrays/rest'),
-  'findIndex': _dereq_('./arrays/findIndex'),
-  'findLastIndex': _dereq_('./arrays/findLastIndex'),
-  'first': _dereq_('./arrays/first'),
-  'flatten': _dereq_('./arrays/flatten'),
-  'head': _dereq_('./arrays/first'),
-  'indexOf': _dereq_('./arrays/indexOf'),
-  'initial': _dereq_('./arrays/initial'),
-  'intersection': _dereq_('./arrays/intersection'),
-  'last': _dereq_('./arrays/last'),
-  'lastIndexOf': _dereq_('./arrays/lastIndexOf'),
-  'object': _dereq_('./arrays/zipObject'),
-  'pull': _dereq_('./arrays/pull'),
-  'range': _dereq_('./arrays/range'),
-  'remove': _dereq_('./arrays/remove'),
-  'rest': _dereq_('./arrays/rest'),
-  'sortedIndex': _dereq_('./arrays/sortedIndex'),
-  'tail': _dereq_('./arrays/rest'),
-  'take': _dereq_('./arrays/first'),
-  'union': _dereq_('./arrays/union'),
-  'uniq': _dereq_('./arrays/uniq'),
-  'unique': _dereq_('./arrays/uniq'),
-  'unzip': _dereq_('./arrays/zip'),
-  'without': _dereq_('./arrays/without'),
-  'xor': _dereq_('./arrays/xor'),
-  'zip': _dereq_('./arrays/zip'),
-  'zipObject': _dereq_('./arrays/zipObject')
+  'compact': require('./arrays/compact'),
+  'difference': require('./arrays/difference'),
+  'drop': require('./arrays/rest'),
+  'findIndex': require('./arrays/findIndex'),
+  'findLastIndex': require('./arrays/findLastIndex'),
+  'first': require('./arrays/first'),
+  'flatten': require('./arrays/flatten'),
+  'head': require('./arrays/first'),
+  'indexOf': require('./arrays/indexOf'),
+  'initial': require('./arrays/initial'),
+  'intersection': require('./arrays/intersection'),
+  'last': require('./arrays/last'),
+  'lastIndexOf': require('./arrays/lastIndexOf'),
+  'object': require('./arrays/zipObject'),
+  'pull': require('./arrays/pull'),
+  'range': require('./arrays/range'),
+  'remove': require('./arrays/remove'),
+  'rest': require('./arrays/rest'),
+  'sortedIndex': require('./arrays/sortedIndex'),
+  'tail': require('./arrays/rest'),
+  'take': require('./arrays/first'),
+  'union': require('./arrays/union'),
+  'uniq': require('./arrays/uniq'),
+  'unique': require('./arrays/uniq'),
+  'unzip': require('./arrays/zip'),
+  'without': require('./arrays/without'),
+  'xor': require('./arrays/xor'),
+  'zip': require('./arrays/zip'),
+  'zipObject': require('./arrays/zipObject')
 };
 
-},{"./arrays/compact":27,"./arrays/difference":28,"./arrays/findIndex":29,"./arrays/findLastIndex":30,"./arrays/first":31,"./arrays/flatten":32,"./arrays/indexOf":33,"./arrays/initial":34,"./arrays/intersection":35,"./arrays/last":36,"./arrays/lastIndexOf":37,"./arrays/pull":38,"./arrays/range":39,"./arrays/remove":40,"./arrays/rest":41,"./arrays/sortedIndex":42,"./arrays/union":43,"./arrays/uniq":44,"./arrays/without":45,"./arrays/xor":46,"./arrays/zip":47,"./arrays/zipObject":48}],27:[function(_dereq_,module,exports){
+},{"./arrays/compact":28,"./arrays/difference":29,"./arrays/findIndex":30,"./arrays/findLastIndex":31,"./arrays/first":32,"./arrays/flatten":33,"./arrays/indexOf":34,"./arrays/initial":35,"./arrays/intersection":36,"./arrays/last":37,"./arrays/lastIndexOf":38,"./arrays/pull":39,"./arrays/range":40,"./arrays/remove":41,"./arrays/rest":42,"./arrays/sortedIndex":43,"./arrays/union":44,"./arrays/uniq":45,"./arrays/without":46,"./arrays/xor":47,"./arrays/zip":48,"./arrays/zipObject":49}],28:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -3444,7 +3508,7 @@ function compact(array) {
 
 module.exports = compact;
 
-},{}],28:[function(_dereq_,module,exports){
+},{}],29:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -3453,8 +3517,8 @@ module.exports = compact;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseDifference = _dereq_('../internals/baseDifference'),
-    baseFlatten = _dereq_('../internals/baseFlatten');
+var baseDifference = require('../internals/baseDifference'),
+    baseFlatten = require('../internals/baseFlatten');
 
 /**
  * Creates an array excluding all values of the provided arrays using strict
@@ -3477,7 +3541,7 @@ function difference(array) {
 
 module.exports = difference;
 
-},{"../internals/baseDifference":106,"../internals/baseFlatten":107}],29:[function(_dereq_,module,exports){
+},{"../internals/baseDifference":107,"../internals/baseFlatten":108}],30:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -3486,7 +3550,7 @@ module.exports = difference;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback');
+var createCallback = require('../functions/createCallback');
 
 /**
  * This method is like `_.find` except that it returns the index of the first
@@ -3544,7 +3608,7 @@ function findIndex(array, callback, thisArg) {
 
 module.exports = findIndex;
 
-},{"../functions/createCallback":88}],30:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89}],31:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -3553,7 +3617,7 @@ module.exports = findIndex;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback');
+var createCallback = require('../functions/createCallback');
 
 /**
  * This method is like `_.findIndex` except that it iterates over elements
@@ -3609,7 +3673,7 @@ function findLastIndex(array, callback, thisArg) {
 
 module.exports = findLastIndex;
 
-},{"../functions/createCallback":88}],31:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89}],32:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -3618,8 +3682,8 @@ module.exports = findLastIndex;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback'),
-    slice = _dereq_('../internals/slice');
+var createCallback = require('../functions/createCallback'),
+    slice = require('../internals/slice');
 
 /* Native method shortcuts for methods with the same name as other `lodash` methods */
 var nativeMax = Math.max,
@@ -3697,7 +3761,7 @@ function first(array, callback, thisArg) {
 
 module.exports = first;
 
-},{"../functions/createCallback":88,"../internals/slice":141}],32:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"../internals/slice":142}],33:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -3706,8 +3770,8 @@ module.exports = first;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseFlatten = _dereq_('../internals/baseFlatten'),
-    map = _dereq_('../collections/map');
+var baseFlatten = require('../internals/baseFlatten'),
+    map = require('../collections/map');
 
 /**
  * Flattens a nested array (the nesting can be to any depth). If `isShallow`
@@ -3765,7 +3829,7 @@ function flatten(array, isShallow, callback, thisArg) {
 
 module.exports = flatten;
 
-},{"../collections/map":68,"../internals/baseFlatten":107}],33:[function(_dereq_,module,exports){
+},{"../collections/map":69,"../internals/baseFlatten":108}],34:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -3774,8 +3838,8 @@ module.exports = flatten;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseIndexOf = _dereq_('../internals/baseIndexOf'),
-    sortedIndex = _dereq_('./sortedIndex');
+var baseIndexOf = require('../internals/baseIndexOf'),
+    sortedIndex = require('./sortedIndex');
 
 /* Native method shortcuts for methods with the same name as other `lodash` methods */
 var nativeMax = Math.max;
@@ -3817,7 +3881,7 @@ function indexOf(array, value, fromIndex) {
 
 module.exports = indexOf;
 
-},{"../internals/baseIndexOf":108,"./sortedIndex":42}],34:[function(_dereq_,module,exports){
+},{"../internals/baseIndexOf":109,"./sortedIndex":43}],35:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -3826,8 +3890,8 @@ module.exports = indexOf;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback'),
-    slice = _dereq_('../internals/slice');
+var createCallback = require('../functions/createCallback'),
+    slice = require('../internals/slice');
 
 /* Native method shortcuts for methods with the same name as other `lodash` methods */
 var nativeMax = Math.max,
@@ -3901,7 +3965,7 @@ function initial(array, callback, thisArg) {
 
 module.exports = initial;
 
-},{"../functions/createCallback":88,"../internals/slice":141}],35:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"../internals/slice":142}],36:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -3910,15 +3974,15 @@ module.exports = initial;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseIndexOf = _dereq_('../internals/baseIndexOf'),
-    cacheIndexOf = _dereq_('../internals/cacheIndexOf'),
-    createCache = _dereq_('../internals/createCache'),
-    getArray = _dereq_('../internals/getArray'),
-    isArguments = _dereq_('../objects/isArguments'),
-    isArray = _dereq_('../objects/isArray'),
-    largeArraySize = _dereq_('../internals/largeArraySize'),
-    releaseArray = _dereq_('../internals/releaseArray'),
-    releaseObject = _dereq_('../internals/releaseObject');
+var baseIndexOf = require('../internals/baseIndexOf'),
+    cacheIndexOf = require('../internals/cacheIndexOf'),
+    createCache = require('../internals/createCache'),
+    getArray = require('../internals/getArray'),
+    isArguments = require('../objects/isArguments'),
+    isArray = require('../objects/isArray'),
+    largeArraySize = require('../internals/largeArraySize'),
+    releaseArray = require('../internals/releaseArray'),
+    releaseObject = require('../internals/releaseObject');
 
 /**
  * Creates an array of unique values present in all provided arrays using
@@ -3986,7 +4050,7 @@ function intersection() {
 
 module.exports = intersection;
 
-},{"../internals/baseIndexOf":108,"../internals/cacheIndexOf":113,"../internals/createCache":118,"../internals/getArray":122,"../internals/largeArraySize":128,"../internals/releaseArray":136,"../internals/releaseObject":137,"../objects/isArguments":158,"../objects/isArray":159}],36:[function(_dereq_,module,exports){
+},{"../internals/baseIndexOf":109,"../internals/cacheIndexOf":114,"../internals/createCache":119,"../internals/getArray":123,"../internals/largeArraySize":129,"../internals/releaseArray":137,"../internals/releaseObject":138,"../objects/isArguments":159,"../objects/isArray":160}],37:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -3995,8 +4059,8 @@ module.exports = intersection;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback'),
-    slice = _dereq_('../internals/slice');
+var createCallback = require('../functions/createCallback'),
+    slice = require('../internals/slice');
 
 /* Native method shortcuts for methods with the same name as other `lodash` methods */
 var nativeMax = Math.max;
@@ -4072,7 +4136,7 @@ function last(array, callback, thisArg) {
 
 module.exports = last;
 
-},{"../functions/createCallback":88,"../internals/slice":141}],37:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"../internals/slice":142}],38:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -4128,7 +4192,7 @@ function lastIndexOf(array, value, fromIndex) {
 
 module.exports = lastIndexOf;
 
-},{}],38:[function(_dereq_,module,exports){
+},{}],39:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -4187,7 +4251,7 @@ function pull(array) {
 
 module.exports = pull;
 
-},{}],39:[function(_dereq_,module,exports){
+},{}],40:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -4258,7 +4322,7 @@ function range(start, end, step) {
 
 module.exports = range;
 
-},{}],40:[function(_dereq_,module,exports){
+},{}],41:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -4267,7 +4331,7 @@ module.exports = range;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback');
+var createCallback = require('../functions/createCallback');
 
 /**
  * Used for `Array` method references.
@@ -4331,7 +4395,7 @@ function remove(array, callback, thisArg) {
 
 module.exports = remove;
 
-},{"../functions/createCallback":88}],41:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89}],42:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -4340,8 +4404,8 @@ module.exports = remove;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback'),
-    slice = _dereq_('../internals/slice');
+var createCallback = require('../functions/createCallback'),
+    slice = require('../internals/slice');
 
 /* Native method shortcuts for methods with the same name as other `lodash` methods */
 var nativeMax = Math.max;
@@ -4416,7 +4480,7 @@ function rest(array, callback, thisArg) {
 
 module.exports = rest;
 
-},{"../functions/createCallback":88,"../internals/slice":141}],42:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"../internals/slice":142}],43:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -4425,8 +4489,8 @@ module.exports = rest;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback'),
-    identity = _dereq_('../utilities/identity');
+var createCallback = require('../functions/createCallback'),
+    identity = require('../utilities/identity');
 
 /**
  * Uses a binary search to determine the smallest index at which a value
@@ -4495,7 +4559,7 @@ function sortedIndex(array, value, callback, thisArg) {
 
 module.exports = sortedIndex;
 
-},{"../functions/createCallback":88,"../utilities/identity":187}],43:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"../utilities/identity":188}],44:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -4504,8 +4568,8 @@ module.exports = sortedIndex;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseFlatten = _dereq_('../internals/baseFlatten'),
-    baseUniq = _dereq_('../internals/baseUniq');
+var baseFlatten = require('../internals/baseFlatten'),
+    baseUniq = require('../internals/baseUniq');
 
 /**
  * Creates an array of unique values, in order, of the provided arrays using
@@ -4527,7 +4591,7 @@ function union() {
 
 module.exports = union;
 
-},{"../internals/baseFlatten":107,"../internals/baseUniq":112}],44:[function(_dereq_,module,exports){
+},{"../internals/baseFlatten":108,"../internals/baseUniq":113}],45:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -4536,8 +4600,8 @@ module.exports = union;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseUniq = _dereq_('../internals/baseUniq'),
-    createCallback = _dereq_('../functions/createCallback');
+var baseUniq = require('../internals/baseUniq'),
+    createCallback = require('../functions/createCallback');
 
 /**
  * Creates a duplicate-value-free version of an array using strict equality
@@ -4598,7 +4662,7 @@ function uniq(array, isSorted, callback, thisArg) {
 
 module.exports = uniq;
 
-},{"../functions/createCallback":88,"../internals/baseUniq":112}],45:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"../internals/baseUniq":113}],46:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -4607,8 +4671,8 @@ module.exports = uniq;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseDifference = _dereq_('../internals/baseDifference'),
-    slice = _dereq_('../internals/slice');
+var baseDifference = require('../internals/baseDifference'),
+    slice = require('../internals/slice');
 
 /**
  * Creates an array excluding all provided values using strict equality for
@@ -4631,7 +4695,7 @@ function without(array) {
 
 module.exports = without;
 
-},{"../internals/baseDifference":106,"../internals/slice":141}],46:[function(_dereq_,module,exports){
+},{"../internals/baseDifference":107,"../internals/slice":142}],47:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -4640,10 +4704,10 @@ module.exports = without;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseDifference = _dereq_('../internals/baseDifference'),
-    baseUniq = _dereq_('../internals/baseUniq'),
-    isArguments = _dereq_('../objects/isArguments'),
-    isArray = _dereq_('../objects/isArray');
+var baseDifference = require('../internals/baseDifference'),
+    baseUniq = require('../internals/baseUniq'),
+    isArguments = require('../objects/isArguments'),
+    isArray = require('../objects/isArray');
 
 /**
  * Creates an array that is the symmetric difference of the provided arrays.
@@ -4679,7 +4743,7 @@ function xor() {
 
 module.exports = xor;
 
-},{"../internals/baseDifference":106,"../internals/baseUniq":112,"../objects/isArguments":158,"../objects/isArray":159}],47:[function(_dereq_,module,exports){
+},{"../internals/baseDifference":107,"../internals/baseUniq":113,"../objects/isArguments":159,"../objects/isArray":160}],48:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -4688,8 +4752,8 @@ module.exports = xor;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var max = _dereq_('../collections/max'),
-    pluck = _dereq_('../collections/pluck');
+var max = require('../collections/max'),
+    pluck = require('../collections/pluck');
 
 /**
  * Creates an array of grouped elements, the first of which contains the first
@@ -4721,7 +4785,7 @@ function zip() {
 
 module.exports = zip;
 
-},{"../collections/max":69,"../collections/pluck":71}],48:[function(_dereq_,module,exports){
+},{"../collections/max":70,"../collections/pluck":72}],49:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -4730,7 +4794,7 @@ module.exports = zip;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var isArray = _dereq_('../objects/isArray');
+var isArray = require('../objects/isArray');
 
 /**
  * Creates an object composed from arrays of `keys` and `values`. Provide
@@ -4771,7 +4835,7 @@ function zipObject(keys, values) {
 
 module.exports = zipObject;
 
-},{"../objects/isArray":159}],49:[function(_dereq_,module,exports){
+},{"../objects/isArray":160}],50:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -4782,15 +4846,15 @@ module.exports = zipObject;
  */
 
 module.exports = {
-  'chain': _dereq_('./chaining/chain'),
-  'tap': _dereq_('./chaining/tap'),
-  'value': _dereq_('./chaining/wrapperValueOf'),
-  'wrapperChain': _dereq_('./chaining/wrapperChain'),
-  'wrapperToString': _dereq_('./chaining/wrapperToString'),
-  'wrapperValueOf': _dereq_('./chaining/wrapperValueOf')
+  'chain': require('./chaining/chain'),
+  'tap': require('./chaining/tap'),
+  'value': require('./chaining/wrapperValueOf'),
+  'wrapperChain': require('./chaining/wrapperChain'),
+  'wrapperToString': require('./chaining/wrapperToString'),
+  'wrapperValueOf': require('./chaining/wrapperValueOf')
 };
 
-},{"./chaining/chain":50,"./chaining/tap":51,"./chaining/wrapperChain":52,"./chaining/wrapperToString":53,"./chaining/wrapperValueOf":54}],50:[function(_dereq_,module,exports){
+},{"./chaining/chain":51,"./chaining/tap":52,"./chaining/wrapperChain":53,"./chaining/wrapperToString":54,"./chaining/wrapperValueOf":55}],51:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -4799,7 +4863,7 @@ module.exports = {
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var lodashWrapper = _dereq_('../internals/lodashWrapper');
+var lodashWrapper = require('../internals/lodashWrapper');
 
 /**
  * Creates a `lodash` object that wraps the given value with explicit
@@ -4833,7 +4897,7 @@ function chain(value) {
 
 module.exports = chain;
 
-},{"../internals/lodashWrapper":129}],51:[function(_dereq_,module,exports){
+},{"../internals/lodashWrapper":130}],52:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -4870,7 +4934,7 @@ function tap(value, interceptor) {
 
 module.exports = tap;
 
-},{}],52:[function(_dereq_,module,exports){
+},{}],53:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -4912,7 +4976,7 @@ function wrapperChain() {
 
 module.exports = wrapperChain;
 
-},{}],53:[function(_dereq_,module,exports){
+},{}],54:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -4940,7 +5004,7 @@ function wrapperToString() {
 
 module.exports = wrapperToString;
 
-},{}],54:[function(_dereq_,module,exports){
+},{}],55:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -4949,8 +5013,8 @@ module.exports = wrapperToString;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var forEach = _dereq_('../collections/forEach'),
-    support = _dereq_('../support');
+var forEach = require('../collections/forEach'),
+    support = require('../support');
 
 /**
  * Extracts the wrapped value.
@@ -4971,7 +5035,7 @@ function wrapperValueOf() {
 
 module.exports = wrapperValueOf;
 
-},{"../collections/forEach":63,"../support":183}],55:[function(_dereq_,module,exports){
+},{"../collections/forEach":64,"../support":184}],56:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -4982,47 +5046,47 @@ module.exports = wrapperValueOf;
  */
 
 module.exports = {
-  'all': _dereq_('./collections/every'),
-  'any': _dereq_('./collections/some'),
-  'at': _dereq_('./collections/at'),
-  'collect': _dereq_('./collections/map'),
-  'contains': _dereq_('./collections/contains'),
-  'countBy': _dereq_('./collections/countBy'),
-  'detect': _dereq_('./collections/find'),
-  'each': _dereq_('./collections/forEach'),
-  'eachRight': _dereq_('./collections/forEachRight'),
-  'every': _dereq_('./collections/every'),
-  'filter': _dereq_('./collections/filter'),
-  'find': _dereq_('./collections/find'),
-  'findLast': _dereq_('./collections/findLast'),
-  'findWhere': _dereq_('./collections/find'),
-  'foldl': _dereq_('./collections/reduce'),
-  'foldr': _dereq_('./collections/reduceRight'),
-  'forEach': _dereq_('./collections/forEach'),
-  'forEachRight': _dereq_('./collections/forEachRight'),
-  'groupBy': _dereq_('./collections/groupBy'),
-  'include': _dereq_('./collections/contains'),
-  'indexBy': _dereq_('./collections/indexBy'),
-  'inject': _dereq_('./collections/reduce'),
-  'invoke': _dereq_('./collections/invoke'),
-  'map': _dereq_('./collections/map'),
-  'max': _dereq_('./collections/max'),
-  'min': _dereq_('./collections/min'),
-  'pluck': _dereq_('./collections/pluck'),
-  'reduce': _dereq_('./collections/reduce'),
-  'reduceRight': _dereq_('./collections/reduceRight'),
-  'reject': _dereq_('./collections/reject'),
-  'sample': _dereq_('./collections/sample'),
-  'select': _dereq_('./collections/filter'),
-  'shuffle': _dereq_('./collections/shuffle'),
-  'size': _dereq_('./collections/size'),
-  'some': _dereq_('./collections/some'),
-  'sortBy': _dereq_('./collections/sortBy'),
-  'toArray': _dereq_('./collections/toArray'),
-  'where': _dereq_('./collections/where')
+  'all': require('./collections/every'),
+  'any': require('./collections/some'),
+  'at': require('./collections/at'),
+  'collect': require('./collections/map'),
+  'contains': require('./collections/contains'),
+  'countBy': require('./collections/countBy'),
+  'detect': require('./collections/find'),
+  'each': require('./collections/forEach'),
+  'eachRight': require('./collections/forEachRight'),
+  'every': require('./collections/every'),
+  'filter': require('./collections/filter'),
+  'find': require('./collections/find'),
+  'findLast': require('./collections/findLast'),
+  'findWhere': require('./collections/find'),
+  'foldl': require('./collections/reduce'),
+  'foldr': require('./collections/reduceRight'),
+  'forEach': require('./collections/forEach'),
+  'forEachRight': require('./collections/forEachRight'),
+  'groupBy': require('./collections/groupBy'),
+  'include': require('./collections/contains'),
+  'indexBy': require('./collections/indexBy'),
+  'inject': require('./collections/reduce'),
+  'invoke': require('./collections/invoke'),
+  'map': require('./collections/map'),
+  'max': require('./collections/max'),
+  'min': require('./collections/min'),
+  'pluck': require('./collections/pluck'),
+  'reduce': require('./collections/reduce'),
+  'reduceRight': require('./collections/reduceRight'),
+  'reject': require('./collections/reject'),
+  'sample': require('./collections/sample'),
+  'select': require('./collections/filter'),
+  'shuffle': require('./collections/shuffle'),
+  'size': require('./collections/size'),
+  'some': require('./collections/some'),
+  'sortBy': require('./collections/sortBy'),
+  'toArray': require('./collections/toArray'),
+  'where': require('./collections/where')
 };
 
-},{"./collections/at":56,"./collections/contains":57,"./collections/countBy":58,"./collections/every":59,"./collections/filter":60,"./collections/find":61,"./collections/findLast":62,"./collections/forEach":63,"./collections/forEachRight":64,"./collections/groupBy":65,"./collections/indexBy":66,"./collections/invoke":67,"./collections/map":68,"./collections/max":69,"./collections/min":70,"./collections/pluck":71,"./collections/reduce":72,"./collections/reduceRight":73,"./collections/reject":74,"./collections/sample":75,"./collections/shuffle":76,"./collections/size":77,"./collections/some":78,"./collections/sortBy":79,"./collections/toArray":80,"./collections/where":81}],56:[function(_dereq_,module,exports){
+},{"./collections/at":57,"./collections/contains":58,"./collections/countBy":59,"./collections/every":60,"./collections/filter":61,"./collections/find":62,"./collections/findLast":63,"./collections/forEach":64,"./collections/forEachRight":65,"./collections/groupBy":66,"./collections/indexBy":67,"./collections/invoke":68,"./collections/map":69,"./collections/max":70,"./collections/min":71,"./collections/pluck":72,"./collections/reduce":73,"./collections/reduceRight":74,"./collections/reject":75,"./collections/sample":76,"./collections/shuffle":77,"./collections/size":78,"./collections/some":79,"./collections/sortBy":80,"./collections/toArray":81,"./collections/where":82}],57:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -5031,8 +5095,8 @@ module.exports = {
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseFlatten = _dereq_('../internals/baseFlatten'),
-    isString = _dereq_('../objects/isString');
+var baseFlatten = require('../internals/baseFlatten'),
+    isString = require('../objects/isString');
 
 /**
  * Creates an array of elements from the specified indexes, or keys, of the
@@ -5070,7 +5134,7 @@ function at(collection) {
 
 module.exports = at;
 
-},{"../internals/baseFlatten":107,"../objects/isString":173}],57:[function(_dereq_,module,exports){
+},{"../internals/baseFlatten":108,"../objects/isString":174}],58:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -5079,10 +5143,10 @@ module.exports = at;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseIndexOf = _dereq_('../internals/baseIndexOf'),
-    forOwn = _dereq_('../objects/forOwn'),
-    isArray = _dereq_('../objects/isArray'),
-    isString = _dereq_('../objects/isString');
+var baseIndexOf = require('../internals/baseIndexOf'),
+    forOwn = require('../objects/forOwn'),
+    isArray = require('../objects/isArray'),
+    isString = require('../objects/isString');
 
 /* Native method shortcuts for methods with the same name as other `lodash` methods */
 var nativeMax = Math.max;
@@ -5137,7 +5201,7 @@ function contains(collection, target, fromIndex) {
 
 module.exports = contains;
 
-},{"../internals/baseIndexOf":108,"../objects/forOwn":153,"../objects/isArray":159,"../objects/isString":173}],58:[function(_dereq_,module,exports){
+},{"../internals/baseIndexOf":109,"../objects/forOwn":154,"../objects/isArray":160,"../objects/isString":174}],59:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -5146,7 +5210,7 @@ module.exports = contains;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createAggregator = _dereq_('../internals/createAggregator');
+var createAggregator = require('../internals/createAggregator');
 
 /** Used for native method references */
 var objectProto = Object.prototype;
@@ -5194,7 +5258,7 @@ var countBy = createAggregator(function(result, value, key) {
 
 module.exports = countBy;
 
-},{"../internals/createAggregator":117}],59:[function(_dereq_,module,exports){
+},{"../internals/createAggregator":118}],60:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -5203,8 +5267,8 @@ module.exports = countBy;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback'),
-    forOwn = _dereq_('../objects/forOwn');
+var createCallback = require('../functions/createCallback'),
+    forOwn = require('../objects/forOwn');
 
 /**
  * Checks if the given callback returns truey value for **all** elements of
@@ -5270,7 +5334,7 @@ function every(collection, callback, thisArg) {
 
 module.exports = every;
 
-},{"../functions/createCallback":88,"../objects/forOwn":153}],60:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"../objects/forOwn":154}],61:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -5279,8 +5343,8 @@ module.exports = every;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback'),
-    forOwn = _dereq_('../objects/forOwn');
+var createCallback = require('../functions/createCallback'),
+    forOwn = require('../objects/forOwn');
 
 /**
  * Iterates over elements of a collection, returning an array of all elements
@@ -5348,7 +5412,7 @@ function filter(collection, callback, thisArg) {
 
 module.exports = filter;
 
-},{"../functions/createCallback":88,"../objects/forOwn":153}],61:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"../objects/forOwn":154}],62:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -5357,8 +5421,8 @@ module.exports = filter;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback'),
-    forOwn = _dereq_('../objects/forOwn');
+var createCallback = require('../functions/createCallback'),
+    forOwn = require('../objects/forOwn');
 
 /**
  * Iterates over elements of a collection, returning the first element that
@@ -5430,7 +5494,7 @@ function find(collection, callback, thisArg) {
 
 module.exports = find;
 
-},{"../functions/createCallback":88,"../objects/forOwn":153}],62:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"../objects/forOwn":154}],63:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -5439,8 +5503,8 @@ module.exports = find;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback'),
-    forEachRight = _dereq_('./forEachRight');
+var createCallback = require('../functions/createCallback'),
+    forEachRight = require('./forEachRight');
 
 /**
  * This method is like `_.find` except that it iterates over elements
@@ -5476,7 +5540,7 @@ function findLast(collection, callback, thisArg) {
 
 module.exports = findLast;
 
-},{"../functions/createCallback":88,"./forEachRight":64}],63:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"./forEachRight":65}],64:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -5485,8 +5549,8 @@ module.exports = findLast;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseCreateCallback = _dereq_('../internals/baseCreateCallback'),
-    forOwn = _dereq_('../objects/forOwn');
+var baseCreateCallback = require('../internals/baseCreateCallback'),
+    forOwn = require('../objects/forOwn');
 
 /**
  * Iterates over elements of a collection, executing the callback for each
@@ -5533,7 +5597,7 @@ function forEach(collection, callback, thisArg) {
 
 module.exports = forEach;
 
-},{"../internals/baseCreateCallback":104,"../objects/forOwn":153}],64:[function(_dereq_,module,exports){
+},{"../internals/baseCreateCallback":105,"../objects/forOwn":154}],65:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -5542,11 +5606,11 @@ module.exports = forEach;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseCreateCallback = _dereq_('../internals/baseCreateCallback'),
-    forOwn = _dereq_('../objects/forOwn'),
-    isArray = _dereq_('../objects/isArray'),
-    isString = _dereq_('../objects/isString'),
-    keys = _dereq_('../objects/keys');
+var baseCreateCallback = require('../internals/baseCreateCallback'),
+    forOwn = require('../objects/forOwn'),
+    isArray = require('../objects/isArray'),
+    isString = require('../objects/isString'),
+    keys = require('../objects/keys');
 
 /**
  * This method is like `_.forEach` except that it iterates over elements
@@ -5587,7 +5651,7 @@ function forEachRight(collection, callback, thisArg) {
 
 module.exports = forEachRight;
 
-},{"../internals/baseCreateCallback":104,"../objects/forOwn":153,"../objects/isArray":159,"../objects/isString":173,"../objects/keys":175}],65:[function(_dereq_,module,exports){
+},{"../internals/baseCreateCallback":105,"../objects/forOwn":154,"../objects/isArray":160,"../objects/isString":174,"../objects/keys":176}],66:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -5596,7 +5660,7 @@ module.exports = forEachRight;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createAggregator = _dereq_('../internals/createAggregator');
+var createAggregator = require('../internals/createAggregator');
 
 /** Used for native method references */
 var objectProto = Object.prototype;
@@ -5645,7 +5709,7 @@ var groupBy = createAggregator(function(result, value, key) {
 
 module.exports = groupBy;
 
-},{"../internals/createAggregator":117}],66:[function(_dereq_,module,exports){
+},{"../internals/createAggregator":118}],67:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -5654,7 +5718,7 @@ module.exports = groupBy;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createAggregator = _dereq_('../internals/createAggregator');
+var createAggregator = require('../internals/createAggregator');
 
 /**
  * Creates an object composed of keys generated from the results of running
@@ -5701,7 +5765,7 @@ var indexBy = createAggregator(function(result, value, key) {
 
 module.exports = indexBy;
 
-},{"../internals/createAggregator":117}],67:[function(_dereq_,module,exports){
+},{"../internals/createAggregator":118}],68:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -5710,8 +5774,8 @@ module.exports = indexBy;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var forEach = _dereq_('./forEach'),
-    slice = _dereq_('../internals/slice');
+var forEach = require('./forEach'),
+    slice = require('../internals/slice');
 
 /**
  * Invokes the method named by `methodName` on each element in the `collection`
@@ -5750,7 +5814,7 @@ function invoke(collection, methodName) {
 
 module.exports = invoke;
 
-},{"../internals/slice":141,"./forEach":63}],68:[function(_dereq_,module,exports){
+},{"../internals/slice":142,"./forEach":64}],69:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -5759,8 +5823,8 @@ module.exports = invoke;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback'),
-    forOwn = _dereq_('../objects/forOwn');
+var createCallback = require('../functions/createCallback'),
+    forOwn = require('../objects/forOwn');
 
 /**
  * Creates an array of values by running each element in the collection
@@ -5822,7 +5886,7 @@ function map(collection, callback, thisArg) {
 
 module.exports = map;
 
-},{"../functions/createCallback":88,"../objects/forOwn":153}],69:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"../objects/forOwn":154}],70:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -5831,12 +5895,12 @@ module.exports = map;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var charAtCallback = _dereq_('../internals/charAtCallback'),
-    createCallback = _dereq_('../functions/createCallback'),
-    forEach = _dereq_('./forEach'),
-    forOwn = _dereq_('../objects/forOwn'),
-    isArray = _dereq_('../objects/isArray'),
-    isString = _dereq_('../objects/isString');
+var charAtCallback = require('../internals/charAtCallback'),
+    createCallback = require('../functions/createCallback'),
+    forEach = require('./forEach'),
+    forOwn = require('../objects/forOwn'),
+    isArray = require('../objects/isArray'),
+    isString = require('../objects/isString');
 
 /**
  * Retrieves the maximum value of a collection. If the collection is empty or
@@ -5915,7 +5979,7 @@ function max(collection, callback, thisArg) {
 
 module.exports = max;
 
-},{"../functions/createCallback":88,"../internals/charAtCallback":115,"../objects/forOwn":153,"../objects/isArray":159,"../objects/isString":173,"./forEach":63}],70:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"../internals/charAtCallback":116,"../objects/forOwn":154,"../objects/isArray":160,"../objects/isString":174,"./forEach":64}],71:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -5924,12 +5988,12 @@ module.exports = max;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var charAtCallback = _dereq_('../internals/charAtCallback'),
-    createCallback = _dereq_('../functions/createCallback'),
-    forEach = _dereq_('./forEach'),
-    forOwn = _dereq_('../objects/forOwn'),
-    isArray = _dereq_('../objects/isArray'),
-    isString = _dereq_('../objects/isString');
+var charAtCallback = require('../internals/charAtCallback'),
+    createCallback = require('../functions/createCallback'),
+    forEach = require('./forEach'),
+    forOwn = require('../objects/forOwn'),
+    isArray = require('../objects/isArray'),
+    isString = require('../objects/isString');
 
 /**
  * Retrieves the minimum value of a collection. If the collection is empty or
@@ -6008,7 +6072,7 @@ function min(collection, callback, thisArg) {
 
 module.exports = min;
 
-},{"../functions/createCallback":88,"../internals/charAtCallback":115,"../objects/forOwn":153,"../objects/isArray":159,"../objects/isString":173,"./forEach":63}],71:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"../internals/charAtCallback":116,"../objects/forOwn":154,"../objects/isArray":160,"../objects/isString":174,"./forEach":64}],72:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -6017,7 +6081,7 @@ module.exports = min;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var map = _dereq_('./map');
+var map = require('./map');
 
 /**
  * Retrieves the value of a specified property from all elements in the collection.
@@ -6043,7 +6107,7 @@ var pluck = map;
 
 module.exports = pluck;
 
-},{"./map":68}],72:[function(_dereq_,module,exports){
+},{"./map":69}],73:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -6052,8 +6116,8 @@ module.exports = pluck;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback'),
-    forOwn = _dereq_('../objects/forOwn');
+var createCallback = require('../functions/createCallback'),
+    forOwn = require('../objects/forOwn');
 
 /**
  * Reduces a collection to a value which is the accumulated result of running
@@ -6112,7 +6176,7 @@ function reduce(collection, callback, accumulator, thisArg) {
 
 module.exports = reduce;
 
-},{"../functions/createCallback":88,"../objects/forOwn":153}],73:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"../objects/forOwn":154}],74:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -6121,8 +6185,8 @@ module.exports = reduce;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback'),
-    forEachRight = _dereq_('./forEachRight');
+var createCallback = require('../functions/createCallback'),
+    forEachRight = require('./forEachRight');
 
 /**
  * This method is like `_.reduce` except that it iterates over elements
@@ -6156,7 +6220,7 @@ function reduceRight(collection, callback, accumulator, thisArg) {
 
 module.exports = reduceRight;
 
-},{"../functions/createCallback":88,"./forEachRight":64}],74:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"./forEachRight":65}],75:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -6165,8 +6229,8 @@ module.exports = reduceRight;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback'),
-    filter = _dereq_('./filter');
+var createCallback = require('../functions/createCallback'),
+    filter = require('./filter');
 
 /**
  * The opposite of `_.filter` this method returns the elements of a
@@ -6215,7 +6279,7 @@ function reject(collection, callback, thisArg) {
 
 module.exports = reject;
 
-},{"../functions/createCallback":88,"./filter":60}],75:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"./filter":61}],76:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -6224,10 +6288,10 @@ module.exports = reject;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseRandom = _dereq_('../internals/baseRandom'),
-    isString = _dereq_('../objects/isString'),
-    shuffle = _dereq_('./shuffle'),
-    values = _dereq_('../objects/values');
+var baseRandom = require('../internals/baseRandom'),
+    isString = require('../objects/isString'),
+    shuffle = require('./shuffle'),
+    values = require('../objects/values');
 
 /* Native method shortcuts for methods with the same name as other `lodash` methods */
 var nativeMax = Math.max,
@@ -6266,7 +6330,7 @@ function sample(collection, n, guard) {
 
 module.exports = sample;
 
-},{"../internals/baseRandom":111,"../objects/isString":173,"../objects/values":182,"./shuffle":76}],76:[function(_dereq_,module,exports){
+},{"../internals/baseRandom":112,"../objects/isString":174,"../objects/values":183,"./shuffle":77}],77:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -6275,8 +6339,8 @@ module.exports = sample;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseRandom = _dereq_('../internals/baseRandom'),
-    forEach = _dereq_('./forEach');
+var baseRandom = require('../internals/baseRandom'),
+    forEach = require('./forEach');
 
 /**
  * Creates an array of shuffled values, using a version of the Fisher-Yates
@@ -6307,7 +6371,7 @@ function shuffle(collection) {
 
 module.exports = shuffle;
 
-},{"../internals/baseRandom":111,"./forEach":63}],77:[function(_dereq_,module,exports){
+},{"../internals/baseRandom":112,"./forEach":64}],78:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -6316,7 +6380,7 @@ module.exports = shuffle;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var keys = _dereq_('../objects/keys');
+var keys = require('../objects/keys');
 
 /**
  * Gets the size of the `collection` by returning `collection.length` for arrays
@@ -6345,7 +6409,7 @@ function size(collection) {
 
 module.exports = size;
 
-},{"../objects/keys":175}],78:[function(_dereq_,module,exports){
+},{"../objects/keys":176}],79:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -6354,9 +6418,9 @@ module.exports = size;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback'),
-    forOwn = _dereq_('../objects/forOwn'),
-    isArray = _dereq_('../objects/isArray');
+var createCallback = require('../functions/createCallback'),
+    forOwn = require('../objects/forOwn'),
+    isArray = require('../objects/isArray');
 
 /**
  * Checks if the callback returns a truey value for **any** element of a
@@ -6423,7 +6487,7 @@ function some(collection, callback, thisArg) {
 
 module.exports = some;
 
-},{"../functions/createCallback":88,"../objects/forOwn":153,"../objects/isArray":159}],79:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"../objects/forOwn":154,"../objects/isArray":160}],80:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -6432,15 +6496,15 @@ module.exports = some;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var compareAscending = _dereq_('../internals/compareAscending'),
-    createCallback = _dereq_('../functions/createCallback'),
-    forEach = _dereq_('./forEach'),
-    getArray = _dereq_('../internals/getArray'),
-    getObject = _dereq_('../internals/getObject'),
-    isArray = _dereq_('../objects/isArray'),
-    map = _dereq_('./map'),
-    releaseArray = _dereq_('../internals/releaseArray'),
-    releaseObject = _dereq_('../internals/releaseObject');
+var compareAscending = require('../internals/compareAscending'),
+    createCallback = require('../functions/createCallback'),
+    forEach = require('./forEach'),
+    getArray = require('../internals/getArray'),
+    getObject = require('../internals/getObject'),
+    isArray = require('../objects/isArray'),
+    map = require('./map'),
+    releaseArray = require('../internals/releaseArray'),
+    releaseObject = require('../internals/releaseObject');
 
 /**
  * Creates an array of elements, sorted in ascending order by the results of
@@ -6526,7 +6590,7 @@ function sortBy(collection, callback, thisArg) {
 
 module.exports = sortBy;
 
-},{"../functions/createCallback":88,"../internals/compareAscending":116,"../internals/getArray":122,"../internals/getObject":123,"../internals/releaseArray":136,"../internals/releaseObject":137,"../objects/isArray":159,"./forEach":63,"./map":68}],80:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"../internals/compareAscending":117,"../internals/getArray":123,"../internals/getObject":124,"../internals/releaseArray":137,"../internals/releaseObject":138,"../objects/isArray":160,"./forEach":64,"./map":69}],81:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -6535,9 +6599,9 @@ module.exports = sortBy;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var isString = _dereq_('../objects/isString'),
-    slice = _dereq_('../internals/slice'),
-    values = _dereq_('../objects/values');
+var isString = require('../objects/isString'),
+    slice = require('../internals/slice'),
+    values = require('../objects/values');
 
 /**
  * Converts the `collection` to an array.
@@ -6561,7 +6625,7 @@ function toArray(collection) {
 
 module.exports = toArray;
 
-},{"../internals/slice":141,"../objects/isString":173,"../objects/values":182}],81:[function(_dereq_,module,exports){
+},{"../internals/slice":142,"../objects/isString":174,"../objects/values":183}],82:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -6570,7 +6634,7 @@ module.exports = toArray;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var filter = _dereq_('./filter');
+var filter = require('./filter');
 
 /**
  * Performs a deep comparison of each element in a `collection` to the given
@@ -6601,7 +6665,7 @@ var where = filter;
 
 module.exports = where;
 
-},{"./filter":60}],82:[function(_dereq_,module,exports){
+},{"./filter":61}],83:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -6612,25 +6676,25 @@ module.exports = where;
  */
 
 module.exports = {
-  'after': _dereq_('./functions/after'),
-  'bind': _dereq_('./functions/bind'),
-  'bindAll': _dereq_('./functions/bindAll'),
-  'bindKey': _dereq_('./functions/bindKey'),
-  'compose': _dereq_('./functions/compose'),
-  'createCallback': _dereq_('./functions/createCallback'),
-  'curry': _dereq_('./functions/curry'),
-  'debounce': _dereq_('./functions/debounce'),
-  'defer': _dereq_('./functions/defer'),
-  'delay': _dereq_('./functions/delay'),
-  'memoize': _dereq_('./functions/memoize'),
-  'once': _dereq_('./functions/once'),
-  'partial': _dereq_('./functions/partial'),
-  'partialRight': _dereq_('./functions/partialRight'),
-  'throttle': _dereq_('./functions/throttle'),
-  'wrap': _dereq_('./functions/wrap')
+  'after': require('./functions/after'),
+  'bind': require('./functions/bind'),
+  'bindAll': require('./functions/bindAll'),
+  'bindKey': require('./functions/bindKey'),
+  'compose': require('./functions/compose'),
+  'createCallback': require('./functions/createCallback'),
+  'curry': require('./functions/curry'),
+  'debounce': require('./functions/debounce'),
+  'defer': require('./functions/defer'),
+  'delay': require('./functions/delay'),
+  'memoize': require('./functions/memoize'),
+  'once': require('./functions/once'),
+  'partial': require('./functions/partial'),
+  'partialRight': require('./functions/partialRight'),
+  'throttle': require('./functions/throttle'),
+  'wrap': require('./functions/wrap')
 };
 
-},{"./functions/after":83,"./functions/bind":84,"./functions/bindAll":85,"./functions/bindKey":86,"./functions/compose":87,"./functions/createCallback":88,"./functions/curry":89,"./functions/debounce":90,"./functions/defer":91,"./functions/delay":92,"./functions/memoize":93,"./functions/once":94,"./functions/partial":95,"./functions/partialRight":96,"./functions/throttle":97,"./functions/wrap":98}],83:[function(_dereq_,module,exports){
+},{"./functions/after":84,"./functions/bind":85,"./functions/bindAll":86,"./functions/bindKey":87,"./functions/compose":88,"./functions/createCallback":89,"./functions/curry":90,"./functions/debounce":91,"./functions/defer":92,"./functions/delay":93,"./functions/memoize":94,"./functions/once":95,"./functions/partial":96,"./functions/partialRight":97,"./functions/throttle":98,"./functions/wrap":99}],84:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -6639,7 +6703,7 @@ module.exports = {
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var isFunction = _dereq_('../objects/isFunction');
+var isFunction = require('../objects/isFunction');
 
 /**
  * Creates a function that executes `func`, with  the `this` binding and
@@ -6678,7 +6742,7 @@ function after(n, func) {
 
 module.exports = after;
 
-},{"../objects/isFunction":166}],84:[function(_dereq_,module,exports){
+},{"../objects/isFunction":167}],85:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -6687,8 +6751,8 @@ module.exports = after;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createWrapper = _dereq_('../internals/createWrapper'),
-    slice = _dereq_('../internals/slice');
+var createWrapper = require('../internals/createWrapper'),
+    slice = require('../internals/slice');
 
 /**
  * Creates a function that, when called, invokes `func` with the `this`
@@ -6720,7 +6784,7 @@ function bind(func, thisArg) {
 
 module.exports = bind;
 
-},{"../internals/createWrapper":119,"../internals/slice":141}],85:[function(_dereq_,module,exports){
+},{"../internals/createWrapper":120,"../internals/slice":142}],86:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -6729,9 +6793,9 @@ module.exports = bind;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseFlatten = _dereq_('../internals/baseFlatten'),
-    createWrapper = _dereq_('../internals/createWrapper'),
-    functions = _dereq_('../objects/functions');
+var baseFlatten = require('../internals/baseFlatten'),
+    createWrapper = require('../internals/createWrapper'),
+    functions = require('../objects/functions');
 
 /**
  * Binds methods of an object to the object itself, overwriting the existing
@@ -6771,7 +6835,7 @@ function bindAll(object) {
 
 module.exports = bindAll;
 
-},{"../internals/baseFlatten":107,"../internals/createWrapper":119,"../objects/functions":155}],86:[function(_dereq_,module,exports){
+},{"../internals/baseFlatten":108,"../internals/createWrapper":120,"../objects/functions":156}],87:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -6780,8 +6844,8 @@ module.exports = bindAll;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createWrapper = _dereq_('../internals/createWrapper'),
-    slice = _dereq_('../internals/slice');
+var createWrapper = require('../internals/createWrapper'),
+    slice = require('../internals/slice');
 
 /**
  * Creates a function that, when called, invokes the method at `object[key]`
@@ -6825,7 +6889,7 @@ function bindKey(object, key) {
 
 module.exports = bindKey;
 
-},{"../internals/createWrapper":119,"../internals/slice":141}],87:[function(_dereq_,module,exports){
+},{"../internals/createWrapper":120,"../internals/slice":142}],88:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -6834,7 +6898,7 @@ module.exports = bindKey;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var isFunction = _dereq_('../objects/isFunction');
+var isFunction = require('../objects/isFunction');
 
 /**
  * Creates a function that is the composition of the provided functions,
@@ -6888,7 +6952,7 @@ function compose() {
 
 module.exports = compose;
 
-},{"../objects/isFunction":166}],88:[function(_dereq_,module,exports){
+},{"../objects/isFunction":167}],89:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -6897,11 +6961,11 @@ module.exports = compose;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseCreateCallback = _dereq_('../internals/baseCreateCallback'),
-    baseIsEqual = _dereq_('../internals/baseIsEqual'),
-    isObject = _dereq_('../objects/isObject'),
-    keys = _dereq_('../objects/keys'),
-    property = _dereq_('../utilities/property');
+var baseCreateCallback = require('../internals/baseCreateCallback'),
+    baseIsEqual = require('../internals/baseIsEqual'),
+    isObject = require('../objects/isObject'),
+    keys = require('../objects/keys'),
+    property = require('../utilities/property');
 
 /**
  * Produces a callback bound to an optional `thisArg`. If `func` is a property
@@ -6971,7 +7035,7 @@ function createCallback(func, thisArg, argCount) {
 
 module.exports = createCallback;
 
-},{"../internals/baseCreateCallback":104,"../internals/baseIsEqual":109,"../objects/isObject":170,"../objects/keys":175,"../utilities/property":193}],89:[function(_dereq_,module,exports){
+},{"../internals/baseCreateCallback":105,"../internals/baseIsEqual":110,"../objects/isObject":171,"../objects/keys":176,"../utilities/property":194}],90:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -6980,7 +7044,7 @@ module.exports = createCallback;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createWrapper = _dereq_('../internals/createWrapper');
+var createWrapper = require('../internals/createWrapper');
 
 /**
  * Creates a function which accepts one or more arguments of `func` that when
@@ -7017,7 +7081,7 @@ function curry(func, arity) {
 
 module.exports = curry;
 
-},{"../internals/createWrapper":119}],90:[function(_dereq_,module,exports){
+},{"../internals/createWrapper":120}],91:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -7026,9 +7090,9 @@ module.exports = curry;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var isFunction = _dereq_('../objects/isFunction'),
-    isObject = _dereq_('../objects/isObject'),
-    now = _dereq_('../utilities/now');
+var isFunction = require('../objects/isFunction'),
+    isObject = require('../objects/isObject'),
+    now = require('../utilities/now');
 
 /* Native method shortcuts for methods with the same name as other `lodash` methods */
 var nativeMax = Math.max;
@@ -7175,7 +7239,7 @@ function debounce(func, wait, options) {
 
 module.exports = debounce;
 
-},{"../objects/isFunction":166,"../objects/isObject":170,"../utilities/now":191}],91:[function(_dereq_,module,exports){
+},{"../objects/isFunction":167,"../objects/isObject":171,"../utilities/now":192}],92:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -7184,8 +7248,8 @@ module.exports = debounce;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var isFunction = _dereq_('../objects/isFunction'),
-    slice = _dereq_('../internals/slice');
+var isFunction = require('../objects/isFunction'),
+    slice = require('../internals/slice');
 
 /**
  * Defers executing the `func` function until the current call stack has cleared.
@@ -7212,7 +7276,7 @@ function defer(func) {
 
 module.exports = defer;
 
-},{"../internals/slice":141,"../objects/isFunction":166}],92:[function(_dereq_,module,exports){
+},{"../internals/slice":142,"../objects/isFunction":167}],93:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -7221,8 +7285,8 @@ module.exports = defer;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var isFunction = _dereq_('../objects/isFunction'),
-    slice = _dereq_('../internals/slice');
+var isFunction = require('../objects/isFunction'),
+    slice = require('../internals/slice');
 
 /**
  * Executes the `func` function after `wait` milliseconds. Additional arguments
@@ -7250,7 +7314,7 @@ function delay(func, wait) {
 
 module.exports = delay;
 
-},{"../internals/slice":141,"../objects/isFunction":166}],93:[function(_dereq_,module,exports){
+},{"../internals/slice":142,"../objects/isFunction":167}],94:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -7259,8 +7323,8 @@ module.exports = delay;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var isFunction = _dereq_('../objects/isFunction'),
-    keyPrefix = _dereq_('../internals/keyPrefix');
+var isFunction = require('../objects/isFunction'),
+    keyPrefix = require('../internals/keyPrefix');
 
 /** Used for native method references */
 var objectProto = Object.prototype;
@@ -7323,7 +7387,7 @@ function memoize(func, resolver) {
 
 module.exports = memoize;
 
-},{"../internals/keyPrefix":127,"../objects/isFunction":166}],94:[function(_dereq_,module,exports){
+},{"../internals/keyPrefix":128,"../objects/isFunction":167}],95:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -7332,7 +7396,7 @@ module.exports = memoize;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var isFunction = _dereq_('../objects/isFunction');
+var isFunction = require('../objects/isFunction');
 
 /**
  * Creates a function that is restricted to execute `func` once. Repeat calls to
@@ -7373,7 +7437,7 @@ function once(func) {
 
 module.exports = once;
 
-},{"../objects/isFunction":166}],95:[function(_dereq_,module,exports){
+},{"../objects/isFunction":167}],96:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -7382,8 +7446,8 @@ module.exports = once;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createWrapper = _dereq_('../internals/createWrapper'),
-    slice = _dereq_('../internals/slice');
+var createWrapper = require('../internals/createWrapper'),
+    slice = require('../internals/slice');
 
 /**
  * Creates a function that, when called, invokes `func` with any additional
@@ -7409,7 +7473,7 @@ function partial(func) {
 
 module.exports = partial;
 
-},{"../internals/createWrapper":119,"../internals/slice":141}],96:[function(_dereq_,module,exports){
+},{"../internals/createWrapper":120,"../internals/slice":142}],97:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -7418,8 +7482,8 @@ module.exports = partial;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createWrapper = _dereq_('../internals/createWrapper'),
-    slice = _dereq_('../internals/slice');
+var createWrapper = require('../internals/createWrapper'),
+    slice = require('../internals/slice');
 
 /**
  * This method is like `_.partial` except that `partial` arguments are
@@ -7454,7 +7518,7 @@ function partialRight(func) {
 
 module.exports = partialRight;
 
-},{"../internals/createWrapper":119,"../internals/slice":141}],97:[function(_dereq_,module,exports){
+},{"../internals/createWrapper":120,"../internals/slice":142}],98:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -7463,9 +7527,9 @@ module.exports = partialRight;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var debounce = _dereq_('./debounce'),
-    isFunction = _dereq_('../objects/isFunction'),
-    isObject = _dereq_('../objects/isObject');
+var debounce = require('./debounce'),
+    isFunction = require('../objects/isFunction'),
+    isObject = require('../objects/isObject');
 
 /** Used as an internal `_.debounce` options object */
 var debounceOptions = {
@@ -7527,7 +7591,7 @@ function throttle(func, wait, options) {
 
 module.exports = throttle;
 
-},{"../objects/isFunction":166,"../objects/isObject":170,"./debounce":90}],98:[function(_dereq_,module,exports){
+},{"../objects/isFunction":167,"../objects/isObject":171,"./debounce":91}],99:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -7536,7 +7600,7 @@ module.exports = throttle;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createWrapper = _dereq_('../internals/createWrapper');
+var createWrapper = require('../internals/createWrapper');
 
 /**
  * Creates a function that provides `value` to the wrapper function as its
@@ -7565,7 +7629,7 @@ function wrap(value, wrapper) {
 
 module.exports = wrap;
 
-},{"../internals/createWrapper":119}],99:[function(_dereq_,module,exports){
+},{"../internals/createWrapper":120}],100:[function(require,module,exports){
 /**
  * @license
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
@@ -7575,19 +7639,19 @@ module.exports = wrap;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var arrays = _dereq_('./arrays'),
-    chaining = _dereq_('./chaining'),
-    collections = _dereq_('./collections'),
-    functions = _dereq_('./functions'),
-    objects = _dereq_('./objects'),
-    utilities = _dereq_('./utilities'),
-    forEach = _dereq_('./collections/forEach'),
-    forOwn = _dereq_('./objects/forOwn'),
-    isArray = _dereq_('./objects/isArray'),
-    lodashWrapper = _dereq_('./internals/lodashWrapper'),
-    mixin = _dereq_('./utilities/mixin'),
-    support = _dereq_('./support'),
-    templateSettings = _dereq_('./utilities/templateSettings');
+var arrays = require('./arrays'),
+    chaining = require('./chaining'),
+    collections = require('./collections'),
+    functions = require('./functions'),
+    objects = require('./objects'),
+    utilities = require('./utilities'),
+    forEach = require('./collections/forEach'),
+    forOwn = require('./objects/forOwn'),
+    isArray = require('./objects/isArray'),
+    lodashWrapper = require('./internals/lodashWrapper'),
+    mixin = require('./utilities/mixin'),
+    support = require('./support'),
+    templateSettings = require('./utilities/templateSettings');
 
 /**
  * Used for `Array` method references.
@@ -7921,7 +7985,7 @@ lodash.support = support;
 (lodash.templateSettings = utilities.templateSettings).imports._ = lodash;
 module.exports = lodash;
 
-},{"./arrays":26,"./chaining":49,"./collections":55,"./collections/forEach":63,"./functions":82,"./internals/lodashWrapper":129,"./objects":143,"./objects/forOwn":153,"./objects/isArray":159,"./support":183,"./utilities":184,"./utilities/mixin":188,"./utilities/templateSettings":197}],100:[function(_dereq_,module,exports){
+},{"./arrays":27,"./chaining":50,"./collections":56,"./collections/forEach":64,"./functions":83,"./internals/lodashWrapper":130,"./objects":144,"./objects/forOwn":154,"./objects/isArray":160,"./support":184,"./utilities":185,"./utilities/mixin":189,"./utilities/templateSettings":198}],101:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -7936,7 +8000,7 @@ var arrayPool = [];
 
 module.exports = arrayPool;
 
-},{}],101:[function(_dereq_,module,exports){
+},{}],102:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -7945,10 +8009,10 @@ module.exports = arrayPool;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseCreate = _dereq_('./baseCreate'),
-    isObject = _dereq_('../objects/isObject'),
-    setBindData = _dereq_('./setBindData'),
-    slice = _dereq_('./slice');
+var baseCreate = require('./baseCreate'),
+    isObject = require('../objects/isObject'),
+    setBindData = require('./setBindData'),
+    slice = require('./slice');
 
 /**
  * Used for `Array` method references.
@@ -8000,7 +8064,7 @@ function baseBind(bindData) {
 
 module.exports = baseBind;
 
-},{"../objects/isObject":170,"./baseCreate":103,"./setBindData":138,"./slice":141}],102:[function(_dereq_,module,exports){
+},{"../objects/isObject":171,"./baseCreate":104,"./setBindData":139,"./slice":142}],103:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -8009,14 +8073,14 @@ module.exports = baseBind;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var assign = _dereq_('../objects/assign'),
-    forEach = _dereq_('../collections/forEach'),
-    forOwn = _dereq_('../objects/forOwn'),
-    getArray = _dereq_('./getArray'),
-    isArray = _dereq_('../objects/isArray'),
-    isObject = _dereq_('../objects/isObject'),
-    releaseArray = _dereq_('./releaseArray'),
-    slice = _dereq_('./slice');
+var assign = require('../objects/assign'),
+    forEach = require('../collections/forEach'),
+    forOwn = require('../objects/forOwn'),
+    getArray = require('./getArray'),
+    isArray = require('../objects/isArray'),
+    isObject = require('../objects/isObject'),
+    releaseArray = require('./releaseArray'),
+    slice = require('./slice');
 
 /** Used to match regexp flags from their coerced string values */
 var reFlags = /\w*$/;
@@ -8154,7 +8218,7 @@ function baseClone(value, isDeep, callback, stackA, stackB) {
 
 module.exports = baseClone;
 
-},{"../collections/forEach":63,"../objects/assign":144,"../objects/forOwn":153,"../objects/isArray":159,"../objects/isObject":170,"./getArray":122,"./releaseArray":136,"./slice":141}],103:[function(_dereq_,module,exports){
+},{"../collections/forEach":64,"../objects/assign":145,"../objects/forOwn":154,"../objects/isArray":160,"../objects/isObject":171,"./getArray":123,"./releaseArray":137,"./slice":142}],104:[function(require,module,exports){
 (function (global){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
@@ -8164,9 +8228,9 @@ module.exports = baseClone;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var isNative = _dereq_('./isNative'),
-    isObject = _dereq_('../objects/isObject'),
-    noop = _dereq_('../utilities/noop');
+var isNative = require('./isNative'),
+    isObject = require('../objects/isObject'),
+    noop = require('../utilities/noop');
 
 /* Native method shortcuts for methods with the same name as other `lodash` methods */
 var nativeCreate = isNative(nativeCreate = Object.create) && nativeCreate;
@@ -8199,8 +8263,8 @@ if (!nativeCreate) {
 
 module.exports = baseCreate;
 
-}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../objects/isObject":170,"../utilities/noop":190,"./isNative":126}],104:[function(_dereq_,module,exports){
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"../objects/isObject":171,"../utilities/noop":191,"./isNative":127}],105:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -8209,10 +8273,10 @@ module.exports = baseCreate;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var bind = _dereq_('../functions/bind'),
-    identity = _dereq_('../utilities/identity'),
-    setBindData = _dereq_('./setBindData'),
-    support = _dereq_('../support');
+var bind = require('../functions/bind'),
+    identity = require('../utilities/identity'),
+    setBindData = require('./setBindData'),
+    support = require('../support');
 
 /** Used to detected named functions */
 var reFuncName = /^\s*function[ \n\r\t]+\w/;
@@ -8282,7 +8346,7 @@ function baseCreateCallback(func, thisArg, argCount) {
 
 module.exports = baseCreateCallback;
 
-},{"../functions/bind":84,"../support":183,"../utilities/identity":187,"./setBindData":138}],105:[function(_dereq_,module,exports){
+},{"../functions/bind":85,"../support":184,"../utilities/identity":188,"./setBindData":139}],106:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -8291,10 +8355,10 @@ module.exports = baseCreateCallback;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseCreate = _dereq_('./baseCreate'),
-    isObject = _dereq_('../objects/isObject'),
-    setBindData = _dereq_('./setBindData'),
-    slice = _dereq_('./slice');
+var baseCreate = require('./baseCreate'),
+    isObject = require('../objects/isObject'),
+    setBindData = require('./setBindData'),
+    slice = require('./slice');
 
 /**
  * Used for `Array` method references.
@@ -8362,7 +8426,7 @@ function baseCreateWrapper(bindData) {
 
 module.exports = baseCreateWrapper;
 
-},{"../objects/isObject":170,"./baseCreate":103,"./setBindData":138,"./slice":141}],106:[function(_dereq_,module,exports){
+},{"../objects/isObject":171,"./baseCreate":104,"./setBindData":139,"./slice":142}],107:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -8371,11 +8435,11 @@ module.exports = baseCreateWrapper;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseIndexOf = _dereq_('./baseIndexOf'),
-    cacheIndexOf = _dereq_('./cacheIndexOf'),
-    createCache = _dereq_('./createCache'),
-    largeArraySize = _dereq_('./largeArraySize'),
-    releaseObject = _dereq_('./releaseObject');
+var baseIndexOf = require('./baseIndexOf'),
+    cacheIndexOf = require('./cacheIndexOf'),
+    createCache = require('./createCache'),
+    largeArraySize = require('./largeArraySize'),
+    releaseObject = require('./releaseObject');
 
 /**
  * The base implementation of `_.difference` that accepts a single array
@@ -8416,7 +8480,7 @@ function baseDifference(array, values) {
 
 module.exports = baseDifference;
 
-},{"./baseIndexOf":108,"./cacheIndexOf":113,"./createCache":118,"./largeArraySize":128,"./releaseObject":137}],107:[function(_dereq_,module,exports){
+},{"./baseIndexOf":109,"./cacheIndexOf":114,"./createCache":119,"./largeArraySize":129,"./releaseObject":138}],108:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -8425,8 +8489,8 @@ module.exports = baseDifference;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var isArguments = _dereq_('../objects/isArguments'),
-    isArray = _dereq_('../objects/isArray');
+var isArguments = require('../objects/isArguments'),
+    isArray = require('../objects/isArray');
 
 /**
  * The base implementation of `_.flatten` without support for callback
@@ -8470,7 +8534,7 @@ function baseFlatten(array, isShallow, isStrict, fromIndex) {
 
 module.exports = baseFlatten;
 
-},{"../objects/isArguments":158,"../objects/isArray":159}],108:[function(_dereq_,module,exports){
+},{"../objects/isArguments":159,"../objects/isArray":160}],109:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -8504,7 +8568,7 @@ function baseIndexOf(array, value, fromIndex) {
 
 module.exports = baseIndexOf;
 
-},{}],109:[function(_dereq_,module,exports){
+},{}],110:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -8513,11 +8577,11 @@ module.exports = baseIndexOf;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var forIn = _dereq_('../objects/forIn'),
-    getArray = _dereq_('./getArray'),
-    isFunction = _dereq_('../objects/isFunction'),
-    objectTypes = _dereq_('./objectTypes'),
-    releaseArray = _dereq_('./releaseArray');
+var forIn = require('../objects/forIn'),
+    getArray = require('./getArray'),
+    isFunction = require('../objects/isFunction'),
+    objectTypes = require('./objectTypes'),
+    releaseArray = require('./releaseArray');
 
 /** `Object#toString` result shortcuts */
 var argsClass = '[object Arguments]',
@@ -8715,7 +8779,7 @@ function baseIsEqual(a, b, callback, isWhere, stackA, stackB) {
 
 module.exports = baseIsEqual;
 
-},{"../objects/forIn":151,"../objects/isFunction":166,"./getArray":122,"./objectTypes":132,"./releaseArray":136}],110:[function(_dereq_,module,exports){
+},{"../objects/forIn":152,"../objects/isFunction":167,"./getArray":123,"./objectTypes":133,"./releaseArray":137}],111:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -8724,10 +8788,10 @@ module.exports = baseIsEqual;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var forEach = _dereq_('../collections/forEach'),
-    forOwn = _dereq_('../objects/forOwn'),
-    isArray = _dereq_('../objects/isArray'),
-    isPlainObject = _dereq_('../objects/isPlainObject');
+var forEach = require('../collections/forEach'),
+    forOwn = require('../objects/forOwn'),
+    isArray = require('../objects/isArray'),
+    isPlainObject = require('../objects/isPlainObject');
 
 /**
  * The base implementation of `_.merge` without argument juggling or support
@@ -8796,7 +8860,7 @@ function baseMerge(object, source, callback, stackA, stackB) {
 
 module.exports = baseMerge;
 
-},{"../collections/forEach":63,"../objects/forOwn":153,"../objects/isArray":159,"../objects/isPlainObject":171}],111:[function(_dereq_,module,exports){
+},{"../collections/forEach":64,"../objects/forOwn":154,"../objects/isArray":160,"../objects/isPlainObject":172}],112:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -8827,7 +8891,7 @@ function baseRandom(min, max) {
 
 module.exports = baseRandom;
 
-},{}],112:[function(_dereq_,module,exports){
+},{}],113:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -8836,13 +8900,13 @@ module.exports = baseRandom;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseIndexOf = _dereq_('./baseIndexOf'),
-    cacheIndexOf = _dereq_('./cacheIndexOf'),
-    createCache = _dereq_('./createCache'),
-    getArray = _dereq_('./getArray'),
-    largeArraySize = _dereq_('./largeArraySize'),
-    releaseArray = _dereq_('./releaseArray'),
-    releaseObject = _dereq_('./releaseObject');
+var baseIndexOf = require('./baseIndexOf'),
+    cacheIndexOf = require('./cacheIndexOf'),
+    createCache = require('./createCache'),
+    getArray = require('./getArray'),
+    largeArraySize = require('./largeArraySize'),
+    releaseArray = require('./releaseArray'),
+    releaseObject = require('./releaseObject');
 
 /**
  * The base implementation of `_.uniq` without support for callback shorthands
@@ -8893,7 +8957,7 @@ function baseUniq(array, isSorted, callback) {
 
 module.exports = baseUniq;
 
-},{"./baseIndexOf":108,"./cacheIndexOf":113,"./createCache":118,"./getArray":122,"./largeArraySize":128,"./releaseArray":136,"./releaseObject":137}],113:[function(_dereq_,module,exports){
+},{"./baseIndexOf":109,"./cacheIndexOf":114,"./createCache":119,"./getArray":123,"./largeArraySize":129,"./releaseArray":137,"./releaseObject":138}],114:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -8902,8 +8966,8 @@ module.exports = baseUniq;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseIndexOf = _dereq_('./baseIndexOf'),
-    keyPrefix = _dereq_('./keyPrefix');
+var baseIndexOf = require('./baseIndexOf'),
+    keyPrefix = require('./keyPrefix');
 
 /**
  * An implementation of `_.contains` for cache objects that mimics the return
@@ -8934,7 +8998,7 @@ function cacheIndexOf(cache, value) {
 
 module.exports = cacheIndexOf;
 
-},{"./baseIndexOf":108,"./keyPrefix":127}],114:[function(_dereq_,module,exports){
+},{"./baseIndexOf":109,"./keyPrefix":128}],115:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -8943,7 +9007,7 @@ module.exports = cacheIndexOf;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var keyPrefix = _dereq_('./keyPrefix');
+var keyPrefix = require('./keyPrefix');
 
 /**
  * Adds a given value to the corresponding cache object.
@@ -8974,7 +9038,7 @@ function cachePush(value) {
 
 module.exports = cachePush;
 
-},{"./keyPrefix":127}],115:[function(_dereq_,module,exports){
+},{"./keyPrefix":128}],116:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -8998,7 +9062,7 @@ function charAtCallback(value) {
 
 module.exports = charAtCallback;
 
-},{}],116:[function(_dereq_,module,exports){
+},{}],117:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9047,7 +9111,7 @@ function compareAscending(a, b) {
 
 module.exports = compareAscending;
 
-},{}],117:[function(_dereq_,module,exports){
+},{}],118:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9056,9 +9120,9 @@ module.exports = compareAscending;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback'),
-    forOwn = _dereq_('../objects/forOwn'),
-    isArray = _dereq_('../objects/isArray');
+var createCallback = require('../functions/createCallback'),
+    forOwn = require('../objects/forOwn'),
+    isArray = require('../objects/isArray');
 
 /**
  * Creates a function that aggregates a collection, creating an object composed
@@ -9094,7 +9158,7 @@ function createAggregator(setter) {
 
 module.exports = createAggregator;
 
-},{"../functions/createCallback":88,"../objects/forOwn":153,"../objects/isArray":159}],118:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"../objects/forOwn":154,"../objects/isArray":160}],119:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9103,9 +9167,9 @@ module.exports = createAggregator;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var cachePush = _dereq_('./cachePush'),
-    getObject = _dereq_('./getObject'),
-    releaseObject = _dereq_('./releaseObject');
+var cachePush = require('./cachePush'),
+    getObject = require('./getObject'),
+    releaseObject = require('./releaseObject');
 
 /**
  * Creates a cache object to optimize linear searches of large arrays.
@@ -9141,7 +9205,7 @@ function createCache(array) {
 
 module.exports = createCache;
 
-},{"./cachePush":114,"./getObject":123,"./releaseObject":137}],119:[function(_dereq_,module,exports){
+},{"./cachePush":115,"./getObject":124,"./releaseObject":138}],120:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9150,10 +9214,10 @@ module.exports = createCache;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseBind = _dereq_('./baseBind'),
-    baseCreateWrapper = _dereq_('./baseCreateWrapper'),
-    isFunction = _dereq_('../objects/isFunction'),
-    slice = _dereq_('./slice');
+var baseBind = require('./baseBind'),
+    baseCreateWrapper = require('./baseCreateWrapper'),
+    isFunction = require('../objects/isFunction'),
+    slice = require('./slice');
 
 /**
  * Used for `Array` method references.
@@ -9249,7 +9313,7 @@ function createWrapper(func, bitmask, partialArgs, partialRightArgs, thisArg, ar
 
 module.exports = createWrapper;
 
-},{"../objects/isFunction":166,"./baseBind":101,"./baseCreateWrapper":105,"./slice":141}],120:[function(_dereq_,module,exports){
+},{"../objects/isFunction":167,"./baseBind":102,"./baseCreateWrapper":106,"./slice":142}],121:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9258,7 +9322,7 @@ module.exports = createWrapper;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var htmlEscapes = _dereq_('./htmlEscapes');
+var htmlEscapes = require('./htmlEscapes');
 
 /**
  * Used by `escape` to convert characters to HTML entities.
@@ -9273,7 +9337,7 @@ function escapeHtmlChar(match) {
 
 module.exports = escapeHtmlChar;
 
-},{"./htmlEscapes":124}],121:[function(_dereq_,module,exports){
+},{"./htmlEscapes":125}],122:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9308,7 +9372,7 @@ function escapeStringChar(match) {
 
 module.exports = escapeStringChar;
 
-},{}],122:[function(_dereq_,module,exports){
+},{}],123:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9317,7 +9381,7 @@ module.exports = escapeStringChar;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var arrayPool = _dereq_('./arrayPool');
+var arrayPool = require('./arrayPool');
 
 /**
  * Gets an array from the array pool or creates a new one if the pool is empty.
@@ -9331,7 +9395,7 @@ function getArray() {
 
 module.exports = getArray;
 
-},{"./arrayPool":100}],123:[function(_dereq_,module,exports){
+},{"./arrayPool":101}],124:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9340,7 +9404,7 @@ module.exports = getArray;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var objectPool = _dereq_('./objectPool');
+var objectPool = require('./objectPool');
 
 /**
  * Gets an object from the object pool or creates a new one if the pool is empty.
@@ -9368,7 +9432,7 @@ function getObject() {
 
 module.exports = getObject;
 
-},{"./objectPool":131}],124:[function(_dereq_,module,exports){
+},{"./objectPool":132}],125:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9396,7 +9460,7 @@ var htmlEscapes = {
 
 module.exports = htmlEscapes;
 
-},{}],125:[function(_dereq_,module,exports){
+},{}],126:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9405,15 +9469,15 @@ module.exports = htmlEscapes;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var htmlEscapes = _dereq_('./htmlEscapes'),
-    invert = _dereq_('../objects/invert');
+var htmlEscapes = require('./htmlEscapes'),
+    invert = require('../objects/invert');
 
 /** Used to convert HTML entities to characters */
 var htmlUnescapes = invert(htmlEscapes);
 
 module.exports = htmlUnescapes;
 
-},{"../objects/invert":157,"./htmlEscapes":124}],126:[function(_dereq_,module,exports){
+},{"../objects/invert":158,"./htmlEscapes":125}],127:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9449,7 +9513,7 @@ function isNative(value) {
 
 module.exports = isNative;
 
-},{}],127:[function(_dereq_,module,exports){
+},{}],128:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9464,7 +9528,7 @@ var keyPrefix = +new Date + '';
 
 module.exports = keyPrefix;
 
-},{}],128:[function(_dereq_,module,exports){
+},{}],129:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9479,7 +9543,7 @@ var largeArraySize = 75;
 
 module.exports = largeArraySize;
 
-},{}],129:[function(_dereq_,module,exports){
+},{}],130:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9504,7 +9568,7 @@ function lodashWrapper(value, chainAll) {
 
 module.exports = lodashWrapper;
 
-},{}],130:[function(_dereq_,module,exports){
+},{}],131:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9519,7 +9583,7 @@ var maxPoolSize = 40;
 
 module.exports = maxPoolSize;
 
-},{}],131:[function(_dereq_,module,exports){
+},{}],132:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9534,7 +9598,7 @@ var objectPool = [];
 
 module.exports = objectPool;
 
-},{}],132:[function(_dereq_,module,exports){
+},{}],133:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9556,7 +9620,7 @@ var objectTypes = {
 
 module.exports = objectTypes;
 
-},{}],133:[function(_dereq_,module,exports){
+},{}],134:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9565,15 +9629,15 @@ module.exports = objectTypes;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var htmlUnescapes = _dereq_('./htmlUnescapes'),
-    keys = _dereq_('../objects/keys');
+var htmlUnescapes = require('./htmlUnescapes'),
+    keys = require('../objects/keys');
 
 /** Used to match HTML entities and HTML characters */
 var reEscapedHtml = RegExp('(' + keys(htmlUnescapes).join('|') + ')', 'g');
 
 module.exports = reEscapedHtml;
 
-},{"../objects/keys":175,"./htmlUnescapes":125}],134:[function(_dereq_,module,exports){
+},{"../objects/keys":176,"./htmlUnescapes":126}],135:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9588,7 +9652,7 @@ var reInterpolate = /<%=([\s\S]+?)%>/g;
 
 module.exports = reInterpolate;
 
-},{}],135:[function(_dereq_,module,exports){
+},{}],136:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9597,15 +9661,15 @@ module.exports = reInterpolate;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var htmlEscapes = _dereq_('./htmlEscapes'),
-    keys = _dereq_('../objects/keys');
+var htmlEscapes = require('./htmlEscapes'),
+    keys = require('../objects/keys');
 
 /** Used to match HTML entities and HTML characters */
 var reUnescapedHtml = RegExp('[' + keys(htmlEscapes).join('') + ']', 'g');
 
 module.exports = reUnescapedHtml;
 
-},{"../objects/keys":175,"./htmlEscapes":124}],136:[function(_dereq_,module,exports){
+},{"../objects/keys":176,"./htmlEscapes":125}],137:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9614,8 +9678,8 @@ module.exports = reUnescapedHtml;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var arrayPool = _dereq_('./arrayPool'),
-    maxPoolSize = _dereq_('./maxPoolSize');
+var arrayPool = require('./arrayPool'),
+    maxPoolSize = require('./maxPoolSize');
 
 /**
  * Releases the given array back to the array pool.
@@ -9632,7 +9696,7 @@ function releaseArray(array) {
 
 module.exports = releaseArray;
 
-},{"./arrayPool":100,"./maxPoolSize":130}],137:[function(_dereq_,module,exports){
+},{"./arrayPool":101,"./maxPoolSize":131}],138:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9641,8 +9705,8 @@ module.exports = releaseArray;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var maxPoolSize = _dereq_('./maxPoolSize'),
-    objectPool = _dereq_('./objectPool');
+var maxPoolSize = require('./maxPoolSize'),
+    objectPool = require('./objectPool');
 
 /**
  * Releases the given object back to the object pool.
@@ -9663,7 +9727,7 @@ function releaseObject(object) {
 
 module.exports = releaseObject;
 
-},{"./maxPoolSize":130,"./objectPool":131}],138:[function(_dereq_,module,exports){
+},{"./maxPoolSize":131,"./objectPool":132}],139:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9672,8 +9736,8 @@ module.exports = releaseObject;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var isNative = _dereq_('./isNative'),
-    noop = _dereq_('../utilities/noop');
+var isNative = require('./isNative'),
+    noop = require('../utilities/noop');
 
 /** Used as the property descriptor for `__bindData__` */
 var descriptor = {
@@ -9708,7 +9772,7 @@ var setBindData = !defineProperty ? noop : function(func, value) {
 
 module.exports = setBindData;
 
-},{"../utilities/noop":190,"./isNative":126}],139:[function(_dereq_,module,exports){
+},{"../utilities/noop":191,"./isNative":127}],140:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9717,8 +9781,8 @@ module.exports = setBindData;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var forIn = _dereq_('../objects/forIn'),
-    isFunction = _dereq_('../objects/isFunction');
+var forIn = require('../objects/forIn'),
+    isFunction = require('../objects/isFunction');
 
 /** `Object#toString` result shortcuts */
 var objectClass = '[object Object]';
@@ -9762,7 +9826,7 @@ function shimIsPlainObject(value) {
 
 module.exports = shimIsPlainObject;
 
-},{"../objects/forIn":151,"../objects/isFunction":166}],140:[function(_dereq_,module,exports){
+},{"../objects/forIn":152,"../objects/isFunction":167}],141:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9771,7 +9835,7 @@ module.exports = shimIsPlainObject;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var objectTypes = _dereq_('./objectTypes');
+var objectTypes = require('./objectTypes');
 
 /** Used for native method references */
 var objectProto = Object.prototype;
@@ -9802,7 +9866,7 @@ var shimKeys = function(object) {
 
 module.exports = shimKeys;
 
-},{"./objectTypes":132}],141:[function(_dereq_,module,exports){
+},{"./objectTypes":133}],142:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9842,7 +9906,7 @@ function slice(array, start, end) {
 
 module.exports = slice;
 
-},{}],142:[function(_dereq_,module,exports){
+},{}],143:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9851,7 +9915,7 @@ module.exports = slice;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var htmlUnescapes = _dereq_('./htmlUnescapes');
+var htmlUnescapes = require('./htmlUnescapes');
 
 /**
  * Used by `unescape` to convert HTML entities to characters.
@@ -9866,7 +9930,7 @@ function unescapeHtmlChar(match) {
 
 module.exports = unescapeHtmlChar;
 
-},{"./htmlUnescapes":125}],143:[function(_dereq_,module,exports){
+},{"./htmlUnescapes":126}],144:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9877,50 +9941,50 @@ module.exports = unescapeHtmlChar;
  */
 
 module.exports = {
-  'assign': _dereq_('./objects/assign'),
-  'clone': _dereq_('./objects/clone'),
-  'cloneDeep': _dereq_('./objects/cloneDeep'),
-  'create': _dereq_('./objects/create'),
-  'defaults': _dereq_('./objects/defaults'),
-  'extend': _dereq_('./objects/assign'),
-  'findKey': _dereq_('./objects/findKey'),
-  'findLastKey': _dereq_('./objects/findLastKey'),
-  'forIn': _dereq_('./objects/forIn'),
-  'forInRight': _dereq_('./objects/forInRight'),
-  'forOwn': _dereq_('./objects/forOwn'),
-  'forOwnRight': _dereq_('./objects/forOwnRight'),
-  'functions': _dereq_('./objects/functions'),
-  'has': _dereq_('./objects/has'),
-  'invert': _dereq_('./objects/invert'),
-  'isArguments': _dereq_('./objects/isArguments'),
-  'isArray': _dereq_('./objects/isArray'),
-  'isBoolean': _dereq_('./objects/isBoolean'),
-  'isDate': _dereq_('./objects/isDate'),
-  'isElement': _dereq_('./objects/isElement'),
-  'isEmpty': _dereq_('./objects/isEmpty'),
-  'isEqual': _dereq_('./objects/isEqual'),
-  'isFinite': _dereq_('./objects/isFinite'),
-  'isFunction': _dereq_('./objects/isFunction'),
-  'isNaN': _dereq_('./objects/isNaN'),
-  'isNull': _dereq_('./objects/isNull'),
-  'isNumber': _dereq_('./objects/isNumber'),
-  'isObject': _dereq_('./objects/isObject'),
-  'isPlainObject': _dereq_('./objects/isPlainObject'),
-  'isRegExp': _dereq_('./objects/isRegExp'),
-  'isString': _dereq_('./objects/isString'),
-  'isUndefined': _dereq_('./objects/isUndefined'),
-  'keys': _dereq_('./objects/keys'),
-  'mapValues': _dereq_('./objects/mapValues'),
-  'merge': _dereq_('./objects/merge'),
-  'methods': _dereq_('./objects/functions'),
-  'omit': _dereq_('./objects/omit'),
-  'pairs': _dereq_('./objects/pairs'),
-  'pick': _dereq_('./objects/pick'),
-  'transform': _dereq_('./objects/transform'),
-  'values': _dereq_('./objects/values')
+  'assign': require('./objects/assign'),
+  'clone': require('./objects/clone'),
+  'cloneDeep': require('./objects/cloneDeep'),
+  'create': require('./objects/create'),
+  'defaults': require('./objects/defaults'),
+  'extend': require('./objects/assign'),
+  'findKey': require('./objects/findKey'),
+  'findLastKey': require('./objects/findLastKey'),
+  'forIn': require('./objects/forIn'),
+  'forInRight': require('./objects/forInRight'),
+  'forOwn': require('./objects/forOwn'),
+  'forOwnRight': require('./objects/forOwnRight'),
+  'functions': require('./objects/functions'),
+  'has': require('./objects/has'),
+  'invert': require('./objects/invert'),
+  'isArguments': require('./objects/isArguments'),
+  'isArray': require('./objects/isArray'),
+  'isBoolean': require('./objects/isBoolean'),
+  'isDate': require('./objects/isDate'),
+  'isElement': require('./objects/isElement'),
+  'isEmpty': require('./objects/isEmpty'),
+  'isEqual': require('./objects/isEqual'),
+  'isFinite': require('./objects/isFinite'),
+  'isFunction': require('./objects/isFunction'),
+  'isNaN': require('./objects/isNaN'),
+  'isNull': require('./objects/isNull'),
+  'isNumber': require('./objects/isNumber'),
+  'isObject': require('./objects/isObject'),
+  'isPlainObject': require('./objects/isPlainObject'),
+  'isRegExp': require('./objects/isRegExp'),
+  'isString': require('./objects/isString'),
+  'isUndefined': require('./objects/isUndefined'),
+  'keys': require('./objects/keys'),
+  'mapValues': require('./objects/mapValues'),
+  'merge': require('./objects/merge'),
+  'methods': require('./objects/functions'),
+  'omit': require('./objects/omit'),
+  'pairs': require('./objects/pairs'),
+  'pick': require('./objects/pick'),
+  'transform': require('./objects/transform'),
+  'values': require('./objects/values')
 };
 
-},{"./objects/assign":144,"./objects/clone":145,"./objects/cloneDeep":146,"./objects/create":147,"./objects/defaults":148,"./objects/findKey":149,"./objects/findLastKey":150,"./objects/forIn":151,"./objects/forInRight":152,"./objects/forOwn":153,"./objects/forOwnRight":154,"./objects/functions":155,"./objects/has":156,"./objects/invert":157,"./objects/isArguments":158,"./objects/isArray":159,"./objects/isBoolean":160,"./objects/isDate":161,"./objects/isElement":162,"./objects/isEmpty":163,"./objects/isEqual":164,"./objects/isFinite":165,"./objects/isFunction":166,"./objects/isNaN":167,"./objects/isNull":168,"./objects/isNumber":169,"./objects/isObject":170,"./objects/isPlainObject":171,"./objects/isRegExp":172,"./objects/isString":173,"./objects/isUndefined":174,"./objects/keys":175,"./objects/mapValues":176,"./objects/merge":177,"./objects/omit":178,"./objects/pairs":179,"./objects/pick":180,"./objects/transform":181,"./objects/values":182}],144:[function(_dereq_,module,exports){
+},{"./objects/assign":145,"./objects/clone":146,"./objects/cloneDeep":147,"./objects/create":148,"./objects/defaults":149,"./objects/findKey":150,"./objects/findLastKey":151,"./objects/forIn":152,"./objects/forInRight":153,"./objects/forOwn":154,"./objects/forOwnRight":155,"./objects/functions":156,"./objects/has":157,"./objects/invert":158,"./objects/isArguments":159,"./objects/isArray":160,"./objects/isBoolean":161,"./objects/isDate":162,"./objects/isElement":163,"./objects/isEmpty":164,"./objects/isEqual":165,"./objects/isFinite":166,"./objects/isFunction":167,"./objects/isNaN":168,"./objects/isNull":169,"./objects/isNumber":170,"./objects/isObject":171,"./objects/isPlainObject":172,"./objects/isRegExp":173,"./objects/isString":174,"./objects/isUndefined":175,"./objects/keys":176,"./objects/mapValues":177,"./objects/merge":178,"./objects/omit":179,"./objects/pairs":180,"./objects/pick":181,"./objects/transform":182,"./objects/values":183}],145:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -9929,9 +9993,9 @@ module.exports = {
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseCreateCallback = _dereq_('../internals/baseCreateCallback'),
-    keys = _dereq_('./keys'),
-    objectTypes = _dereq_('../internals/objectTypes');
+var baseCreateCallback = require('../internals/baseCreateCallback'),
+    keys = require('./keys'),
+    objectTypes = require('../internals/objectTypes');
 
 /**
  * Assigns own enumerable properties of source object(s) to the destination
@@ -9992,7 +10056,7 @@ var assign = function(object, source, guard) {
 
 module.exports = assign;
 
-},{"../internals/baseCreateCallback":104,"../internals/objectTypes":132,"./keys":175}],145:[function(_dereq_,module,exports){
+},{"../internals/baseCreateCallback":105,"../internals/objectTypes":133,"./keys":176}],146:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -10001,8 +10065,8 @@ module.exports = assign;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseClone = _dereq_('../internals/baseClone'),
-    baseCreateCallback = _dereq_('../internals/baseCreateCallback');
+var baseClone = require('../internals/baseClone'),
+    baseCreateCallback = require('../internals/baseCreateCallback');
 
 /**
  * Creates a clone of `value`. If `isDeep` is `true` nested objects will also
@@ -10057,7 +10121,7 @@ function clone(value, isDeep, callback, thisArg) {
 
 module.exports = clone;
 
-},{"../internals/baseClone":102,"../internals/baseCreateCallback":104}],146:[function(_dereq_,module,exports){
+},{"../internals/baseClone":103,"../internals/baseCreateCallback":105}],147:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -10066,8 +10130,8 @@ module.exports = clone;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseClone = _dereq_('../internals/baseClone'),
-    baseCreateCallback = _dereq_('../internals/baseCreateCallback');
+var baseClone = require('../internals/baseClone'),
+    baseCreateCallback = require('../internals/baseCreateCallback');
 
 /**
  * Creates a deep clone of `value`. If a callback is provided it will be
@@ -10116,7 +10180,7 @@ function cloneDeep(value, callback, thisArg) {
 
 module.exports = cloneDeep;
 
-},{"../internals/baseClone":102,"../internals/baseCreateCallback":104}],147:[function(_dereq_,module,exports){
+},{"../internals/baseClone":103,"../internals/baseCreateCallback":105}],148:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -10125,8 +10189,8 @@ module.exports = cloneDeep;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var assign = _dereq_('./assign'),
-    baseCreate = _dereq_('../internals/baseCreate');
+var assign = require('./assign'),
+    baseCreate = require('../internals/baseCreate');
 
 /**
  * Creates an object that inherits from the given `prototype` object. If a
@@ -10166,7 +10230,7 @@ function create(prototype, properties) {
 
 module.exports = create;
 
-},{"../internals/baseCreate":103,"./assign":144}],148:[function(_dereq_,module,exports){
+},{"../internals/baseCreate":104,"./assign":145}],149:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -10175,8 +10239,8 @@ module.exports = create;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var keys = _dereq_('./keys'),
-    objectTypes = _dereq_('../internals/objectTypes');
+var keys = require('./keys'),
+    objectTypes = require('../internals/objectTypes');
 
 /**
  * Assigns own enumerable properties of source object(s) to the destination
@@ -10222,7 +10286,7 @@ var defaults = function(object, source, guard) {
 
 module.exports = defaults;
 
-},{"../internals/objectTypes":132,"./keys":175}],149:[function(_dereq_,module,exports){
+},{"../internals/objectTypes":133,"./keys":176}],150:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -10231,8 +10295,8 @@ module.exports = defaults;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback'),
-    forOwn = _dereq_('./forOwn');
+var createCallback = require('../functions/createCallback'),
+    forOwn = require('./forOwn');
 
 /**
  * This method is like `_.findIndex` except that it returns the key of the
@@ -10289,7 +10353,7 @@ function findKey(object, callback, thisArg) {
 
 module.exports = findKey;
 
-},{"../functions/createCallback":88,"./forOwn":153}],150:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"./forOwn":154}],151:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -10298,8 +10362,8 @@ module.exports = findKey;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback'),
-    forOwnRight = _dereq_('./forOwnRight');
+var createCallback = require('../functions/createCallback'),
+    forOwnRight = require('./forOwnRight');
 
 /**
  * This method is like `_.findKey` except that it iterates over elements
@@ -10356,7 +10420,7 @@ function findLastKey(object, callback, thisArg) {
 
 module.exports = findLastKey;
 
-},{"../functions/createCallback":88,"./forOwnRight":154}],151:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"./forOwnRight":155}],152:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -10365,8 +10429,8 @@ module.exports = findLastKey;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseCreateCallback = _dereq_('../internals/baseCreateCallback'),
-    objectTypes = _dereq_('../internals/objectTypes');
+var baseCreateCallback = require('../internals/baseCreateCallback'),
+    objectTypes = require('../internals/objectTypes');
 
 /**
  * Iterates over own and inherited enumerable properties of an object,
@@ -10412,7 +10476,7 @@ var forIn = function(collection, callback, thisArg) {
 
 module.exports = forIn;
 
-},{"../internals/baseCreateCallback":104,"../internals/objectTypes":132}],152:[function(_dereq_,module,exports){
+},{"../internals/baseCreateCallback":105,"../internals/objectTypes":133}],153:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -10421,8 +10485,8 @@ module.exports = forIn;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseCreateCallback = _dereq_('../internals/baseCreateCallback'),
-    forIn = _dereq_('./forIn');
+var baseCreateCallback = require('../internals/baseCreateCallback'),
+    forIn = require('./forIn');
 
 /**
  * This method is like `_.forIn` except that it iterates over elements
@@ -10471,7 +10535,7 @@ function forInRight(object, callback, thisArg) {
 
 module.exports = forInRight;
 
-},{"../internals/baseCreateCallback":104,"./forIn":151}],153:[function(_dereq_,module,exports){
+},{"../internals/baseCreateCallback":105,"./forIn":152}],154:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -10480,9 +10544,9 @@ module.exports = forInRight;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseCreateCallback = _dereq_('../internals/baseCreateCallback'),
-    keys = _dereq_('./keys'),
-    objectTypes = _dereq_('../internals/objectTypes');
+var baseCreateCallback = require('../internals/baseCreateCallback'),
+    keys = require('./keys'),
+    objectTypes = require('../internals/objectTypes');
 
 /**
  * Iterates over own enumerable properties of an object, executing the callback
@@ -10523,7 +10587,7 @@ var forOwn = function(collection, callback, thisArg) {
 
 module.exports = forOwn;
 
-},{"../internals/baseCreateCallback":104,"../internals/objectTypes":132,"./keys":175}],154:[function(_dereq_,module,exports){
+},{"../internals/baseCreateCallback":105,"../internals/objectTypes":133,"./keys":176}],155:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -10532,8 +10596,8 @@ module.exports = forOwn;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseCreateCallback = _dereq_('../internals/baseCreateCallback'),
-    keys = _dereq_('./keys');
+var baseCreateCallback = require('../internals/baseCreateCallback'),
+    keys = require('./keys');
 
 /**
  * This method is like `_.forOwn` except that it iterates over elements
@@ -10569,7 +10633,7 @@ function forOwnRight(object, callback, thisArg) {
 
 module.exports = forOwnRight;
 
-},{"../internals/baseCreateCallback":104,"./keys":175}],155:[function(_dereq_,module,exports){
+},{"../internals/baseCreateCallback":105,"./keys":176}],156:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -10578,8 +10642,8 @@ module.exports = forOwnRight;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var forIn = _dereq_('./forIn'),
-    isFunction = _dereq_('./isFunction');
+var forIn = require('./forIn'),
+    isFunction = require('./isFunction');
 
 /**
  * Creates a sorted array of property names of all enumerable properties,
@@ -10608,7 +10672,7 @@ function functions(object) {
 
 module.exports = functions;
 
-},{"./forIn":151,"./isFunction":166}],156:[function(_dereq_,module,exports){
+},{"./forIn":152,"./isFunction":167}],157:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -10645,7 +10709,7 @@ function has(object, key) {
 
 module.exports = has;
 
-},{}],157:[function(_dereq_,module,exports){
+},{}],158:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -10654,7 +10718,7 @@ module.exports = has;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var keys = _dereq_('./keys');
+var keys = require('./keys');
 
 /**
  * Creates an object composed of the inverted keys and values of the given object.
@@ -10684,7 +10748,7 @@ function invert(object) {
 
 module.exports = invert;
 
-},{"./keys":175}],158:[function(_dereq_,module,exports){
+},{"./keys":176}],159:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -10726,7 +10790,7 @@ function isArguments(value) {
 
 module.exports = isArguments;
 
-},{}],159:[function(_dereq_,module,exports){
+},{}],160:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -10735,7 +10799,7 @@ module.exports = isArguments;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var isNative = _dereq_('../internals/isNative');
+var isNative = require('../internals/isNative');
 
 /** `Object#toString` result shortcuts */
 var arrayClass = '[object Array]';
@@ -10773,7 +10837,7 @@ var isArray = nativeIsArray || function(value) {
 
 module.exports = isArray;
 
-},{"../internals/isNative":126}],160:[function(_dereq_,module,exports){
+},{"../internals/isNative":127}],161:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -10812,7 +10876,7 @@ function isBoolean(value) {
 
 module.exports = isBoolean;
 
-},{}],161:[function(_dereq_,module,exports){
+},{}],162:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -10850,7 +10914,7 @@ function isDate(value) {
 
 module.exports = isDate;
 
-},{}],162:[function(_dereq_,module,exports){
+},{}],163:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -10879,7 +10943,7 @@ function isElement(value) {
 
 module.exports = isElement;
 
-},{}],163:[function(_dereq_,module,exports){
+},{}],164:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -10888,8 +10952,8 @@ module.exports = isElement;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var forOwn = _dereq_('./forOwn'),
-    isFunction = _dereq_('./isFunction');
+var forOwn = require('./forOwn'),
+    isFunction = require('./isFunction');
 
 /** `Object#toString` result shortcuts */
 var argsClass = '[object Arguments]',
@@ -10944,7 +11008,7 @@ function isEmpty(value) {
 
 module.exports = isEmpty;
 
-},{"./forOwn":153,"./isFunction":166}],164:[function(_dereq_,module,exports){
+},{"./forOwn":154,"./isFunction":167}],165:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -10953,8 +11017,8 @@ module.exports = isEmpty;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseCreateCallback = _dereq_('../internals/baseCreateCallback'),
-    baseIsEqual = _dereq_('../internals/baseIsEqual');
+var baseCreateCallback = require('../internals/baseCreateCallback'),
+    baseIsEqual = require('../internals/baseIsEqual');
 
 /**
  * Performs a deep comparison between two values to determine if they are
@@ -11000,7 +11064,7 @@ function isEqual(a, b, callback, thisArg) {
 
 module.exports = isEqual;
 
-},{"../internals/baseCreateCallback":104,"../internals/baseIsEqual":109}],165:[function(_dereq_,module,exports){
+},{"../internals/baseCreateCallback":105,"../internals/baseIsEqual":110}],166:[function(require,module,exports){
 (function (global){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
@@ -11049,8 +11113,8 @@ function isFinite(value) {
 
 module.exports = isFinite;
 
-}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],166:[function(_dereq_,module,exports){
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],167:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -11079,7 +11143,7 @@ function isFunction(value) {
 
 module.exports = isFunction;
 
-},{}],167:[function(_dereq_,module,exports){
+},{}],168:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -11088,7 +11152,7 @@ module.exports = isFunction;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var isNumber = _dereq_('./isNumber');
+var isNumber = require('./isNumber');
 
 /**
  * Checks if `value` is `NaN`.
@@ -11123,7 +11187,7 @@ function isNaN(value) {
 
 module.exports = isNaN;
 
-},{"./isNumber":169}],168:[function(_dereq_,module,exports){
+},{"./isNumber":170}],169:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -11155,7 +11219,7 @@ function isNull(value) {
 
 module.exports = isNull;
 
-},{}],169:[function(_dereq_,module,exports){
+},{}],170:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -11196,7 +11260,7 @@ function isNumber(value) {
 
 module.exports = isNumber;
 
-},{}],170:[function(_dereq_,module,exports){
+},{}],171:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -11205,7 +11269,7 @@ module.exports = isNumber;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var objectTypes = _dereq_('../internals/objectTypes');
+var objectTypes = require('../internals/objectTypes');
 
 /**
  * Checks if `value` is the language type of Object.
@@ -11237,7 +11301,7 @@ function isObject(value) {
 
 module.exports = isObject;
 
-},{"../internals/objectTypes":132}],171:[function(_dereq_,module,exports){
+},{"../internals/objectTypes":133}],172:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -11246,8 +11310,8 @@ module.exports = isObject;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var isNative = _dereq_('../internals/isNative'),
-    shimIsPlainObject = _dereq_('../internals/shimIsPlainObject');
+var isNative = require('../internals/isNative'),
+    shimIsPlainObject = require('../internals/shimIsPlainObject');
 
 /** `Object#toString` result shortcuts */
 var objectClass = '[object Object]';
@@ -11299,7 +11363,7 @@ var isPlainObject = !getPrototypeOf ? shimIsPlainObject : function(value) {
 
 module.exports = isPlainObject;
 
-},{"../internals/isNative":126,"../internals/shimIsPlainObject":139}],172:[function(_dereq_,module,exports){
+},{"../internals/isNative":127,"../internals/shimIsPlainObject":140}],173:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -11337,7 +11401,7 @@ function isRegExp(value) {
 
 module.exports = isRegExp;
 
-},{}],173:[function(_dereq_,module,exports){
+},{}],174:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -11376,7 +11440,7 @@ function isString(value) {
 
 module.exports = isString;
 
-},{}],174:[function(_dereq_,module,exports){
+},{}],175:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -11405,7 +11469,7 @@ function isUndefined(value) {
 
 module.exports = isUndefined;
 
-},{}],175:[function(_dereq_,module,exports){
+},{}],176:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -11414,9 +11478,9 @@ module.exports = isUndefined;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var isNative = _dereq_('../internals/isNative'),
-    isObject = _dereq_('./isObject'),
-    shimKeys = _dereq_('../internals/shimKeys');
+var isNative = require('../internals/isNative'),
+    isObject = require('./isObject'),
+    shimKeys = require('../internals/shimKeys');
 
 /* Native method shortcuts for methods with the same name as other `lodash` methods */
 var nativeKeys = isNative(nativeKeys = Object.keys) && nativeKeys;
@@ -11443,7 +11507,7 @@ var keys = !nativeKeys ? shimKeys : function(object) {
 
 module.exports = keys;
 
-},{"../internals/isNative":126,"../internals/shimKeys":140,"./isObject":170}],176:[function(_dereq_,module,exports){
+},{"../internals/isNative":127,"../internals/shimKeys":141,"./isObject":171}],177:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -11452,8 +11516,8 @@ module.exports = keys;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var createCallback = _dereq_('../functions/createCallback'),
-    forOwn = _dereq_('./forOwn');
+var createCallback = require('../functions/createCallback'),
+    forOwn = require('./forOwn');
 
 /**
  * Creates an object with the same keys as `object` and values generated by
@@ -11503,7 +11567,7 @@ function mapValues(object, callback, thisArg) {
 
 module.exports = mapValues;
 
-},{"../functions/createCallback":88,"./forOwn":153}],177:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"./forOwn":154}],178:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -11512,12 +11576,12 @@ module.exports = mapValues;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseCreateCallback = _dereq_('../internals/baseCreateCallback'),
-    baseMerge = _dereq_('../internals/baseMerge'),
-    getArray = _dereq_('../internals/getArray'),
-    isObject = _dereq_('./isObject'),
-    releaseArray = _dereq_('../internals/releaseArray'),
-    slice = _dereq_('../internals/slice');
+var baseCreateCallback = require('../internals/baseCreateCallback'),
+    baseMerge = require('../internals/baseMerge'),
+    getArray = require('../internals/getArray'),
+    isObject = require('./isObject'),
+    releaseArray = require('../internals/releaseArray'),
+    slice = require('../internals/slice');
 
 /**
  * Recursively merges own enumerable properties of the source object(s), that
@@ -11602,7 +11666,7 @@ function merge(object) {
 
 module.exports = merge;
 
-},{"../internals/baseCreateCallback":104,"../internals/baseMerge":110,"../internals/getArray":122,"../internals/releaseArray":136,"../internals/slice":141,"./isObject":170}],178:[function(_dereq_,module,exports){
+},{"../internals/baseCreateCallback":105,"../internals/baseMerge":111,"../internals/getArray":123,"../internals/releaseArray":137,"../internals/slice":142,"./isObject":171}],179:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -11611,10 +11675,10 @@ module.exports = merge;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseDifference = _dereq_('../internals/baseDifference'),
-    baseFlatten = _dereq_('../internals/baseFlatten'),
-    createCallback = _dereq_('../functions/createCallback'),
-    forIn = _dereq_('./forIn');
+var baseDifference = require('../internals/baseDifference'),
+    baseFlatten = require('../internals/baseFlatten'),
+    createCallback = require('../functions/createCallback'),
+    forIn = require('./forIn');
 
 /**
  * Creates a shallow clone of `object` excluding the specified properties.
@@ -11671,7 +11735,7 @@ function omit(object, callback, thisArg) {
 
 module.exports = omit;
 
-},{"../functions/createCallback":88,"../internals/baseDifference":106,"../internals/baseFlatten":107,"./forIn":151}],179:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"../internals/baseDifference":107,"../internals/baseFlatten":108,"./forIn":152}],180:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -11680,7 +11744,7 @@ module.exports = omit;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var keys = _dereq_('./keys');
+var keys = require('./keys');
 
 /**
  * Creates a two dimensional array of an object's key-value pairs,
@@ -11711,7 +11775,7 @@ function pairs(object) {
 
 module.exports = pairs;
 
-},{"./keys":175}],180:[function(_dereq_,module,exports){
+},{"./keys":176}],181:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -11720,10 +11784,10 @@ module.exports = pairs;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseFlatten = _dereq_('../internals/baseFlatten'),
-    createCallback = _dereq_('../functions/createCallback'),
-    forIn = _dereq_('./forIn'),
-    isObject = _dereq_('./isObject');
+var baseFlatten = require('../internals/baseFlatten'),
+    createCallback = require('../functions/createCallback'),
+    forIn = require('./forIn'),
+    isObject = require('./isObject');
 
 /**
  * Creates a shallow clone of `object` composed of the specified properties.
@@ -11778,7 +11842,7 @@ function pick(object, callback, thisArg) {
 
 module.exports = pick;
 
-},{"../functions/createCallback":88,"../internals/baseFlatten":107,"./forIn":151,"./isObject":170}],181:[function(_dereq_,module,exports){
+},{"../functions/createCallback":89,"../internals/baseFlatten":108,"./forIn":152,"./isObject":171}],182:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -11787,11 +11851,11 @@ module.exports = pick;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseCreate = _dereq_('../internals/baseCreate'),
-    createCallback = _dereq_('../functions/createCallback'),
-    forEach = _dereq_('../collections/forEach'),
-    forOwn = _dereq_('./forOwn'),
-    isArray = _dereq_('./isArray');
+var baseCreate = require('../internals/baseCreate'),
+    createCallback = require('../functions/createCallback'),
+    forEach = require('../collections/forEach'),
+    forOwn = require('./forOwn'),
+    isArray = require('./isArray');
 
 /**
  * An alternative to `_.reduce` this method transforms `object` to a new
@@ -11847,7 +11911,7 @@ function transform(object, callback, accumulator, thisArg) {
 
 module.exports = transform;
 
-},{"../collections/forEach":63,"../functions/createCallback":88,"../internals/baseCreate":103,"./forOwn":153,"./isArray":159}],182:[function(_dereq_,module,exports){
+},{"../collections/forEach":64,"../functions/createCallback":89,"../internals/baseCreate":104,"./forOwn":154,"./isArray":160}],183:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -11856,7 +11920,7 @@ module.exports = transform;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var keys = _dereq_('./keys');
+var keys = require('./keys');
 
 /**
  * Creates an array composed of the own enumerable property values of `object`.
@@ -11885,7 +11949,7 @@ function values(object) {
 
 module.exports = values;
 
-},{"./keys":175}],183:[function(_dereq_,module,exports){
+},{"./keys":176}],184:[function(require,module,exports){
 (function (global){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
@@ -11895,7 +11959,7 @@ module.exports = values;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var isNative = _dereq_('./internals/isNative');
+var isNative = require('./internals/isNative');
 
 /** Used to detect functions containing a `this` reference */
 var reThis = /\bthis\b/;
@@ -11928,8 +11992,8 @@ support.funcNames = typeof Function.name == 'string';
 
 module.exports = support;
 
-}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./internals/isNative":126}],184:[function(_dereq_,module,exports){
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./internals/isNative":127}],185:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -11940,26 +12004,26 @@ module.exports = support;
  */
 
 module.exports = {
-  'constant': _dereq_('./utilities/constant'),
-  'createCallback': _dereq_('./functions/createCallback'),
-  'escape': _dereq_('./utilities/escape'),
-  'identity': _dereq_('./utilities/identity'),
-  'mixin': _dereq_('./utilities/mixin'),
-  'noConflict': _dereq_('./utilities/noConflict'),
-  'noop': _dereq_('./utilities/noop'),
-  'now': _dereq_('./utilities/now'),
-  'parseInt': _dereq_('./utilities/parseInt'),
-  'property': _dereq_('./utilities/property'),
-  'random': _dereq_('./utilities/random'),
-  'result': _dereq_('./utilities/result'),
-  'template': _dereq_('./utilities/template'),
-  'templateSettings': _dereq_('./utilities/templateSettings'),
-  'times': _dereq_('./utilities/times'),
-  'unescape': _dereq_('./utilities/unescape'),
-  'uniqueId': _dereq_('./utilities/uniqueId')
+  'constant': require('./utilities/constant'),
+  'createCallback': require('./functions/createCallback'),
+  'escape': require('./utilities/escape'),
+  'identity': require('./utilities/identity'),
+  'mixin': require('./utilities/mixin'),
+  'noConflict': require('./utilities/noConflict'),
+  'noop': require('./utilities/noop'),
+  'now': require('./utilities/now'),
+  'parseInt': require('./utilities/parseInt'),
+  'property': require('./utilities/property'),
+  'random': require('./utilities/random'),
+  'result': require('./utilities/result'),
+  'template': require('./utilities/template'),
+  'templateSettings': require('./utilities/templateSettings'),
+  'times': require('./utilities/times'),
+  'unescape': require('./utilities/unescape'),
+  'uniqueId': require('./utilities/uniqueId')
 };
 
-},{"./functions/createCallback":88,"./utilities/constant":185,"./utilities/escape":186,"./utilities/identity":187,"./utilities/mixin":188,"./utilities/noConflict":189,"./utilities/noop":190,"./utilities/now":191,"./utilities/parseInt":192,"./utilities/property":193,"./utilities/random":194,"./utilities/result":195,"./utilities/template":196,"./utilities/templateSettings":197,"./utilities/times":198,"./utilities/unescape":199,"./utilities/uniqueId":200}],185:[function(_dereq_,module,exports){
+},{"./functions/createCallback":89,"./utilities/constant":186,"./utilities/escape":187,"./utilities/identity":188,"./utilities/mixin":189,"./utilities/noConflict":190,"./utilities/noop":191,"./utilities/now":192,"./utilities/parseInt":193,"./utilities/property":194,"./utilities/random":195,"./utilities/result":196,"./utilities/template":197,"./utilities/templateSettings":198,"./utilities/times":199,"./utilities/unescape":200,"./utilities/uniqueId":201}],186:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -11992,7 +12056,7 @@ function constant(value) {
 
 module.exports = constant;
 
-},{}],186:[function(_dereq_,module,exports){
+},{}],187:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -12001,9 +12065,9 @@ module.exports = constant;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var escapeHtmlChar = _dereq_('../internals/escapeHtmlChar'),
-    keys = _dereq_('../objects/keys'),
-    reUnescapedHtml = _dereq_('../internals/reUnescapedHtml');
+var escapeHtmlChar = require('../internals/escapeHtmlChar'),
+    keys = require('../objects/keys'),
+    reUnescapedHtml = require('../internals/reUnescapedHtml');
 
 /**
  * Converts the characters `&`, `<`, `>`, `"`, and `'` in `string` to their
@@ -12025,7 +12089,7 @@ function escape(string) {
 
 module.exports = escape;
 
-},{"../internals/escapeHtmlChar":120,"../internals/reUnescapedHtml":135,"../objects/keys":175}],187:[function(_dereq_,module,exports){
+},{"../internals/escapeHtmlChar":121,"../internals/reUnescapedHtml":136,"../objects/keys":176}],188:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -12055,7 +12119,7 @@ function identity(value) {
 
 module.exports = identity;
 
-},{}],188:[function(_dereq_,module,exports){
+},{}],189:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -12064,10 +12128,10 @@ module.exports = identity;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var forEach = _dereq_('../collections/forEach'),
-    functions = _dereq_('../objects/functions'),
-    isFunction = _dereq_('../objects/isFunction'),
-    isObject = _dereq_('../objects/isObject');
+var forEach = require('../collections/forEach'),
+    functions = require('../objects/functions'),
+    isFunction = require('../objects/isFunction'),
+    isObject = require('../objects/isObject');
 
 /**
  * Used for `Array` method references.
@@ -12145,7 +12209,7 @@ function mixin(object, source, options) {
 
 module.exports = mixin;
 
-},{"../collections/forEach":63,"../objects/functions":155,"../objects/isFunction":166,"../objects/isObject":170}],189:[function(_dereq_,module,exports){
+},{"../collections/forEach":64,"../objects/functions":156,"../objects/isFunction":167,"../objects/isObject":171}],190:[function(require,module,exports){
 (function (global){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
@@ -12178,8 +12242,8 @@ function noConflict() {
 
 module.exports = noConflict;
 
-}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],190:[function(_dereq_,module,exports){
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],191:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -12207,7 +12271,7 @@ function noop() {
 
 module.exports = noop;
 
-},{}],191:[function(_dereq_,module,exports){
+},{}],192:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -12216,7 +12280,7 @@ module.exports = noop;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var isNative = _dereq_('../internals/isNative');
+var isNative = require('../internals/isNative');
 
 /**
  * Gets the number of milliseconds that have elapsed since the Unix epoch
@@ -12237,7 +12301,7 @@ var now = isNative(now = Date.now) && now || function() {
 
 module.exports = now;
 
-},{"../internals/isNative":126}],192:[function(_dereq_,module,exports){
+},{"../internals/isNative":127}],193:[function(require,module,exports){
 (function (global){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
@@ -12247,7 +12311,7 @@ module.exports = now;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var isString = _dereq_('../objects/isString');
+var isString = require('../objects/isString');
 
 /** Used to detect and test whitespace */
 var whitespace = (
@@ -12293,8 +12357,8 @@ var parseInt = nativeParseInt(whitespace + '08') == 8 ? nativeParseInt : functio
 
 module.exports = parseInt;
 
-}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../objects/isString":173}],193:[function(_dereq_,module,exports){
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"../objects/isString":174}],194:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -12336,7 +12400,7 @@ function property(key) {
 
 module.exports = property;
 
-},{}],194:[function(_dereq_,module,exports){
+},{}],195:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -12345,7 +12409,7 @@ module.exports = property;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseRandom = _dereq_('../internals/baseRandom');
+var baseRandom = require('../internals/baseRandom');
 
 /* Native method shortcuts for methods with the same name as other `lodash` methods */
 var nativeMin = Math.min,
@@ -12411,7 +12475,7 @@ function random(min, max, floating) {
 
 module.exports = random;
 
-},{"../internals/baseRandom":111}],195:[function(_dereq_,module,exports){
+},{"../internals/baseRandom":112}],196:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -12420,7 +12484,7 @@ module.exports = random;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var isFunction = _dereq_('../objects/isFunction');
+var isFunction = require('../objects/isFunction');
 
 /**
  * Resolves the value of property `key` on `object`. If `key` is a function
@@ -12458,7 +12522,7 @@ function result(object, key) {
 
 module.exports = result;
 
-},{"../objects/isFunction":166}],196:[function(_dereq_,module,exports){
+},{"../objects/isFunction":167}],197:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -12467,13 +12531,13 @@ module.exports = result;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var defaults = _dereq_('../objects/defaults'),
-    escape = _dereq_('./escape'),
-    escapeStringChar = _dereq_('../internals/escapeStringChar'),
-    keys = _dereq_('../objects/keys'),
-    reInterpolate = _dereq_('../internals/reInterpolate'),
-    templateSettings = _dereq_('./templateSettings'),
-    values = _dereq_('../objects/values');
+var defaults = require('../objects/defaults'),
+    escape = require('./escape'),
+    escapeStringChar = require('../internals/escapeStringChar'),
+    keys = require('../objects/keys'),
+    reInterpolate = require('../internals/reInterpolate'),
+    templateSettings = require('./templateSettings'),
+    values = require('../objects/values');
 
 /** Used to match empty string literals in compiled template source */
 var reEmptyStringLeading = /\b__p \+= '';/g,
@@ -12676,7 +12740,7 @@ function template(text, data, options) {
 
 module.exports = template;
 
-},{"../internals/escapeStringChar":121,"../internals/reInterpolate":134,"../objects/defaults":148,"../objects/keys":175,"../objects/values":182,"./escape":186,"./templateSettings":197}],197:[function(_dereq_,module,exports){
+},{"../internals/escapeStringChar":122,"../internals/reInterpolate":135,"../objects/defaults":149,"../objects/keys":176,"../objects/values":183,"./escape":187,"./templateSettings":198}],198:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -12685,8 +12749,8 @@ module.exports = template;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var escape = _dereq_('./escape'),
-    reInterpolate = _dereq_('../internals/reInterpolate');
+var escape = require('./escape'),
+    reInterpolate = require('../internals/reInterpolate');
 
 /**
  * By default, the template delimiters used by Lo-Dash are similar to those in
@@ -12751,7 +12815,7 @@ var templateSettings = {
 
 module.exports = templateSettings;
 
-},{"../internals/reInterpolate":134,"./escape":186}],198:[function(_dereq_,module,exports){
+},{"../internals/reInterpolate":135,"./escape":187}],199:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -12760,7 +12824,7 @@ module.exports = templateSettings;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var baseCreateCallback = _dereq_('../internals/baseCreateCallback');
+var baseCreateCallback = require('../internals/baseCreateCallback');
 
 /**
  * Executes the callback `n` times, returning an array of the results
@@ -12799,7 +12863,7 @@ function times(n, callback, thisArg) {
 
 module.exports = times;
 
-},{"../internals/baseCreateCallback":104}],199:[function(_dereq_,module,exports){
+},{"../internals/baseCreateCallback":105}],200:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -12808,9 +12872,9 @@ module.exports = times;
  * Copyright 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <http://lodash.com/license>
  */
-var keys = _dereq_('../objects/keys'),
-    reEscapedHtml = _dereq_('../internals/reEscapedHtml'),
-    unescapeHtmlChar = _dereq_('../internals/unescapeHtmlChar');
+var keys = require('../objects/keys'),
+    reEscapedHtml = require('../internals/reEscapedHtml'),
+    unescapeHtmlChar = require('../internals/unescapeHtmlChar');
 
 /**
  * The inverse of `_.escape` this method converts the HTML entities
@@ -12833,7 +12897,7 @@ function unescape(string) {
 
 module.exports = unescape;
 
-},{"../internals/reEscapedHtml":133,"../internals/unescapeHtmlChar":142,"../objects/keys":175}],200:[function(_dereq_,module,exports){
+},{"../internals/reEscapedHtml":134,"../internals/unescapeHtmlChar":143,"../objects/keys":176}],201:[function(require,module,exports){
 /**
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modularize modern exports="node" -o ./modern/`
@@ -12869,7 +12933,7 @@ function uniqueId(prefix) {
 
 module.exports = uniqueId;
 
-},{}],201:[function(_dereq_,module,exports){
+},{}],202:[function(require,module,exports){
 function DOMParser(options){
 	this.options = options ||{locator:{}};
 	
@@ -13119,14 +13183,14 @@ function appendElement (hander,node) {
     }
 }//appendChild and setAttributeNS are preformance key
 
-if(typeof _dereq_ == 'function'){
-	var XMLReader = _dereq_('./sax').XMLReader;
-	var DOMImplementation = exports.DOMImplementation = _dereq_('./dom').DOMImplementation;
-	exports.XMLSerializer = _dereq_('./dom').XMLSerializer ;
+if(typeof require == 'function'){
+	var XMLReader = require('./sax').XMLReader;
+	var DOMImplementation = exports.DOMImplementation = require('./dom').DOMImplementation;
+	exports.XMLSerializer = require('./dom').XMLSerializer ;
 	exports.DOMParser = DOMParser;
 }
 
-},{"./dom":202,"./sax":203}],202:[function(_dereq_,module,exports){
+},{"./dom":203,"./sax":204}],203:[function(require,module,exports){
 /*
  * DOM Level 2
  * Object DOMException
@@ -14261,12 +14325,12 @@ try{
 }catch(e){//ie8
 }
 
-if(typeof _dereq_ == 'function'){
+if(typeof require == 'function'){
 	exports.DOMImplementation = DOMImplementation;
 	exports.XMLSerializer = XMLSerializer;
 }
 
-},{}],203:[function(_dereq_,module,exports){
+},{}],204:[function(require,module,exports){
 //[4]   	NameStartChar	   ::=   	":" | [A-Z] | "_" | [a-z] | [#xC0-#xD6] | [#xD8-#xF6] | [#xF8-#x2FF] | [#x370-#x37D] | [#x37F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]
 //[4a]   	NameChar	   ::=   	NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
 //[5]   	Name	   ::=   	NameStartChar (NameChar)*
@@ -14847,11 +14911,10 @@ function split(source,start){
 	}
 }
 
-if(typeof _dereq_ == 'function'){
+if(typeof require == 'function'){
 	exports.XMLReader = XMLReader;
 }
 
 
-},{}]},{},[3])
-(3)
+},{}]},{},[4])(4)
 });
