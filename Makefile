@@ -60,11 +60,13 @@ test-node:
 test-zuul:
 	@if [ "x$(BROWSER_PLATFORM)" = "x" ]; then \
 		$(ZUUL) \
+		--ui mocha-bdd \
 		--browser-name $(BROWSER_NAME) \
 		--browser-version $(BROWSER_VERSION) \
 		test/*.js; \
 		else \
 		$(ZUUL) \
+		--ui mocha-bdd \
 		--browser-name $(BROWSER_NAME) \
 		--browser-version $(BROWSER_VERSION) \
 		--browser-platform "$(BROWSER_PLATFORM)" \
