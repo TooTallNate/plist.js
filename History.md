@@ -1,4 +1,13 @@
 
+1.1.0 / 2014-08-27
+==================
+
+ * package: update "browserify" to v5.10.1
+ * package: update "zuul" to v1.10.2
+ * README: add "Sauce Test Status" build badge
+ * travis: use new "plistjs" sauce credentials
+ * travis: set up zuul saucelabs automated testing
+
 1.0.1 / 2014-06-25
 ==================
 
