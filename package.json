@@ -14,6 +14,7 @@
     "type": "git",
     "url": "git://github.com/TooTallNate/node-plist.git"
   },
+  "license": "MIT",
   "keywords": [
     "apple",
     "browser",
