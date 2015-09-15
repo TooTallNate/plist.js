@@ -122,7 +122,7 @@ describe('plist', function () {
 <plist version="1.0">
   <dict>
     <key>a</key>
-    <string></string>
+    <string/>
   </dict>
 </plist>
 */}));
