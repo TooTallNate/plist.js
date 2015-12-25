@@ -69,8 +69,34 @@ Parsing a plist from string payload:
 ``` javascript
 var plist = require('plist');
 
-var obj = plist.parse('<plist><string>Hello World!</string></plist>');
-console.log(obj);  // Hello World!
+var xml = 
+  '<?xml version="1.0" encoding="UTF-8"?>' +
+  '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' +
+  '<plist version="1.0">' +
+    '<key>metadata</key>' +
+    '<dict>' +
+      '<key>bundle-identifier</key>' +
+      '<string>com.company.app</string>' +
+      '<key>bundle-version</key>' +
+      '<string>0.1.1</string>' +
+      '<key>kind</key>' +
+      '<string>software</string>' +
+      '<key>title</key>' +
+      '<string>AppName</string>' +
+    '</dict>' +
+  '</plist>';
+
+console.log(plist.parse(xml));
+
+// [
+//   "metadata",
+//   {
+//     "bundle-identifier": "com.company.app",
+//     "bundle-version": "0.1.1",
+//     "kind": "software",
+//     "title": "AppName"
+//   }
+// ]
 ```
 
 ### Building
@@ -81,9 +107,34 @@ that complies with the plist DTD:
 ``` javascript
 var plist = require('plist');
 
-console.log(plist.build({ foo: 'bar' }));
-```
+var json = [
+  "metadata",
+  {
+    "bundle-identifier": "com.company.app",
+    "bundle-version": "0.1.1",
+    "kind": "software",
+    "title": "AppName"
+  }
+];
 
+console.log(plist.build(json));
+
+// <?xml version="1.0" encoding="UTF-8"?>
+// <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+// <plist version="1.0">
+//   <key>metadata</key>
+//   <dict>
+//     <key>bundle-identifier</key>
+//     <string>com.company.app</string>
+//     <key>bundle-version</key>
+//     <string>0.1.1</string>
+//     <key>kind</key>
+//     <string>software</string>
+//     <key>title</key>
+//     <string>AppName</string>
+//   </dict>
+// </plist>
+```
 
 ## License
 
