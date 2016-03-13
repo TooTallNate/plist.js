@@ -3,6 +3,15 @@ var assert = require('assert');
 var parse = require('../').parse;
 var multiline = require('multiline');
 
+function isEmpty(o){
+  for(var i in o){
+    if(o.hasOwnProperty(i)){
+      return false;
+    }
+  }
+  return true;
+}
+
 describe('plist', function () {
 
   describe('parse()', function () {
@@ -48,6 +57,59 @@ describe('plist', function () {
       assert.strictEqual(parsed, 3.14);
     });
 
+    it('should parse an empty <key/> in a dictionary', function() {
+      var xml = multiline(function() {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key />
+    <string />
+  </dict>
+</plist>
+*/});
+      var parsed = parse(xml);
+      assert.ok(isEmpty(parsed));
+    });
+
+    it('should parse an empty <key></key> in a dictionary', function() {
+      var xml = multiline(function() {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key></key>
+    <string />
+  </dict>
+</plist>
+*/});
+      var parsed = parse(xml);
+      assert.ok(isEmpty(parsed));
+    });
+
+    it('should parse an empty <key></key> and <string></string> in dictionary with more data', function() {
+      var xml = multiline(function() {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key></key>
+    <string></string>
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+      <string>armv7</string>
+    </array>
+  </dict>
+</plist>
+*/});
+      var parsed = parse(xml);
+      assert.deepEqual(parsed, {
+        'UIRequiredDeviceCapabilities': [
+          'armv7'
+        ]
+      });
+    });
+
     it('should parse a <date> node into a Date', function () {
       var xml = multiline(function () {/*
 <?xml version="1.0" encoding="UTF-8"?>
@@ -80,10 +142,10 @@ describe('plist', function () {
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
   <data>4pyTIMOgIGxhIG
-  
-  
+
+
   1v
-  
+
   ZG
   U=</data>
 </plist>
@@ -251,9 +313,9 @@ int main(int argc, char *argv[])
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
