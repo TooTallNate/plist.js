@@ -25,16 +25,16 @@
   ],
   "main": "lib/plist.js",
   "dependencies": {
-    "base64-js": "0.0.8",
-    "xmlbuilder": "4.0.0",
+    "base64-js": "1.1.2",
+    "xmlbuilder": "8.2.2",
     "xmldom": "0.1.x",
     "util-deprecate": "1.0.2"
   },
   "devDependencies": {
-    "browserify": "12.0.1",
-    "mocha": "2.3.3",
+    "browserify": "13.0.1",
+    "mocha": "2.4.5",
     "multiline": "1.0.2",
-    "zuul": "3.7.2"
+    "zuul": "3.10.1"
   },
   "scripts": {
     "test": "make test"
