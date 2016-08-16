@@ -1,3 +1,10 @@
+2.0.0 / 2016-08-16
+==================
+
+* [[`d50087ca68`](https://github.com/TooTallNate/plist/commit/d50087ca68)] - remove deprecated functions (Nathan Rajlich)
+* [[`97c02b3f05`](https://github.com/TooTallNate/plist/commit/97c02b3f05)] - **travis**: add `sudo: false` and test more node versions (Nathan Rajlich)
+* [[`4afb7c5079`](https://github.com/TooTallNate/plist/commit/4afb7c5079)] - fix `Cannot read property 'nodeValue' of undefined` exception that is thrown when a `<key></key>` construct appears in plist (Chris Kinsman)
+
 1.2.0 / 2015-11-10
 ==================
 
