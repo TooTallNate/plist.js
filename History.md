@@ -1,9 +1,15 @@
 2.0.0 / 2016-08-16
 ==================
 
-* [[`d50087ca68`](https://github.com/TooTallNate/plist/commit/d50087ca68)] - remove deprecated functions (Nathan Rajlich)
+* [[`90deef5d43`](https://github.com/TooTallNate/plist/commit/90deef5d43)] - remove deprecated functions (Nathan Rajlich)
+* [[`d475cd8ce9`](https://github.com/TooTallNate/plist/commit/d475cd8ce9)] - Added travis ci support for node 6 (Amila Welihinda)
+* [[`04c8ee7646`](https://github.com/TooTallNate/plist/commit/04c8ee7646)] - update dependencies (Mitchell Hentges)
 * [[`97c02b3f05`](https://github.com/TooTallNate/plist/commit/97c02b3f05)] - **travis**: add `sudo: false` and test more node versions (Nathan Rajlich)
-* [[`4afb7c5079`](https://github.com/TooTallNate/plist/commit/4afb7c5079)] - fix `Cannot read property 'nodeValue' of undefined` exception that is thrown when a `<key></key>` construct appears in plist (Chris Kinsman)
+* [[`54c821ec29`](https://github.com/TooTallNate/plist/commit/54c821ec29)] - #71 - fixed and added test (Andrew Goldis)
+* [[`4afb7c5079`](https://github.com/TooTallNate/plist/commit/4afb7c5079)] - fix `Cannot read property 'nodeValue' of undefined exception` that is thrown when a `<key></key>` construct appears in plist (Chris Kinsman)
+* [[`f360d7d685`](https://github.com/TooTallNate/plist/commit/f360d7d685)] - #66 - fixed empty keys and added tests (Andrew Goldis)
+* [[`421c7f26e9`](https://github.com/TooTallNate/plist/commit/421c7f26e9)] - #66 - fixed empty key (Andrew Goldis)
+* [[`a88aa4dca7`](https://github.com/TooTallNate/plist/commit/a88aa4dca7)] - add verbose examples (mrzmyr)
 
 1.2.0 / 2015-11-10
 ==================
