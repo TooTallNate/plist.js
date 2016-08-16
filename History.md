@@ -1,3 +1,8 @@
+2.0.1 / 2016-08-16
+==================
+
+* [[`de136c8388`](https://github.com/TooTallNate/plist/commit/de136c8388)] - bad npm release… (Nathan Rajlich)
+
 2.0.0 / 2016-08-16
 ==================
 
