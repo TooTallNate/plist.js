@@ -23,12 +23,11 @@
     "parser",
     "xml"
   ],
-  "main": "lib/plist.js",
+  "main": "index.js",
   "dependencies": {
     "base64-js": "1.1.2",
     "xmlbuilder": "8.2.2",
-    "xmldom": "0.1.x",
-    "util-deprecate": "1.0.2"
+    "xmldom": "0.1.x"
   },
   "devDependencies": {
     "browserify": "13.0.1",
