@@ -72,6 +72,21 @@ describe('plist', function () {
       assert.ok(isEmpty(parsed));
     });
 
+    it('should parse an empty <string/> in a dictionary', function() {
+      var xml = multiline(function() {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>foo</key>
+    <string/>
+  </dict>
+</plist>
+*/});
+      var parsed = parse(xml);
+      assert.deepEqual(parsed, {foo: ''});
+    });
+
     it('should parse an empty <key></key> in a dictionary', function() {
       var xml = multiline(function() {/*
 <?xml version="1.0" encoding="UTF-8"?>
