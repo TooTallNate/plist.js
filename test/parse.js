@@ -102,6 +102,23 @@ describe('plist', function () {
       assert.ok(isEmpty(parsed));
     });
 
+    it('should prevent errors when empty <key></key> in a dictionary', function() {
+      var xml = multiline(function() {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key></key>
+    <string>should never be added</string>
+    <key>foo</key>
+    <string>bar</string>
+  </dict>
+</plist>
+*/});
+      var parsed = parse(xml);
+      assert.deepEqual(parsed, {foo: 'bar'});
+    });
+
     it('should parse an empty <key></key> and <string></string> in dictionary with more data', function() {
       var xml = multiline(function() {/*
 <?xml version="1.0" encoding="UTF-8"?>
