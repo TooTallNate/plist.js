@@ -1,6 +1,7 @@
 2.1.0 / 2017-05-04
 ==================
 
+* [[`edc6e41035`]](https://github.com/TooTallNate/plist.js/commit/edc6e4103546b1d7518a577e7c202c305a8abec0) update module deps (Mike Reinstein)
 * [[`85d11c48ef`](https://github.com/TooTallNate/plist.js/commit/85d11c48eff02312cbdd67f46fd8e74b0d372ca1)] - Harden test-cases and implementation to align with other implementations (Björn Brauer)
 * [[`7619537eaa`]](https://github.com/TooTallNate/plist.js/commit/7619537eaa9e3e5a80829e759c004d2e017a07d2) review feedback: early returns and constants for nodeTypes (Björn Brauer)
 
