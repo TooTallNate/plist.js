@@ -25,15 +25,15 @@
   ],
   "main": "index.js",
   "dependencies": {
-    "base64-js": "1.1.2",
+    "base64-js": "1.2.0",
     "xmlbuilder": "8.2.2",
     "xmldom": "0.1.x"
   },
   "devDependencies": {
-    "browserify": "13.0.1",
-    "mocha": "2.4.5",
-    "multiline": "1.0.2",
-    "zuul": "3.10.1"
+    "browserify": "^14.3.0",
+    "mocha": "^3.3.0",
+    "multiline": "^1.0.2",
+    "zuul": "^3.10.1"
   },
   "scripts": {
     "test": "make test"
