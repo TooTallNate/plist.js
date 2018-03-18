@@ -1,6 +1,6 @@
 3.0.0 / 2018-03-18
 ==================
-
+* [[`cb0d8f1bc6`]](https://github.com/TooTallNate/plist.js/commit/cb0d8f1bc60dee423f8fc2cfcac427452dfaddb0) update Makefile, rebuild dist/ (Mike Reinstein)
 * [[`9dfeffe73f`]](https://github.com/TooTallNate/plist.js/commit/9dfeffe73fdb447ac5a87ee364a1472975f12adf) remove unsupported browser versions from travis (Mike Reinstein)
 * [[`c962bfe1ea`]](https://github.com/TooTallNate/plist.js/commit/c962bfe1ea04dd87966250253d33738bceecab61) update module deps, remove support for node < 6 (Mike Reinstein)
 
