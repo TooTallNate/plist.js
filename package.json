@@ -1,5 +1,5 @@
 {
-  "name": "plist",
+  "name": "@atom/plist",
   "description": "Mac OS X Plist parser/builder for NodeJS. Convert a Plist file or string into a native JS object and native JS object into a Plist file.",
   "version": "0.4.3",
   "author": "Nathan Rajlich <nathan@tootallnate.net>",
