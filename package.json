@@ -1,7 +1,7 @@
 {
   "name": "@atom/plist",
   "description": "Mac OS X Plist parser/builder for NodeJS. Convert a Plist file or string into a native JS object and native JS object into a Plist file.",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "author": "Nathan Rajlich <nathan@tootallnate.net>",
   "contributors": [
     "Hans Huebner <hans.huebner@gmail.com>",
@@ -23,11 +23,11 @@
   ],
   "main": "./lib/plist",
   "dependencies": {
-    "xmlbuilder" : "0.4.x",
-    "xmldom" : "0.1.x"
+    "xmlbuilder": "0.4.x",
+    "xmldom": "0.1.x"
   },
   "devDependencies": {
-    "nodeunit" : "0.7.x"
+    "nodeunit": "0.7.x"
   },
   "scripts": {
     "test": "nodeunit tests"
