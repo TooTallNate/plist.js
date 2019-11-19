@@ -128,15 +128,13 @@ describe('plist', function () {
 */}));
     });
 
-    it('should omit undefined values', function () {
+    it('should discard keys when value is invalid', function () {
       var xml = build({ a: undefined });
       assert.strictEqual(xml, multiline(function () {/*
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-  <dict>
-    <key>a</key>
-  </dict>
+  <dict/>
 </plist>
 */}));
     });
