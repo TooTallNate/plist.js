@@ -2,6 +2,7 @@
 var assert = require('assert');
 var build = require('../').build;
 var multiline = require('multiline');
+var bigInt = require('big-integer');
 
 describe('plist', function () {
 
@@ -36,6 +37,33 @@ describe('plist', function () {
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
   <real>3.141592653589793</real>
+</plist>
+*/}));
+    });
+
+    if (typeof BigInt === 'function') {
+      it('should create a plist XML real from a a BigInt', function () {
+        var xml = build(BigInt(10000000000));
+        assert.strictEqual(xml, multiline(function () {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <integer>10000000000</integer>
+</plist>
+*/}));
+      });
+    }
+
+    it('should create a plist XML real from a BigInteger.js BigInt', function () {
+      var xml = build({key: bigInt('ffffffffffffffbf', 16)});
+      assert.strictEqual(xml, multiline(function () {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>key</key>
+    <integer>18446744073709552000</integer>
+  </dict>
 </plist>
 */}));
     });

@@ -26,6 +26,7 @@
   "main": "index.js",
   "dependencies": {
     "base64-js": "^1.2.3",
+    "big-integer": "^1.6.48",
     "xmlbuilder": "^9.0.7",
     "xmldom": "0.1.x"
   },
