@@ -27,7 +27,7 @@
   "dependencies": {
     "base64-js": "^1.2.3",
     "xmlbuilder": "^9.0.7",
-    "xmldom": "0.1.x"
+    "xmldom-alpha": "^0.1.28"
   },
   "devDependencies": {
     "browserify": "^16.1.1",
