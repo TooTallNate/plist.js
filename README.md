@@ -136,6 +136,13 @@ console.log(plist.build(json));
 // </plist>
 ```
 
+## Cross Platform Testing Credits
+
+Much thanks to Sauce Labs for providing free resources that enable cross-browser testing on this project!
+
+[![Testing Powered By SauceLabs](https://opensource.saucelabs.com/images/opensauce/powered-by-saucelabs-badge-red.png?sanitize=true "Testing Powered By SauceLabs")](https://saucelabs.com)
+
+
 ## License
 
 [(The MIT License)](LICENSE)
