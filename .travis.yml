@@ -10,11 +10,6 @@ node_js:
 addons:
   sauce_connect: true
 
-env:
-  global:
-  - secure: r/aJSYB54gC/KDePoPyJFmhx2EzvJWUUnxOsYXY9jsFqWr+wHSlqXRXKrZ9MxNOvBD5+i6cpQBjICUo3OEJGaNE3i27xg9FN2mHGUaooUzhnyLssSlcaomTrOex0fZ7S1HXy2kJL9FHNgAVEzUSbTgPVwFH8gzxvgK0hmgdOOX0=
-  - secure: c0i4+3E5WqtKeT5X5C/DvwGq6s5gANuCwTudinT13Bk6lrGRiSTEEcrcR82HJytUnTTg5mywvQtayvaub55IBQlWbZhk0TxgZK9FZYGwJqmSO1gXpBMXe+8ybTnseUNCizZ7Lk+O1F1oYYL4YlJMn8LZ1JaAvZxwong7nNPV2bM=
-
 jobs:
   include:
   - node_js: '6'
