@@ -1,4 +1,4 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.plist = f()}})(function(){var define,module,exports;return (function(){function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s}return e})()({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.plist = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 /**
  * Parser functions.
  */
@@ -14,7 +14,7 @@ var builderFunctions = require('./lib/build');
 Object.keys(builderFunctions).forEach(function (k) { exports[k] = builderFunctions[k]; });
 
 },{"./lib/build":2,"./lib/parse":3}],2:[function(require,module,exports){
-(function (Buffer){
+(function (Buffer){(function (){
 /**
  * Module dependencies.
  */
@@ -153,9 +153,9 @@ function walk_obj(next, next_child) {
   }
 }
 
-}).call(this,{"isBuffer":require("../node_modules/is-buffer/index.js")})
+}).call(this)}).call(this,{"isBuffer":require("../node_modules/is-buffer/index.js")})
 },{"../node_modules/is-buffer/index.js":7,"base64-js":4,"xmlbuilder":29}],3:[function(require,module,exports){
-(function (Buffer){
+(function (Buffer){(function (){
 /**
  * Module dependencies.
  */
@@ -372,7 +372,7 @@ function parsePlistXML (node) {
   }
 }
 
-}).call(this,require("buffer").Buffer)
+}).call(this)}).call(this,require("buffer").Buffer)
 },{"buffer":5,"xmldom":30}],4:[function(require,module,exports){
 'use strict'
 
@@ -395,65 +395,98 @@ for (var i = 0, len = code.length; i < len; ++i) {
 revLookup['-'.charCodeAt(0)] = 62
 revLookup['_'.charCodeAt(0)] = 63
 
-function placeHoldersCount (b64) {
+function getLens (b64) {
   var len = b64.length
+
   if (len % 4 > 0) {
     throw new Error('Invalid string. Length must be a multiple of 4')
   }
 
-  // the number of equal signs (place holders)
-  // if there are two placeholders, than the two characters before it
-  // represent one byte
-  // if there is only one, then the three characters before it represent 2 bytes
-  // this is just a cheap hack to not do indexOf twice
-  return b64[len - 2] === '=' ? 2 : b64[len - 1] === '=' ? 1 : 0
+  // Trim off extra bytes after placeholder bytes are found
+  // See: https://github.com/beatgammit/base64-js/issues/42
+  var validLen = b64.indexOf('=')
+  if (validLen === -1) validLen = len
+
+  var placeHoldersLen = validLen === len
+    ? 0
+    : 4 - (validLen % 4)
+
+  return [validLen, placeHoldersLen]
 }
 
+// base64 is 4/3 + up to two characters of the original data
 function byteLength (b64) {
-  // base64 is 4/3 + up to two characters of the original data
-  return (b64.length * 3 / 4) - placeHoldersCount(b64)
+  var lens = getLens(b64)
+  var validLen = lens[0]
+  var placeHoldersLen = lens[1]
+  return ((validLen + placeHoldersLen) * 3 / 4) - placeHoldersLen
+}
+
+function _byteLength (b64, validLen, placeHoldersLen) {
+  return ((validLen + placeHoldersLen) * 3 / 4) - placeHoldersLen
 }
 
 function toByteArray (b64) {
-  var i, l, tmp, placeHolders, arr
-  var len = b64.length
-  placeHolders = placeHoldersCount(b64)
+  var tmp
+  var lens = getLens(b64)
+  var validLen = lens[0]
+  var placeHoldersLen = lens[1]
 
-  arr = new Arr((len * 3 / 4) - placeHolders)
+  var arr = new Arr(_byteLength(b64, validLen, placeHoldersLen))
+
+  var curByte = 0
 
   // if there are placeholders, only get up to the last complete 4 chars
-  l = placeHolders > 0 ? len - 4 : len
+  var len = placeHoldersLen > 0
+    ? validLen - 4
+    : validLen
 
-  var L = 0
-
-  for (i = 0; i < l; i += 4) {
-    tmp = (revLookup[b64.charCodeAt(i)] << 18) | (revLookup[b64.charCodeAt(i + 1)] << 12) | (revLookup[b64.charCodeAt(i + 2)] << 6) | revLookup[b64.charCodeAt(i + 3)]
-    arr[L++] = (tmp >> 16) & 0xFF
-    arr[L++] = (tmp >> 8) & 0xFF
-    arr[L++] = tmp & 0xFF
+  var i
+  for (i = 0; i < len; i += 4) {
+    tmp =
+      (revLookup[b64.charCodeAt(i)] << 18) |
+      (revLookup[b64.charCodeAt(i + 1)] << 12) |
+      (revLookup[b64.charCodeAt(i + 2)] << 6) |
+      revLookup[b64.charCodeAt(i + 3)]
+    arr[curByte++] = (tmp >> 16) & 0xFF
+    arr[curByte++] = (tmp >> 8) & 0xFF
+    arr[curByte++] = tmp & 0xFF
   }
 
-  if (placeHolders === 2) {
-    tmp = (revLookup[b64.charCodeAt(i)] << 2) | (revLookup[b64.charCodeAt(i + 1)] >> 4)
-    arr[L++] = tmp & 0xFF
-  } else if (placeHolders === 1) {
-    tmp = (revLookup[b64.charCodeAt(i)] << 10) | (revLookup[b64.charCodeAt(i + 1)] << 4) | (revLookup[b64.charCodeAt(i + 2)] >> 2)
-    arr[L++] = (tmp >> 8) & 0xFF
-    arr[L++] = tmp & 0xFF
+  if (placeHoldersLen === 2) {
+    tmp =
+      (revLookup[b64.charCodeAt(i)] << 2) |
+      (revLookup[b64.charCodeAt(i + 1)] >> 4)
+    arr[curByte++] = tmp & 0xFF
+  }
+
+  if (placeHoldersLen === 1) {
+    tmp =
+      (revLookup[b64.charCodeAt(i)] << 10) |
+      (revLookup[b64.charCodeAt(i + 1)] << 4) |
+      (revLookup[b64.charCodeAt(i + 2)] >> 2)
+    arr[curByte++] = (tmp >> 8) & 0xFF
+    arr[curByte++] = tmp & 0xFF
   }
 
   return arr
 }
 
 function tripletToBase64 (num) {
-  return lookup[num >> 18 & 0x3F] + lookup[num >> 12 & 0x3F] + lookup[num >> 6 & 0x3F] + lookup[num & 0x3F]
+  return lookup[num >> 18 & 0x3F] +
+    lookup[num >> 12 & 0x3F] +
+    lookup[num >> 6 & 0x3F] +
+    lookup[num & 0x3F]
 }
 
 function encodeChunk (uint8, start, end) {
   var tmp
   var output = []
   for (var i = start; i < end; i += 3) {
-    tmp = ((uint8[i] << 16) & 0xFF0000) + ((uint8[i + 1] << 8) & 0xFF00) + (uint8[i + 2] & 0xFF)
+    tmp =
+      ((uint8[i] << 16) & 0xFF0000) +
+      ((uint8[i + 1] << 8) & 0xFF00) +
+      (uint8[i + 2] & 0xFF)
     output.push(tripletToBase64(tmp))
   }
   return output.join('')
@@ -463,7 +496,6 @@ function fromByteArray (uint8) {
   var tmp
   var len = uint8.length
   var extraBytes = len % 3 // if we have 1 byte left, pad 2 bytes
-  var output = ''
   var parts = []
   var maxChunkLength = 16383 // must be multiple of 3
 
@@ -475,23 +507,26 @@ function fromByteArray (uint8) {
   // pad the end with zeros, but make sure to not forget the extra bytes
   if (extraBytes === 1) {
     tmp = uint8[len - 1]
-    output += lookup[tmp >> 2]
-    output += lookup[(tmp << 4) & 0x3F]
-    output += '=='
+    parts.push(
+      lookup[tmp >> 2] +
+      lookup[(tmp << 4) & 0x3F] +
+      '=='
+    )
   } else if (extraBytes === 2) {
-    tmp = (uint8[len - 2] << 8) + (uint8[len - 1])
-    output += lookup[tmp >> 10]
-    output += lookup[(tmp >> 4) & 0x3F]
-    output += lookup[(tmp << 2) & 0x3F]
-    output += '='
+    tmp = (uint8[len - 2] << 8) + uint8[len - 1]
+    parts.push(
+      lookup[tmp >> 10] +
+      lookup[(tmp >> 4) & 0x3F] +
+      lookup[(tmp << 2) & 0x3F] +
+      '='
+    )
   }
-
-  parts.push(output)
 
   return parts.join('')
 }
 
 },{}],5:[function(require,module,exports){
+(function (Buffer){(function (){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -540,7 +575,7 @@ function typedArraySupport () {
   // Can typed array instances can be augmented?
   try {
     var arr = new Uint8Array(1)
-    arr.__proto__ = {__proto__: Uint8Array.prototype, foo: function () { return 42 }}
+    arr.__proto__ = { __proto__: Uint8Array.prototype, foo: function () { return 42 } }
     return arr.foo() === 42
   } catch (e) {
     return false
@@ -548,26 +583,24 @@ function typedArraySupport () {
 }
 
 Object.defineProperty(Buffer.prototype, 'parent', {
+  enumerable: true,
   get: function () {
-    if (!(this instanceof Buffer)) {
-      return undefined
-    }
+    if (!Buffer.isBuffer(this)) return undefined
     return this.buffer
   }
 })
 
 Object.defineProperty(Buffer.prototype, 'offset', {
+  enumerable: true,
   get: function () {
-    if (!(this instanceof Buffer)) {
-      return undefined
-    }
+    if (!Buffer.isBuffer(this)) return undefined
     return this.byteOffset
   }
 })
 
 function createBuffer (length) {
   if (length > K_MAX_LENGTH) {
-    throw new RangeError('Invalid typed array length')
+    throw new RangeError('The value "' + length + '" is invalid for option "size"')
   }
   // Return an augmented `Uint8Array` instance
   var buf = new Uint8Array(length)
@@ -589,8 +622,8 @@ function Buffer (arg, encodingOrOffset, length) {
   // Common case.
   if (typeof arg === 'number') {
     if (typeof encodingOrOffset === 'string') {
-      throw new Error(
-        'If encoding is specified then the first argument must be a string'
+      throw new TypeError(
+        'The "string" argument must be of type string. Received type number'
       )
     }
     return allocUnsafe(arg)
@@ -599,7 +632,7 @@ function Buffer (arg, encodingOrOffset, length) {
 }
 
 // Fix subarray() in ES2016. See: https://github.com/feross/buffer/pull/97
-if (typeof Symbol !== 'undefined' && Symbol.species &&
+if (typeof Symbol !== 'undefined' && Symbol.species != null &&
     Buffer[Symbol.species] === Buffer) {
   Object.defineProperty(Buffer, Symbol.species, {
     value: null,
@@ -612,19 +645,51 @@ if (typeof Symbol !== 'undefined' && Symbol.species &&
 Buffer.poolSize = 8192 // not used by this implementation
 
 function from (value, encodingOrOffset, length) {
-  if (typeof value === 'number') {
-    throw new TypeError('"value" argument must not be a number')
-  }
-
-  if (isArrayBuffer(value) || (value && isArrayBuffer(value.buffer))) {
-    return fromArrayBuffer(value, encodingOrOffset, length)
-  }
-
   if (typeof value === 'string') {
     return fromString(value, encodingOrOffset)
   }
 
-  return fromObject(value)
+  if (ArrayBuffer.isView(value)) {
+    return fromArrayLike(value)
+  }
+
+  if (value == null) {
+    throw TypeError(
+      'The first argument must be one of type string, Buffer, ArrayBuffer, Array, ' +
+      'or Array-like Object. Received type ' + (typeof value)
+    )
+  }
+
+  if (isInstance(value, ArrayBuffer) ||
+      (value && isInstance(value.buffer, ArrayBuffer))) {
+    return fromArrayBuffer(value, encodingOrOffset, length)
+  }
+
+  if (typeof value === 'number') {
+    throw new TypeError(
+      'The "value" argument must not be of type number. Received type number'
+    )
+  }
+
+  var valueOf = value.valueOf && value.valueOf()
+  if (valueOf != null && valueOf !== value) {
+    return Buffer.from(valueOf, encodingOrOffset, length)
+  }
+
+  var b = fromObject(value)
+  if (b) return b
+
+  if (typeof Symbol !== 'undefined' && Symbol.toPrimitive != null &&
+      typeof value[Symbol.toPrimitive] === 'function') {
+    return Buffer.from(
+      value[Symbol.toPrimitive]('string'), encodingOrOffset, length
+    )
+  }
+
+  throw new TypeError(
+    'The first argument must be one of type string, Buffer, ArrayBuffer, Array, ' +
+    'or Array-like Object. Received type ' + (typeof value)
+  )
 }
 
 /**
@@ -648,7 +713,7 @@ function assertSize (size) {
   if (typeof size !== 'number') {
     throw new TypeError('"size" argument must be of type number')
   } else if (size < 0) {
-    throw new RangeError('"size" argument must not be negative')
+    throw new RangeError('The value "' + size + '" is invalid for option "size"')
   }
 }
 
@@ -763,20 +828,16 @@ function fromObject (obj) {
     return buf
   }
 
-  if (obj) {
-    if (ArrayBuffer.isView(obj) || 'length' in obj) {
-      if (typeof obj.length !== 'number' || numberIsNaN(obj.length)) {
-        return createBuffer(0)
-      }
-      return fromArrayLike(obj)
+  if (obj.length !== undefined) {
+    if (typeof obj.length !== 'number' || numberIsNaN(obj.length)) {
+      return createBuffer(0)
     }
-
-    if (obj.type === 'Buffer' && Array.isArray(obj.data)) {
-      return fromArrayLike(obj.data)
-    }
+    return fromArrayLike(obj)
   }
 
-  throw new TypeError('The first argument must be one of type string, Buffer, ArrayBuffer, Array, or Array-like Object.')
+  if (obj.type === 'Buffer' && Array.isArray(obj.data)) {
+    return fromArrayLike(obj.data)
+  }
 }
 
 function checked (length) {
@@ -797,12 +858,17 @@ function SlowBuffer (length) {
 }
 
 Buffer.isBuffer = function isBuffer (b) {
-  return b != null && b._isBuffer === true
+  return b != null && b._isBuffer === true &&
+    b !== Buffer.prototype // so Buffer.isBuffer(Buffer.prototype) will be false
 }
 
 Buffer.compare = function compare (a, b) {
+  if (isInstance(a, Uint8Array)) a = Buffer.from(a, a.offset, a.byteLength)
+  if (isInstance(b, Uint8Array)) b = Buffer.from(b, b.offset, b.byteLength)
   if (!Buffer.isBuffer(a) || !Buffer.isBuffer(b)) {
-    throw new TypeError('Arguments must be Buffers')
+    throw new TypeError(
+      'The "buf1", "buf2" arguments must be one of type Buffer or Uint8Array'
+    )
   }
 
   if (a === b) return 0
@@ -863,7 +929,7 @@ Buffer.concat = function concat (list, length) {
   var pos = 0
   for (i = 0; i < list.length; ++i) {
     var buf = list[i]
-    if (ArrayBuffer.isView(buf)) {
+    if (isInstance(buf, Uint8Array)) {
       buf = Buffer.from(buf)
     }
     if (!Buffer.isBuffer(buf)) {
@@ -879,15 +945,19 @@ function byteLength (string, encoding) {
   if (Buffer.isBuffer(string)) {
     return string.length
   }
-  if (ArrayBuffer.isView(string) || isArrayBuffer(string)) {
+  if (ArrayBuffer.isView(string) || isInstance(string, ArrayBuffer)) {
     return string.byteLength
   }
   if (typeof string !== 'string') {
-    string = '' + string
+    throw new TypeError(
+      'The "string" argument must be one of type string, Buffer, or ArrayBuffer. ' +
+      'Received type ' + typeof string
+    )
   }
 
   var len = string.length
-  if (len === 0) return 0
+  var mustMatch = (arguments.length > 2 && arguments[2] === true)
+  if (!mustMatch && len === 0) return 0
 
   // Use a for loop to avoid recursion
   var loweredCase = false
@@ -899,7 +969,6 @@ function byteLength (string, encoding) {
         return len
       case 'utf8':
       case 'utf-8':
-      case undefined:
         return utf8ToBytes(string).length
       case 'ucs2':
       case 'ucs-2':
@@ -911,7 +980,9 @@ function byteLength (string, encoding) {
       case 'base64':
         return base64ToBytes(string).length
       default:
-        if (loweredCase) return utf8ToBytes(string).length // assume utf8
+        if (loweredCase) {
+          return mustMatch ? -1 : utf8ToBytes(string).length // assume utf8
+        }
         encoding = ('' + encoding).toLowerCase()
         loweredCase = true
     }
@@ -1058,16 +1129,20 @@ Buffer.prototype.equals = function equals (b) {
 Buffer.prototype.inspect = function inspect () {
   var str = ''
   var max = exports.INSPECT_MAX_BYTES
-  if (this.length > 0) {
-    str = this.toString('hex', 0, max).match(/.{2}/g).join(' ')
-    if (this.length > max) str += ' ... '
-  }
+  str = this.toString('hex', 0, max).replace(/(.{2})/g, '$1 ').trim()
+  if (this.length > max) str += ' ... '
   return '<Buffer ' + str + '>'
 }
 
 Buffer.prototype.compare = function compare (target, start, end, thisStart, thisEnd) {
+  if (isInstance(target, Uint8Array)) {
+    target = Buffer.from(target, target.offset, target.byteLength)
+  }
   if (!Buffer.isBuffer(target)) {
-    throw new TypeError('Argument must be a Buffer')
+    throw new TypeError(
+      'The "target" argument must be one of type Buffer or Uint8Array. ' +
+      'Received type ' + (typeof target)
+    )
   }
 
   if (start === undefined) {
@@ -1146,7 +1221,7 @@ function bidirectionalIndexOf (buffer, val, byteOffset, encoding, dir) {
   } else if (byteOffset < -0x80000000) {
     byteOffset = -0x80000000
   }
-  byteOffset = +byteOffset  // Coerce to Number.
+  byteOffset = +byteOffset // Coerce to Number.
   if (numberIsNaN(byteOffset)) {
     // byteOffset: it it's undefined, null, NaN, "foo", etc, search whole buffer
     byteOffset = dir ? 0 : (buffer.length - 1)
@@ -1398,8 +1473,8 @@ function utf8Slice (buf, start, end) {
     var codePoint = null
     var bytesPerSequence = (firstByte > 0xEF) ? 4
       : (firstByte > 0xDF) ? 3
-      : (firstByte > 0xBF) ? 2
-      : 1
+        : (firstByte > 0xBF) ? 2
+          : 1
 
     if (i + bytesPerSequence <= end) {
       var secondByte, thirdByte, fourthByte, tempCodePoint
@@ -2062,7 +2137,7 @@ Buffer.prototype.fill = function fill (val, start, end, encoding) {
   } else {
     var bytes = Buffer.isBuffer(val)
       ? val
-      : new Buffer(val, encoding)
+      : Buffer.from(val, encoding)
     var len = bytes.length
     if (len === 0) {
       throw new TypeError('The value "' + val +
@@ -2217,19 +2292,22 @@ function blitBuffer (src, dst, offset, length) {
   return i
 }
 
-// ArrayBuffers from another context (i.e. an iframe) do not pass the `instanceof` check
-// but they should be treated as valid. See: https://github.com/feross/buffer/issues/166
-function isArrayBuffer (obj) {
-  return obj instanceof ArrayBuffer ||
-    (obj != null && obj.constructor != null && obj.constructor.name === 'ArrayBuffer' &&
-      typeof obj.byteLength === 'number')
+// ArrayBuffer or Uint8Array objects from other contexts (i.e. iframes) do not pass
+// the `instanceof` check but they should be treated as of that type.
+// See: https://github.com/feross/buffer/issues/166
+function isInstance (obj, type) {
+  return obj instanceof type ||
+    (obj != null && obj.constructor != null && obj.constructor.name != null &&
+      obj.constructor.name === type.name)
 }
-
 function numberIsNaN (obj) {
+  // For IE11 support
   return obj !== obj // eslint-disable-line no-self-compare
 }
 
-},{"base64-js":4,"ieee754":6}],6:[function(require,module,exports){
+}).call(this)}).call(this,require("buffer").Buffer)
+},{"base64-js":4,"buffer":5,"ieee754":6}],6:[function(require,module,exports){
+/*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = (nBytes * 8) - mLen - 1
@@ -4889,8 +4967,8 @@ function isSlowBuffer (obj) {
 },{"./Utility":8,"./XMLDocument":18,"./XMLDocumentCB":19,"./XMLStreamWriter":24,"./XMLStringWriter":25}],30:[function(require,module,exports){
 function DOMParser(options){
 	this.options = options ||{locator:{}};
-	
 }
+
 DOMParser.prototype.parseFromString = function(source,mimeType){
 	var options = this.options;
 	var sax =  new XMLReader();
@@ -4898,20 +4976,19 @@ DOMParser.prototype.parseFromString = function(source,mimeType){
 	var errorHandler = options.errorHandler;
 	var locator = options.locator;
 	var defaultNSMap = options.xmlns||{};
-	var entityMap = {'lt':'<','gt':'>','amp':'&','quot':'"','apos':"'"}
+	var isHTML = /\/x?html?$/.test(mimeType);//mimeType.toLowerCase().indexOf('html') > -1;
+  	var entityMap = isHTML?htmlEntity.entityMap:{'lt':'<','gt':'>','amp':'&','quot':'"','apos':"'"};
 	if(locator){
 		domBuilder.setDocumentLocator(locator)
 	}
-	
+
 	sax.errorHandler = buildErrorHandler(errorHandler,domBuilder,locator);
 	sax.domBuilder = options.domBuilder || domBuilder;
-	if(/\/x?html?$/.test(mimeType)){
-		entityMap.nbsp = '\xa0';
-		entityMap.copy = '\xa9';
+	if(isHTML){
 		defaultNSMap['']= 'http://www.w3.org/1999/xhtml';
 	}
 	defaultNSMap.xml = defaultNSMap.xml || 'http://www.w3.org/XML/1998/namespace';
-	if(source){
+	if(source && typeof source === 'string'){
 		sax.parse(source,defaultNSMap,entityMap);
 	}else{
 		sax.errorHandler.error("invalid doc source");
@@ -4947,8 +5024,8 @@ function buildErrorHandler(errorImpl,domBuilder,locator){
 /**
  * +ContentHandler+ErrorHandler
  * +LexicalHandler+EntityResolver2
- * -DeclHandler-DTDHandler 
- * 
+ * -DeclHandler-DTDHandler
+ *
  * DefaultHandler:EntityResolver, DTDHandler, ContentHandler, ErrorHandler
  * DefaultHandler2:DefaultHandler,LexicalHandler, DeclHandler, EntityResolver2
  * @link http://www.saxproject.org/apidoc/org/xml/sax/helpers/DefaultHandler.html
@@ -4963,7 +5040,7 @@ function position(locator,node){
 /**
  * @see org.xml.sax.ContentHandler#startDocument
  * @link http://www.saxproject.org/apidoc/org/xml/sax/ContentHandler.html
- */ 
+ */
 DOMHandler.prototype = {
 	startDocument : function() {
     	this.doc = new DOMImplementation().createDocument(null, null, null);
@@ -4977,7 +5054,7 @@ DOMHandler.prototype = {
 	    var len = attrs.length;
 	    appendElement(this, el);
 	    this.currentElement = el;
-	    
+
 		this.locator && position(this.locator,el)
 	    for (var i = 0 ; i < len; i++) {
 	        var namespaceURI = attrs.getURI(i);
@@ -5040,7 +5117,7 @@ DOMHandler.prototype = {
 	    this.locator && position(this.locator,comm)
 	    appendElement(this, comm);
 	},
-	
+
 	startCDATA:function() {
 	    //used in characters() methods
 	    this.cdata = true;
@@ -5048,7 +5125,7 @@ DOMHandler.prototype = {
 	endCDATA:function() {
 	    this.cdata = false;
 	},
-	
+
 	startDTD:function(name, publicId, systemId) {
 		var impl = this.doc.implementation;
 	    if (impl && impl.createDocumentType) {
@@ -5068,8 +5145,7 @@ DOMHandler.prototype = {
 		console.error('[xmldom error]\t'+error,_locator(this.locator));
 	},
 	fatalError:function(error) {
-		console.error('[xmldom fatalError]\t'+error,_locator(this.locator));
-	    throw error;
+		throw new ParseError(error, this.locator);
 	}
 }
 function _locator(l){
@@ -5133,20 +5209,17 @@ function appendElement (hander,node) {
 }//appendChild and setAttributeNS are preformance key
 
 //if(typeof require == 'function'){
-	var XMLReader = require('./sax').XMLReader;
-	var DOMImplementation = exports.DOMImplementation = require('./dom').DOMImplementation;
-	exports.XMLSerializer = require('./dom').XMLSerializer ;
-	exports.DOMParser = DOMParser;
+var htmlEntity = require('./entities');
+var sax = require('./sax');
+var XMLReader = sax.XMLReader;
+var ParseError = sax.ParseError;
+var DOMImplementation = exports.DOMImplementation = require('./dom').DOMImplementation;
+exports.XMLSerializer = require('./dom').XMLSerializer ;
+exports.DOMParser = DOMParser;
+exports.__DOMHandler = DOMHandler;
 //}
 
-},{"./dom":31,"./sax":32}],31:[function(require,module,exports){
-/*
- * DOM Level 2
- * Object DOMException
- * @see http://www.w3.org/TR/REC-DOM-Level-1/ecma-script-language-binding.html
- * @see http://www.w3.org/TR/2000/REC-DOM-Level-2-Core-20001113/ecma-script-binding.html
- */
-
+},{"./dom":31,"./entities":32,"./sax":33}],31:[function(require,module,exports){
 function copy(src,dest){
 	for(var p in src){
 		dest[p] = src[p];
@@ -5158,10 +5231,6 @@ function copy(src,dest){
  */
 function _extends(Class,Super){
 	var pt = Class.prototype;
-	if(Object.create){
-		var ppt = Object.create(Super.prototype)
-		pt.__proto__ = ppt;
-	}
 	if(!(pt instanceof Super)){
 		function t(){};
 		t.prototype = Super.prototype;
@@ -5212,7 +5281,12 @@ var INVALID_MODIFICATION_ERR 	= ExceptionCode.INVALID_MODIFICATION_ERR 	= ((Exce
 var NAMESPACE_ERR            	= ExceptionCode.NAMESPACE_ERR           	= ((ExceptionMessage[14]="Invalid namespace"),14);
 var INVALID_ACCESS_ERR       	= ExceptionCode.INVALID_ACCESS_ERR      	= ((ExceptionMessage[15]="Invalid access"),15);
 
-
+/**
+ * DOM Level 2
+ * Object DOMException
+ * @see http://www.w3.org/TR/2000/REC-DOM-Level-2-Core-20001113/ecma-script-binding.html
+ * @see http://www.w3.org/TR/REC-DOM-Level-1/ecma-script-language-binding.html
+ */
 function DOMException(code, message) {
 	if(message instanceof Error){
 		var error = message;
@@ -5754,6 +5828,21 @@ Document.prototype = {
 		return rtv;
 	},
 	
+	getElementsByClassName: function(className) {
+		var pattern = new RegExp("(^|\\s)" + className + "(\\s|$)");
+		return new LiveNodeList(this, function(base) {
+			var ls = [];
+			_visitNode(base.documentElement, function(node) {
+				if(node !== base && node.nodeType == ELEMENT_NODE) {
+					if(pattern.test(node.getAttribute('class'))) {
+						ls.push(node);
+					}
+				}
+			});
+			return ls;
+		});
+	},
+	
 	//document factory method:
 	createElement :	function(tagName){
 		var node = new Element();
@@ -6058,7 +6147,7 @@ XMLSerializer.prototype.serializeToString = function(node,isHtml,nodeFilter){
 Node.prototype.toString = nodeSerializeToString;
 function nodeSerializeToString(isHtml,nodeFilter){
 	var buf = [];
-	var refNode = this.nodeType == 9?this.documentElement:this;
+	var refNode = this.nodeType == 9 && this.documentElement || this;
 	var prefix = refNode.prefix;
 	var uri = refNode.namespaceURI;
 	
@@ -6197,9 +6286,27 @@ function serializeToString(node,buf,isHTML,nodeFilter,visibleNamespaces){
 		}
 		return;
 	case ATTRIBUTE_NODE:
-		return buf.push(' ',node.name,'="',node.value.replace(/[<&"]/g,_xmlEncoder),'"');
+		return buf.push(' ',node.name,'="',node.value.replace(/[&"]/g,_xmlEncoder),'"');
 	case TEXT_NODE:
-		return buf.push(node.data.replace(/[<&]/g,_xmlEncoder));
+		/**
+		 * The ampersand character (&) and the left angle bracket (<) must not appear in their literal form,
+		 * except when used as markup delimiters, or within a comment, a processing instruction, or a CDATA section.
+		 * If they are needed elsewhere, they must be escaped using either numeric character references or the strings
+		 * `&amp;` and `&lt;` respectively.
+		 * The right angle bracket (>) may be represented using the string " &gt; ", and must, for compatibility,
+		 * be escaped using either `&gt;` or a character reference when it appears in the string `]]>` in content,
+		 * when that string is not marking the end of a CDATA section.
+		 *
+		 * In the content of elements, character data is any string of characters
+		 * which does not contain the start-delimiter of any markup
+		 * and does not include the CDATA-section-close delimiter, `]]>`.
+		 *
+		 * @see https://www.w3.org/TR/xml/#NT-CharData
+		 */
+		return buf.push(node.data
+			.replace(/[<&]/g,_xmlEncoder)
+			.replace(/]]>/g, ']]&gt;')
+		);
 	case CDATA_SECTION_NODE:
 		return buf.push( '<![CDATA[',node.data,']]>');
 	case COMMENT_NODE:
@@ -6209,13 +6316,13 @@ function serializeToString(node,buf,isHTML,nodeFilter,visibleNamespaces){
 		var sysid = node.systemId;
 		buf.push('<!DOCTYPE ',node.name);
 		if(pubid){
-			buf.push(' PUBLIC "',pubid);
+			buf.push(' PUBLIC ', pubid);
 			if (sysid && sysid!='.') {
-				buf.push( '" "',sysid);
+				buf.push(' ', sysid);
 			}
-			buf.push('">');
+			buf.push('>');
 		}else if(sysid && sysid!='.'){
-			buf.push(' SYSTEM "',sysid,'">');
+			buf.push(' SYSTEM ', sysid, '>');
 		}else{
 			var sub = node.internalSubset;
 			if(sub){
@@ -6381,11 +6488,258 @@ try{
 }
 
 //if(typeof require == 'function'){
+	exports.Node = Node;
+	exports.DOMException = DOMException;
 	exports.DOMImplementation = DOMImplementation;
 	exports.XMLSerializer = XMLSerializer;
 //}
 
 },{}],32:[function(require,module,exports){
+exports.entityMap = {
+       lt: '<',
+       gt: '>',
+       amp: '&',
+       quot: '"',
+       apos: "'",
+       Agrave: "À",
+       Aacute: "Á",
+       Acirc: "Â",
+       Atilde: "Ã",
+       Auml: "Ä",
+       Aring: "Å",
+       AElig: "Æ",
+       Ccedil: "Ç",
+       Egrave: "È",
+       Eacute: "É",
+       Ecirc: "Ê",
+       Euml: "Ë",
+       Igrave: "Ì",
+       Iacute: "Í",
+       Icirc: "Î",
+       Iuml: "Ï",
+       ETH: "Ð",
+       Ntilde: "Ñ",
+       Ograve: "Ò",
+       Oacute: "Ó",
+       Ocirc: "Ô",
+       Otilde: "Õ",
+       Ouml: "Ö",
+       Oslash: "Ø",
+       Ugrave: "Ù",
+       Uacute: "Ú",
+       Ucirc: "Û",
+       Uuml: "Ü",
+       Yacute: "Ý",
+       THORN: "Þ",
+       szlig: "ß",
+       agrave: "à",
+       aacute: "á",
+       acirc: "â",
+       atilde: "ã",
+       auml: "ä",
+       aring: "å",
+       aelig: "æ",
+       ccedil: "ç",
+       egrave: "è",
+       eacute: "é",
+       ecirc: "ê",
+       euml: "ë",
+       igrave: "ì",
+       iacute: "í",
+       icirc: "î",
+       iuml: "ï",
+       eth: "ð",
+       ntilde: "ñ",
+       ograve: "ò",
+       oacute: "ó",
+       ocirc: "ô",
+       otilde: "õ",
+       ouml: "ö",
+       oslash: "ø",
+       ugrave: "ù",
+       uacute: "ú",
+       ucirc: "û",
+       uuml: "ü",
+       yacute: "ý",
+       thorn: "þ",
+       yuml: "ÿ",
+       nbsp: "\u00a0",
+       iexcl: "¡",
+       cent: "¢",
+       pound: "£",
+       curren: "¤",
+       yen: "¥",
+       brvbar: "¦",
+       sect: "§",
+       uml: "¨",
+       copy: "©",
+       ordf: "ª",
+       laquo: "«",
+       not: "¬",
+       shy: "­­",
+       reg: "®",
+       macr: "¯",
+       deg: "°",
+       plusmn: "±",
+       sup2: "²",
+       sup3: "³",
+       acute: "´",
+       micro: "µ",
+       para: "¶",
+       middot: "·",
+       cedil: "¸",
+       sup1: "¹",
+       ordm: "º",
+       raquo: "»",
+       frac14: "¼",
+       frac12: "½",
+       frac34: "¾",
+       iquest: "¿",
+       times: "×",
+       divide: "÷",
+       forall: "∀",
+       part: "∂",
+       exist: "∃",
+       empty: "∅",
+       nabla: "∇",
+       isin: "∈",
+       notin: "∉",
+       ni: "∋",
+       prod: "∏",
+       sum: "∑",
+       minus: "−",
+       lowast: "∗",
+       radic: "√",
+       prop: "∝",
+       infin: "∞",
+       ang: "∠",
+       and: "∧",
+       or: "∨",
+       cap: "∩",
+       cup: "∪",
+       'int': "∫",
+       there4: "∴",
+       sim: "∼",
+       cong: "≅",
+       asymp: "≈",
+       ne: "≠",
+       equiv: "≡",
+       le: "≤",
+       ge: "≥",
+       sub: "⊂",
+       sup: "⊃",
+       nsub: "⊄",
+       sube: "⊆",
+       supe: "⊇",
+       oplus: "⊕",
+       otimes: "⊗",
+       perp: "⊥",
+       sdot: "⋅",
+       Alpha: "Α",
+       Beta: "Β",
+       Gamma: "Γ",
+       Delta: "Δ",
+       Epsilon: "Ε",
+       Zeta: "Ζ",
+       Eta: "Η",
+       Theta: "Θ",
+       Iota: "Ι",
+       Kappa: "Κ",
+       Lambda: "Λ",
+       Mu: "Μ",
+       Nu: "Ν",
+       Xi: "Ξ",
+       Omicron: "Ο",
+       Pi: "Π",
+       Rho: "Ρ",
+       Sigma: "Σ",
+       Tau: "Τ",
+       Upsilon: "Υ",
+       Phi: "Φ",
+       Chi: "Χ",
+       Psi: "Ψ",
+       Omega: "Ω",
+       alpha: "α",
+       beta: "β",
+       gamma: "γ",
+       delta: "δ",
+       epsilon: "ε",
+       zeta: "ζ",
+       eta: "η",
+       theta: "θ",
+       iota: "ι",
+       kappa: "κ",
+       lambda: "λ",
+       mu: "μ",
+       nu: "ν",
+       xi: "ξ",
+       omicron: "ο",
+       pi: "π",
+       rho: "ρ",
+       sigmaf: "ς",
+       sigma: "σ",
+       tau: "τ",
+       upsilon: "υ",
+       phi: "φ",
+       chi: "χ",
+       psi: "ψ",
+       omega: "ω",
+       thetasym: "ϑ",
+       upsih: "ϒ",
+       piv: "ϖ",
+       OElig: "Œ",
+       oelig: "œ",
+       Scaron: "Š",
+       scaron: "š",
+       Yuml: "Ÿ",
+       fnof: "ƒ",
+       circ: "ˆ",
+       tilde: "˜",
+       ensp: " ",
+       emsp: " ",
+       thinsp: " ",
+       zwnj: "‌",
+       zwj: "‍",
+       lrm: "‎",
+       rlm: "‏",
+       ndash: "–",
+       mdash: "—",
+       lsquo: "‘",
+       rsquo: "’",
+       sbquo: "‚",
+       ldquo: "“",
+       rdquo: "”",
+       bdquo: "„",
+       dagger: "†",
+       Dagger: "‡",
+       bull: "•",
+       hellip: "…",
+       permil: "‰",
+       prime: "′",
+       Prime: "″",
+       lsaquo: "‹",
+       rsaquo: "›",
+       oline: "‾",
+       euro: "€",
+       trade: "™",
+       larr: "←",
+       uarr: "↑",
+       rarr: "→",
+       darr: "↓",
+       harr: "↔",
+       crarr: "↵",
+       lceil: "⌈",
+       rceil: "⌉",
+       lfloor: "⌊",
+       rfloor: "⌋",
+       loz: "◊",
+       spades: "♠",
+       clubs: "♣",
+       hearts: "♥",
+       diams: "♦"
+};
+
+},{}],33:[function(require,module,exports){
 //[4]   	NameStartChar	   ::=   	":" | [A-Z] | "_" | [a-z] | [#xC0-#xD6] | [#xD8-#xF6] | [#xF8-#x2FF] | [#x370-#x37D] | [#x37F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]
 //[4a]   	NameChar	   ::=   	NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
 //[5]   	Name	   ::=   	NameStartChar (NameChar)*
@@ -6405,6 +6759,21 @@ var S_ATTR_NOQUOT_VALUE = 4;//attr value(no quot value only)
 var S_ATTR_END = 5;//attr value end and no space(quot end)
 var S_TAG_SPACE = 6;//(attr value end || tag end ) && (space offer)
 var S_TAG_CLOSE = 7;//closed el<el />
+
+/**
+ * Creates an error that will not be caught by XMLReader aka the SAX parser.
+ *
+ * @param {string} message
+ * @param {any?} locator Optional, can provide details about the location in the source
+ * @constructor
+ */
+function ParseError(message, locator) {
+	this.message = message
+	this.locator = locator
+	if(Error.captureStackTrace) Error.captureStackTrace(this, ParseError);
+}
+ParseError.prototype = new Error();
+ParseError.prototype.name = ParseError.name
 
 function XMLReader(){
 	
@@ -6514,7 +6883,7 @@ function parse(source,defaultNSMapCopy,entityMap,domBuilder,errorHandler){
 						}
 					}
 					if(!endMatch){
-		            	errorHandler.fatalError("end tag name: "+tagName+' is not match the current start tagName:'+config.tagName );
+		            	errorHandler.fatalError("end tag name: "+tagName+' is not match the current start tagName:'+config.tagName ); // No known test case
 					}
 		        }else{
 		        	parseStack.push(config)
@@ -6575,10 +6944,11 @@ function parse(source,defaultNSMapCopy,entityMap,domBuilder,errorHandler){
 				}
 			}
 		}catch(e){
+			if (e instanceof ParseError) {
+				throw e;
+			}
 			errorHandler.error('element parse error: '+e)
-			//errorHandler.error('element parse error: '+e);
 			end = -1;
-			//throw e;
 		}
 		if(end>start){
 			start = end;
@@ -6599,6 +6969,16 @@ function copyLocator(f,t){
  * @return end of the elementStartPart(end of elementEndPart for selfClosed el)
  */
 function parseElementStartPart(source,start,el,currentNSMap,entityReplacer,errorHandler){
+
+	/**
+	 * @param {string} qname
+	 * @param {string} value
+	 * @param {number} startIndex
+	 */
+	function addAttribute(qname, value, startIndex) {
+		if (qname in el.attributeNames) errorHandler.fatalError('Attribute ' + qname + ' redefined')
+		el.addValue(qname, value, startIndex)
+	}
 	var attrName;
 	var value;
 	var p = ++start;
@@ -6614,7 +6994,7 @@ function parseElementStartPart(source,start,el,currentNSMap,entityReplacer,error
 				s = S_EQ;
 			}else{
 				//fatalError: equal must after attrName or space after attrName
-				throw new Error('attribute equal must after attrName');
+				throw new Error('attribute equal must after attrName'); // No known test case
 			}
 			break;
 		case '\'':
@@ -6629,7 +7009,7 @@ function parseElementStartPart(source,start,el,currentNSMap,entityReplacer,error
 				p = source.indexOf(c,start)
 				if(p>0){
 					value = source.slice(start,p).replace(/&#?\w+;/g,entityReplacer);
-					el.add(attrName,value,start-1);
+					addAttribute(attrName, value, start-1);
 					s = S_ATTR_END;
 				}else{
 					//fatalError: no end quot match
@@ -6638,14 +7018,14 @@ function parseElementStartPart(source,start,el,currentNSMap,entityReplacer,error
 			}else if(s == S_ATTR_NOQUOT_VALUE){
 				value = source.slice(start,p).replace(/&#?\w+;/g,entityReplacer);
 				//console.log(attrName,value,start,p)
-				el.add(attrName,value,start);
+				addAttribute(attrName, value, start);
 				//console.dir(el)
 				errorHandler.warning('attribute "'+attrName+'" missed start quot('+c+')!!');
 				start = p+1;
 				s = S_ATTR_END
 			}else{
 				//fatalError: no equal before
-				throw new Error('attribute value must after "="');
+				throw new Error('attribute value must after "="'); // No known test case
 			}
 			break;
 		case '/':
@@ -6663,11 +7043,10 @@ function parseElementStartPart(source,start,el,currentNSMap,entityReplacer,error
 				break;
 			//case S_EQ:
 			default:
-				throw new Error("attribute invalid close char('/')")
+				throw new Error("attribute invalid close char('/')") // No known test case
 			}
 			break;
 		case ''://end document
-			//throw new Error('unexpected end of input')
 			errorHandler.error('unexpected end of input');
 			if(s == S_TAG){
 				el.setTagName(source.slice(start,p));
@@ -6693,13 +7072,13 @@ function parseElementStartPart(source,start,el,currentNSMap,entityReplacer,error
 					value = attrName;
 				}
 				if(s == S_ATTR_NOQUOT_VALUE){
-					errorHandler.warning('attribute "'+value+'" missed quot(")!!');
-					el.add(attrName,value.replace(/&#?\w+;/g,entityReplacer),start)
+					errorHandler.warning('attribute "'+value+'" missed quot(")!');
+					addAttribute(attrName, value.replace(/&#?\w+;/g,entityReplacer), start)
 				}else{
 					if(currentNSMap[''] !== 'http://www.w3.org/1999/xhtml' || !value.match(/^(?:disabled|checked|selected)$/i)){
 						errorHandler.warning('attribute "'+value+'" missed value!! "'+value+'" instead!!')
 					}
-					el.add(value,value,start)
+					addAttribute(value, value, start)
 				}
 				break;
 			case S_EQ:
@@ -6724,7 +7103,7 @@ function parseElementStartPart(source,start,el,currentNSMap,entityReplacer,error
 				case S_ATTR_NOQUOT_VALUE:
 					var value = source.slice(start,p).replace(/&#?\w+;/g,entityReplacer);
 					errorHandler.warning('attribute "'+value+'" missed quot(")!!');
-					el.add(attrName,value,start)
+					addAttribute(attrName, value, start)
 				case S_ATTR_END:
 					s = S_TAG_SPACE;
 					break;
@@ -6747,7 +7126,7 @@ function parseElementStartPart(source,start,el,currentNSMap,entityReplacer,error
 					if(currentNSMap[''] !== 'http://www.w3.org/1999/xhtml' || !attrName.match(/^(?:disabled|checked|selected)$/i)){
 						errorHandler.warning('attribute "'+attrName+'" missed value!! "'+attrName+'" instead2!!')
 					}
-					el.add(attrName,attrName,start);
+					addAttribute(attrName, attrName, start);
 					start = p;
 					s = S_ATTR;
 					break;
@@ -6919,11 +7298,18 @@ function parseDCC(source,start,domBuilder,errorHandler){//sure start with '<!'
 		var len = matchs.length;
 		if(len>1 && /!doctype/i.test(matchs[0][0])){
 			var name = matchs[1][0];
-			var pubid = len>3 && /^public$/i.test(matchs[2][0]) && matchs[3][0]
-			var sysid = len>4 && matchs[4][0];
+			var pubid = false;
+			var sysid = false;
+			if(len>3){
+				if(/^public$/i.test(matchs[2][0])){
+					pubid = matchs[3][0];
+					sysid = len>4 && matchs[4][0];
+				}else if(/^system$/i.test(matchs[2][0])){
+					sysid = matchs[3][0];
+				}
+			}
 			var lastMatch = matchs[len-1]
-			domBuilder.startDTD(name,pubid && pubid.replace(/^(['"])(.*?)\1$/,'$2'),
-					sysid && sysid.replace(/^(['"])(.*?)\1$/,'$2'));
+			domBuilder.startDTD(name, pubid, sysid);
 			domBuilder.endDTD();
 			
 			return lastMatch.index+lastMatch[0].length
@@ -6949,11 +7335,8 @@ function parseInstruction(source,start,domBuilder){
 	return -1;
 }
 
-/**
- * @param source
- */
-function ElementAttributes(source){
-	
+function ElementAttributes(){
+	this.attributeNames = {}
 }
 ElementAttributes.prototype = {
 	setTagName:function(tagName){
@@ -6962,10 +7345,11 @@ ElementAttributes.prototype = {
 		}
 		this.tagName = tagName
 	},
-	add:function(qName,value,offset){
+	addValue:function(qName, value, offset) {
 		if(!tagNamePattern.test(qName)){
 			throw new Error('invalid attribute:'+qName)
 		}
+		this.attributeNames[qName] = this.length;
 		this[this.length++] = {qName:qName,value:value,offset:offset}
 	},
 	length:0,
@@ -6988,23 +7372,6 @@ ElementAttributes.prototype = {
 
 
 
-
-function _set_proto_(thiz,parent){
-	thiz.__proto__ = parent;
-	return thiz;
-}
-if(!(_set_proto_({},_set_proto_.prototype) instanceof _set_proto_)){
-	_set_proto_ = function(thiz,parent){
-		function p(){};
-		p.prototype = parent;
-		p = new p();
-		for(parent in thiz){
-			p[parent] = thiz[parent];
-		}
-		return p;
-	}
-}
-
 function split(source,start){
 	var match;
 	var buf = [];
@@ -7018,7 +7385,7 @@ function split(source,start){
 }
 
 exports.XMLReader = XMLReader;
-
+exports.ParseError = ParseError;
 
 },{}]},{},[1])(1)
 });
