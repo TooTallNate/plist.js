@@ -1,3 +1,15 @@
+3.0.2 / 2021-03-25
+==================
+* update xmldom to 0.5.0 to patch critical vulnerability (Mike Reinstein)
+* update saucelab credentials to point at mreinstein's saucelabs account (Mike Reinstein)
+* remove a bunch of test versions from the matrix because they weren't working in zuul + sauce (Mike Reinstein)
+
+
+3.0.1 / 2018-03-21
+==================
+* avoid using Buffer constructor nodejs/node#19079
+
+
 3.0.0 / 2018-03-18
 ==================
 * [[`cb0d8f1bc6`]](https://github.com/TooTallNate/plist.js/commit/cb0d8f1bc60dee423f8fc2cfcac427452dfaddb0) update Makefile, rebuild dist/ (Mike Reinstein)
