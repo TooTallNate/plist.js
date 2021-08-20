@@ -160,7 +160,7 @@ function walk_obj(next, next_child) {
  * Module dependencies.
  */
 
-var DOMParser = require('xmldom').DOMParser;
+var DOMParser = require('@xmldom/xmldom').DOMParser;
 
 /**
  * Module exports.
