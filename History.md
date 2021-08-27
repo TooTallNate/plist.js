@@ -1,3 +1,14 @@
+3.0.4 / 2021-08-27
+==================
+* inline xmldom@0.6.0 to eliminate security warning false positive (Mike Reinstein)
+
+
+3.0.3 / 2021-08-04
+==================
+* update xmldom to 0.6.0 to patch critical vulnerability (Mike Reinstein)
+* remove flaky saucelabs teseting badge (Mike Reinstein)
+
+
 3.0.2 / 2021-03-25
 ==================
 * update xmldom to 0.5.0 to patch critical vulnerability (Mike Reinstein)
