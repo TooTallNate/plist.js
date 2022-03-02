@@ -499,5 +499,27 @@ int main(int argc, char *argv[])
         CFBundleAllowMixedLocalizations: true
       });
     });
+    it('fixed Prototype Pollution using .parse() #114', function () {
+      var xml = multiline(function () {
+        /*
+          var xmlPollution = `
+          <plist version="1.0">
+            <dict>
+              <key>__proto__</key>
+              <dict>
+                <key>length</key>
+                <string>polluted</string>
+              </dict>
+            </dict>
+          </plist>`;
+        */
+      });
+      var parsed = parse(xml);
+      assert.deepEqual(parsed, {
+        __proto__: {
+          length: 'polluted'
+        }
+      });
+    });
   });
 });
