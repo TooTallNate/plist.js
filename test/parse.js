@@ -193,6 +193,11 @@ U=</data>
       assert.throws(function () {
         parseFixture('<dict><key>__proto__</key><dict><key>length</key><string>polluted</string></dict></dict>');
       });
+
+      // adding backslash should still be protected.
+      assert.throws(function () {
+        parseFixture('<dict><key>_\_proto_\_</key><dict><key>length</key><string>polluted</string></dict></dict>');
+      });
     });
   });
 
