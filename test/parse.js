@@ -187,6 +187,13 @@ U=</data>
       );
       assert.deepEqual(parsed, { a: { a1: true } });
     });
+
+    /* Test to protect against CVE-2022-22912 */
+    it('should throw if key value is __proto__', function () {
+      assert.throws(function () {
+        parseFixture('<dict><key>__proto__</key><dict><key>length</key><string>polluted</string></dict></dict>');
+      });
+    });
   });
 
   describe('integration', function () {
