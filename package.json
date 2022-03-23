@@ -29,7 +29,7 @@
     "xmlbuilder": "^9.0.7"
   },
   "devDependencies": {
-    "browserify": "^16.5.2",
+    "browserify": "^17.0.0",
     "mocha": "^5.2.0",
     "multiline": "^1.0.2",
     "zuul": "3.10.1"
