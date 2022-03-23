@@ -1,3 +1,9 @@
+3.0.5 / 2022-03-23
+==================
+* [[`96e2303d05`]](https://github.com/TooTallNate/plist.js/commit/96e2303d059e6be0c9e0c4773226d14b4758de52) Prototype Pollution using .parse() #114 (mario-canva)
+* update browserify from 16 to 17
+
+
 3.0.4 / 2021-08-27
 ==================
 * inline xmldom@0.6.0 to eliminate security warning false positive (Mike Reinstein)
