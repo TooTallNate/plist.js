@@ -19,7 +19,7 @@ describe('parse()', function () {
   describe('null', function () {
     it('should parse a <null> node into a null value', function () {
       var parsed = parseFixture('<null/>');
-      assert.strictEqual(parsed, undefined);
+      assert.strictEqual(parsed, null);
     });
   });
 
