@@ -1,6 +1,6 @@
 {
   "name": "plist",
-  "description": "Mac OS X Plist parser/builder for Node.js and browsers",
+  "description": "Apple's property list parser/builder for Node.js and browsers",
   "version": "3.0.5",
   "author": "Nathan Rajlich <nathan@tootallnate.net>",
   "contributors": [
@@ -26,13 +26,13 @@
   "main": "index.js",
   "dependencies": {
     "base64-js": "^1.5.1",
-    "xmlbuilder": "^9.0.7"
+    "xmlbuilder": "^15.1.1"
   },
   "devDependencies": {
     "browserify": "^17.0.0",
-    "mocha": "^5.2.0",
-    "multiline": "^1.0.2",
-    "zuul": "3.10.1"
+    "mocha": "^9.2.2",
+    "multiline": "^2.0.0",
+    "zuul": "3.12.0"
   },
   "scripts": {
     "test": "make test"
