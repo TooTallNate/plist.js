@@ -141,6 +141,19 @@ describe('plist', function () {
 */}));
     });
 
+    it('should not omit null values', function () {
+      var xml = build({ a: null});
+      assert.strictEqual(xml, multiline(function () {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>a</key>
+    <null/>
+  </dict>
+</plist>
+*/}));
+    });
   });
 
 });
