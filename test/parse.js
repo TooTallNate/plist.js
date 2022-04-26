@@ -164,11 +164,10 @@ U=</data>
         parseFixture('<dict><key>a</key><key>b</key></dict>');
       });
     });
-
-    it('should throw if value is missing', function () {
-      assert.throws(function () {
-        parseFixture('<dict><key>a</key></dict>');
-      });
+    
+    it('should parse to empry string if value is missing', function () {
+      var parsed = parseFixture('<dict><key>a</key></dict>');
+      assert.deepEqual(parsed, { 'a': '' });
     });
 
     it('should parse an empty key', function () {
