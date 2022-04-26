@@ -1,12 +1,12 @@
 plist.js
 ========
-### Mac OS X Plist parser/builder for Node.js and browsers
+### Apple's Property list parser/builder for Node.js and browsers
 
 [![Build Status](https://travis-ci.org/TooTallNate/plist.js.svg?branch=master)](https://travis-ci.org/TooTallNate/plist.js)
 
-Provides facilities for reading and writing Mac OS X Plist (property list)
-files. These are often used in programming OS X and iOS applications, as
-well as the iTunes configuration XML file.
+Provides facilities for reading and writing Plist (property list) files.
+These are often used in programming OS X and iOS applications, as well
+as the iTunes configuration XML file.
 
 Plist files represent stored programming "object"s. They are very similar
 to JSON. A valid Plist file is representable as a native JavaScript Object
