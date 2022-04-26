@@ -16,6 +16,13 @@ function parseFixture(string) {
 
 describe('parse()', function () {
 
+  describe('null', function () {
+    it('should parse a <null> node into a null value', function () {
+      var parsed = parseFixture('<null/>');
+      assert.strictEqual(parsed, undefined);
+    });
+  });
+
   describe('boolean', function () {
     it('should parse a <true> node into a Boolean `true` value', function () {
       var parsed = parseFixture('<true/>');
