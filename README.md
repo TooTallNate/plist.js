@@ -2,7 +2,6 @@ plist.js
 ========
 ### Apple's Property list parser/builder for Node.js and browsers
 
-[![Build Status](https://travis-ci.org/TooTallNate/plist.js.svg?branch=master)](https://travis-ci.org/TooTallNate/plist.js)
 [![ci](https://github.com/TooTallNate/plist.js/actions/workflows/ci.yml/badge.svg)](https://github.com/TooTallNate/plist.js/actions/workflows/ci.yml)
 
 Provides facilities for reading and writing Plist (property list) files.
