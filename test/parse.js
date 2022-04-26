@@ -437,26 +437,6 @@ int main(int argc, char *argv[])
       });
     });
 
-    it('should fail parsing invalid xml plist', function () {
-      var xml = multiline(function () {
-/*
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>test</key>
-  <strong>Testing</strong>
-  <key>bar</key>
-  <string></string>
-</dict>
-</plist>
-*/
-      });
-      assert.throws(function () {
-        var parsed = parse(xml);
-      });
-    });
-
     it('should parse an example "Xcode-Info.plist" file', function () {
       var xml = multiline(function () {
 /*
@@ -536,6 +516,32 @@ int main(int argc, char *argv[])
            'UIInterfaceOrientationLandscapeLeft',
            'UIInterfaceOrientationLandscapeRight' ],
         CFBundleAllowMixedLocalizations: true
+      });
+    });
+  });
+  describe('invalid formats', function () {
+    it('should fail parsing invalid xml plist', function () {
+      var xml = multiline(function () {
+/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>test</key>
+  <strong>Testing</strong>
+  <key>bar</key>
+  <string></string>
+</dict>
+</plist>
+*/
+      });
+      assert.throws(function () {
+        var parsed = parse(xml);
+      });
+    });
+    it('ensure empty strings arent valid plist', function () {
+      assert.throws(function () {
+        var parsed = parse('');
       });
     });
   });
