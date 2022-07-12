@@ -131,8 +131,9 @@ function parsePlistXML (node) {
       counter += 1;
     }
     if (counter % 2 === 1) {
-      throw new Error('Missing value for "' + key + '" while parsing <dict/>');
+      new_obj[key] = '';
     }
+    
     return new_obj;
 
   } else if (node.nodeName === 'array') {
@@ -155,6 +156,12 @@ function parsePlistXML (node) {
     if (isEmptyNode(node)) {
       return '';
     }
+
+    invariant(
+      node.childNodes[0].nodeValue !== '__proto__',
+      '__proto__ keys can lead to prototype pollution. More details on CVE-2022-22912'
+    );
+
     return node.childNodes[0].nodeValue;
   } else if (node.nodeName === 'string') {
     res = '';
@@ -208,11 +215,16 @@ function parsePlistXML (node) {
     )
     return new Date(node.childNodes[0].nodeValue);
 
+  } else if (node.nodeName === 'null') {
+    return null;
+
   } else if (node.nodeName === 'true') {
     return true;
 
   } else if (node.nodeName === 'false') {
     return false;
+  } else {
+    throw new Error('Invalid PLIST tag ' + node.nodeName);
   }
 }
 
