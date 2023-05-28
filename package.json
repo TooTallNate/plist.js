@@ -38,6 +38,6 @@
     "test": "make test"
   },
   "engines": {
-    "node": ">=6"
+    "node": ">=10.4.0"
   }
 }
