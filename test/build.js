@@ -40,6 +40,17 @@ describe('plist', function () {
 */}));
     });
 
+    it('should create a plist XML real from a BigInt', function () {
+      var xml = build(BigInt('0x1fffffffffffff'));
+      assert.strictEqual(xml, multiline(function () {/*
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <integer>9007199254740991</integer>
+</plist>
+*/}));
+    });
+
     it('should create a plist XML date from a Date', function () {
       var xml = build(new Date('2010-02-08T21:41:23Z'));
       assert.strictEqual(xml, multiline(function () {/*
