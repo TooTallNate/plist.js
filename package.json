@@ -1,14 +1,15 @@
 {
   "name": "plist",
   "description": "Apple's property list parser/builder for Node.js and browsers",
-  "version": "3.0.6",
+  "version": "3.0.7",
   "author": "Nathan Rajlich <nathan@tootallnate.net>",
   "contributors": [
     "Hans Huebner <hans.huebner@gmail.com>",
     "Pierre Metrailler",
     "Mike Reinstein <reinstein.mike@gmail.com>",
     "Vladimir Tsvang",
-    "Mathieu D'Amours"
+    "Mathieu D'Amours",
+    "Kelly Pangburn <kel_pan@msn.com>"
   ],
   "repository": {
     "type": "git",
@@ -25,6 +26,7 @@
   ],
   "main": "index.js",
   "dependencies": {
+    "@xmldom/xmldom": "^0.8.8",
     "base64-js": "^1.5.1",
     "xmlbuilder": "^15.1.1"
   },
