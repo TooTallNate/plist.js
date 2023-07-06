@@ -119,6 +119,9 @@ function walk_obj(next, next_child) {
     tag_type = (next % 1 === 0) ? 'integer' : 'real';
     next_child.ele(tag_type).txt(next.toString());
 
+  } else if ('BigInt' == name) {
+    next_child.ele('integer').txt(next);
+
   } else if ('Date' == name) {
     next_child.ele('date').txt(ISODateString(new Date(next)));
 
