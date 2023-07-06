@@ -1,3 +1,8 @@
+3.1.0 / 2023-07-06
+==================
+* replace inlined xmldom with @xmldom/xmldom
+
+
 3.0.5 / 2022-03-23
 ==================
 * [[`96e2303d05`]](https://github.com/TooTallNate/plist.js/commit/96e2303d059e6be0c9e0c4773226d14b4758de52) Prototype Pollution using .parse() #114 (mario-canva)
