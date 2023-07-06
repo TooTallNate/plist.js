@@ -31,8 +31,7 @@
   },
   "devDependencies": {
     "browserify": "^17.0.0",
-    "mocha": "^9.2.2",
-    "multiline": "^2.0.0",
+    "mocha": "^10.2.0",
     "zuul": "3.12.0"
   },
   "scripts": {

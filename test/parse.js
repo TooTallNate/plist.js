@@ -1,16 +1,13 @@
 
 var assert = require('assert');
 var parse = require('../').parse;
-var multiline = require('multiline');
+
 
 function parseFixture(string) {
-  var intro = multiline(function () {
-/*
-<?xml version="1.0" encoding="UTF-8"?>
+  var intro = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-*/
-  });
+<plist version="1.0">`;
+
   return parse(intro + string + '</plist>');
 }
 
@@ -97,17 +94,14 @@ describe('parse()', function () {
     });
 
     it('should parse a <data> node with newlines into a Buffer', function () {
-      var xml = multiline(function () {
-/*
-<data>4pyTIMOgIGxhIG
+      var xml = `<data>4pyTIMOgIGxhIG
 
 
 1v
 
 ZG
 U=</data>
-*/
-      });
+`;
       var parsed = parseFixture(xml);
       assert(Buffer.isBuffer(parsed));
       assert.strictEqual(parsed.toString('utf8'), '✓ à la mode');
@@ -209,9 +203,7 @@ U=</data>
 
   describe('integration', function () {
     it('should parse a plist file with XML comments', function () {
-      var xml = multiline(function () {
-/*
-<?xml version="1.0" encoding="UTF-8"?>
+      var xml = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
   <dict>
@@ -235,8 +227,7 @@ U=</data>
     <string>9.0</string>
   </dict>
 </plist>
-*/
-      });
+`;
       var parsed = parse(xml);
       assert.deepEqual(parsed, {
         CFBundleName: 'Emacs',
@@ -248,9 +239,7 @@ U=</data>
     });
 
     it('should parse a plist file with CDATA content', function () {
-      var xml = multiline(function () {
-/*
-<?xml version="1.0" encoding="UTF-8"?>
+      var xml = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
@@ -295,8 +284,7 @@ int main(int argc, char *argv[])
 	</dict>
 </dict>
 </plist>
-*/
-      });
+`;
       var parsed = parse(xml);
       assert.deepEqual(parsed, { OptionsLabel: 'Product',
         PopupMenu:
@@ -310,9 +298,7 @@ int main(int argc, char *argv[])
     });
 
     it('should parse an example "Cordova.plist" file', function () {
-      var xml = multiline(function () {
-/*
-<?xml version="1.0" encoding="UTF-8"?>
+      var xml = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
 #
@@ -399,8 +385,7 @@ int main(int argc, char *argv[])
   </dict>
 </dict>
 </plist>
-*/
-      });
+`;
       var parsed = parse(xml);
       assert.deepEqual(parsed, {
         UIWebViewBounce: true,
@@ -437,18 +422,16 @@ int main(int argc, char *argv[])
     });
 
     it('should parse an example "Xcode-Info.plist" file', function () {
-      var xml = multiline(function () {
-/*
-<?xml version="1.0" encoding="UTF-8"?>
+      var xml = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>${PRODUCT_NAME}</string>
+	<string>\${PRODUCT_NAME}</string>
 	<key>CFBundleExecutable</key>
-	<string>${EXECUTABLE_NAME}</string>
+	<string>\${EXECUTABLE_NAME}</string>
 	<key>CFBundleIconFiles</key>
 	<array/>
 	<key>CFBundleIdentifier</key>
@@ -456,7 +439,7 @@ int main(int argc, char *argv[])
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>${PRODUCT_NAME}</string>
+	<string>\${PRODUCT_NAME}</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -488,8 +471,7 @@ int main(int argc, char *argv[])
 	<true/>
 </dict>
 </plist>
-*/
-      });
+`;
       var parsed = parse(xml);
       assert.deepEqual(parsed, {
         CFBundleDevelopmentRegion: 'en',
@@ -520,9 +502,7 @@ int main(int argc, char *argv[])
   });
   describe('invalid formats', function () {
     it('should fail parsing invalid xml plist', function () {
-      var xml = multiline(function () {
-/*
-<?xml version="1.0" encoding="UTF-8"?>
+      var xml = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
@@ -532,8 +512,7 @@ int main(int argc, char *argv[])
   <string></string>
 </dict>
 </plist>
-*/
-      });
+`;
       assert.throws(function () {
         var parsed = parse(xml);
       });
