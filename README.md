@@ -20,32 +20,43 @@ and vice-versa.
 Install using `npm`:
 
 ``` bash
-$ npm install --save plist
+$ npm install plist
 ```
 
-Then `require()` the _plist_ module in your file:
+Then import the `parse()` and `build()` functions:
 
 ``` js
-var plist = require('plist');
+import { parse, build } from 'plist';
 
-// now use the `parse()` and `build()` functions
-var val = plist.parse('<plist><string>Hello World!</string></plist>');
+const val = parse('<plist><string>Hello World!</string></plist>');
 console.log(val);  // "Hello World!"
 ```
 
 
 ### Browser
 
-Include the `dist/plist.js` in a `<script>` tag in your HTML file:
+Use an [import map](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap)
+to resolve the bare module specifiers used by plist and its dependencies,
+then import directly from the source:
 
 ``` html
-<script src="plist.js"></script>
-<script>
-  // now use the `parse()` and `build()` functions
-  var val = plist.parse('<plist><string>Hello World!</string></plist>');
+<script type="importmap">
+  {
+    "imports": {
+      "@xmldom/xmldom": "https://esm.sh/@xmldom/xmldom",
+      "xmlbuilder": "https://esm.sh/xmlbuilder"
+    }
+  }
+</script>
+<script type="module">
+  import { parse, build } from './node_modules/plist/index.js';
+
+  const val = parse('<plist><string>Hello World!</string></plist>');
   console.log(val);  // "Hello World!"
 </script>
 ```
+
+See the [browser example](./examples/browser/) for a drag-and-drop demo.
 
 
 ## API
@@ -54,20 +65,20 @@ Include the `dist/plist.js` in a `<script>` tag in your HTML file:
 
 Parsing a plist from filename:
 
-``` javascript
-var fs = require('fs');
-var plist = require('plist');
+``` js
+import { readFileSync } from 'node:fs';
+import { parse } from 'plist';
 
-var obj = plist.parse(fs.readFileSync('myPlist.plist', 'utf8'));
+const obj = parse(readFileSync('myPlist.plist', 'utf8'));
 console.log(JSON.stringify(obj));
 ```
 
 Parsing a plist from string payload:
 
-``` javascript
-var plist = require('plist');
+``` js
+import { parse } from 'plist';
 
-var xml =
+const xml =
   '<?xml version="1.0" encoding="UTF-8"?>' +
   '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' +
   '<plist version="1.0">' +
@@ -84,7 +95,7 @@ var xml =
     '</dict>' +
   '</plist>';
 
-console.log(plist.parse(xml));
+console.log(parse(xml));
 
 // [
 //   "metadata",
@@ -102,10 +113,10 @@ console.log(plist.parse(xml));
 Given an existing JavaScript Object, you can turn it into an XML document
 that complies with the plist DTD:
 
-``` javascript
-var plist = require('plist');
+``` js
+import { build } from 'plist';
 
-var json = [
+const obj = [
   "metadata",
   {
     "bundle-identifier": "com.company.app",
@@ -115,7 +126,7 @@ var json = [
   }
 ];
 
-console.log(plist.build(json));
+console.log(build(obj));
 
 // <?xml version="1.0" encoding="UTF-8"?>
 // <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -133,12 +144,6 @@ console.log(plist.build(json));
 //   </dict>
 // </plist>
 ```
-
-## Cross Platform Testing Credits
-
-Much thanks to Sauce Labs for providing free resources that enable cross-browser testing on this project!
-
-[![Testing Powered By SauceLabs](https://opensource.saucelabs.com/images/opensauce/powered-by-saucelabs-badge-red.png?sanitize=true "Testing Powered By SauceLabs")](https://saucelabs.com)
 
 
 ## License
