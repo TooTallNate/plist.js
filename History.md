@@ -1,3 +1,12 @@
+4.0.0 / 2026-04-25
+==================
+* convert commonjs to pure esm
+* remove build step
+* remove Makefile usage
+* bump minimum node version from 10 to 18
+* switch testing from mocha to node's built in test runner
+* implement a real browser example in examples/browser/
+
 3.1.1 / 2026-04-25
 ==================
 * update xmldom dep

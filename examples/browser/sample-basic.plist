@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Name</key>
+	<string>plist.js</string>
+	<key>Description</key>
+	<string>Apple's property list parser/builder for Node.js and browsers</string>
+	<key>Version</key>
+	<real>3.1</real>
+	<key>License</key>
+	<string>MIT</string>
+	<key>IsOpenSource</key>
+	<true/>
+	<key>Stars</key>
+	<integer>500</integer>
+	<key>Keywords</key>
+	<array>
+		<string>apple</string>
+		<string>plist</string>
+		<string>parser</string>
+		<string>xml</string>
+	</array>
+</dict>
+</plist>

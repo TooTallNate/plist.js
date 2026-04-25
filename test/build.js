@@ -1,6 +1,7 @@
 
-var assert = require('assert');
-var build = require('../').build;
+import { describe, it } from 'node:test';
+import assert from 'node:assert';
+import { build } from '../index.js';
 
 
 describe('plist', function () {
@@ -52,8 +53,8 @@ describe('plist', function () {
 </plist>`);
     });
 
-    it('should create a plist XML date from a Buffer', function () {
-      var xml = build(new Buffer.from('☃'));
+    it('should create a plist XML data from a Uint8Array', function () {
+      var xml = build(new TextEncoder().encode('\u2603'));
       assert.strictEqual(xml, `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">

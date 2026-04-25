@@ -1,6 +1,7 @@
 
-var assert = require('assert');
-var parse = require('../').parse;
+import { describe, it } from 'node:test';
+import assert from 'node:assert';
+import { parse } from '../index.js';
 
 
 function parseFixture(string) {
@@ -81,30 +82,27 @@ describe('parse()', function () {
   });
 
   describe('data', function () {
-    it('should parse an empty data tag into an empty Buffer', function () {
+    it('should parse an empty data tag into an empty Uint8Array', function () {
       var parsed = parseFixture('<data/>');
-      assert(Buffer.isBuffer(parsed));
-      assert.strictEqual(parsed.toString('utf-8'), '');
+      assert(parsed instanceof Uint8Array);
+      assert.strictEqual(new TextDecoder().decode(parsed), '');
     });
 
-    it('should parse a <data> node into a Buffer', function () {
+    it('should parse a <data> node into a Uint8Array', function () {
       var parsed = parseFixture('<data>4pyTIMOgIGxhIG1vZGU=</data>');
-      assert(Buffer.isBuffer(parsed));
-      assert.strictEqual(parsed.toString('utf8'), '✓ à la mode');
+      assert(parsed instanceof Uint8Array);
+      assert.strictEqual(new TextDecoder().decode(parsed), '\u2713 \u00e0 la mode');
     });
 
-    it('should parse a <data> node with newlines into a Buffer', function () {
+    it('should parse a <data> node with newlines into a Uint8Array', function () {
       var xml = `<data>4pyTIMOgIGxhIG
-
-
 1v
-
 ZG
 U=</data>
 `;
       var parsed = parseFixture(xml);
-      assert(Buffer.isBuffer(parsed));
-      assert.strictEqual(parsed.toString('utf8'), '✓ à la mode');
+      assert(parsed instanceof Uint8Array);
+      assert.strictEqual(new TextDecoder().decode(parsed), '\u2713 \u00e0 la mode');
     });
   });
 
