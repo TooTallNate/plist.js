@@ -1,3 +1,8 @@
+3.1.1 / 2026-04-25
+==================
+* update xmldom dep
+
+
 3.1.0 / 2023-07-06
 ==================
 * replace inlined xmldom with @xmldom/xmldom

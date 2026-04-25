@@ -4,7 +4,7 @@
  * Module dependencies.
  */
 
-const { DOMParser } = require('@xmldom/xmldom');
+const { DOMParser } = require("@xmldom/xmldom");
 
 /**
  * Module exports.
@@ -16,7 +16,6 @@ var TEXT_NODE = 3;
 var CDATA_NODE = 4;
 var COMMENT_NODE = 8;
 
-
 /**
  * We ignore raw text (usually whitespace), <!-- xml comments -->,
  * and raw CDATA nodes.
@@ -26,10 +25,12 @@ var COMMENT_NODE = 8;
  * @api private
  */
 
-function shouldIgnoreNode (node) {
-  return node.nodeType === TEXT_NODE
-    || node.nodeType === COMMENT_NODE
-    || node.nodeType === CDATA_NODE;
+function shouldIgnoreNode(node) {
+  return (
+    node.nodeType === TEXT_NODE ||
+    node.nodeType === COMMENT_NODE ||
+    node.nodeType === CDATA_NODE
+  );
 }
 
 /**
@@ -42,8 +43,8 @@ function shouldIgnoreNode (node) {
  * @returns {Boolean}
  * @api private
  */
-function isEmptyNode(node){
-  if(!node.childNodes || node.childNodes.length === 0) {
+function isEmptyNode(node) {
+  if (!node.childNodes || node.childNodes.length === 0) {
     return true;
   } else {
     return false;
@@ -64,11 +65,11 @@ function invariant(test, message) {
  * @api public
  */
 
-function parse (xml) {
-  var doc = new DOMParser().parseFromString(xml);
+function parse(xml) {
+  var doc = new DOMParser().parseFromString(xml, "text/xml");
   invariant(
-    doc.documentElement.nodeName === 'plist',
-    'malformed document. First element should be <plist>'
+    doc.documentElement.nodeName === "plist",
+    "malformed document. First element should be <plist>",
   );
   var plist = parsePlistXML(doc.documentElement);
 
@@ -87,163 +88,143 @@ function parse (xml) {
  * @api private
  */
 
-function parsePlistXML (node) {
+function parsePlistXML(node) {
   var i, new_obj, key, val, new_arr, res, counter, type;
 
-  if (!node)
-    return null;
+  if (!node) return null;
 
-  if (node.nodeName === 'plist') {
+  if (node.nodeName === "plist") {
     new_arr = [];
     if (isEmptyNode(node)) {
       return new_arr;
     }
-    for (i=0; i < node.childNodes.length; i++) {
+    for (i = 0; i < node.childNodes.length; i++) {
       if (!shouldIgnoreNode(node.childNodes[i])) {
-        new_arr.push( parsePlistXML(node.childNodes[i]));
+        new_arr.push(parsePlistXML(node.childNodes[i]));
       }
     }
     return new_arr;
-  } else if (node.nodeName === 'dict') {
+  } else if (node.nodeName === "dict") {
     new_obj = {};
     key = null;
     counter = 0;
     if (isEmptyNode(node)) {
       return new_obj;
     }
-    for (i=0; i < node.childNodes.length; i++) {
+    for (i = 0; i < node.childNodes.length; i++) {
       if (shouldIgnoreNode(node.childNodes[i])) continue;
       if (counter % 2 === 0) {
         invariant(
-          node.childNodes[i].nodeName === 'key',
-          'Missing key while parsing <dict/>.'
+          node.childNodes[i].nodeName === "key",
+          "Missing key while parsing <dict/>.",
         );
         key = parsePlistXML(node.childNodes[i]);
       } else {
         invariant(
-          node.childNodes[i].nodeName !== 'key',
-          'Unexpected key "'
-            + parsePlistXML(node.childNodes[i])
-            + '" while parsing <dict/>.'
+          node.childNodes[i].nodeName !== "key",
+          'Unexpected key "' +
+            parsePlistXML(node.childNodes[i]) +
+            '" while parsing <dict/>.',
         );
         new_obj[key] = parsePlistXML(node.childNodes[i]);
       }
       counter += 1;
     }
     if (counter % 2 === 1) {
-      new_obj[key] = '';
+      new_obj[key] = "";
     }
-    
-    return new_obj;
 
-  } else if (node.nodeName === 'array') {
+    return new_obj;
+  } else if (node.nodeName === "array") {
     new_arr = [];
     if (isEmptyNode(node)) {
       return new_arr;
     }
-    for (i=0; i < node.childNodes.length; i++) {
+    for (i = 0; i < node.childNodes.length; i++) {
       if (!shouldIgnoreNode(node.childNodes[i])) {
         res = parsePlistXML(node.childNodes[i]);
         if (null != res) new_arr.push(res);
       }
     }
     return new_arr;
-
-  } else if (node.nodeName === '#text') {
+  } else if (node.nodeName === "#text") {
     // TODO: what should we do with text types? (CDATA sections)
-
-  } else if (node.nodeName === 'key') {
+  } else if (node.nodeName === "key") {
     if (isEmptyNode(node)) {
-      return '';
+      return "";
     }
 
     invariant(
-      node.childNodes[0].nodeValue !== '__proto__',
-      '__proto__ keys can lead to prototype pollution. More details on CVE-2022-22912'
+      node.childNodes[0].nodeValue !== "__proto__",
+      "__proto__ keys can lead to prototype pollution. More details on CVE-2022-22912",
     );
 
     return node.childNodes[0].nodeValue;
-  } else if (node.nodeName === 'string') {
-    res = '';
+  } else if (node.nodeName === "string") {
+    res = "";
     if (isEmptyNode(node)) {
       return res;
     }
-    for (i=0; i < node.childNodes.length; i++) {
+    for (i = 0; i < node.childNodes.length; i++) {
       var type = node.childNodes[i].nodeType;
       if (type === TEXT_NODE || type === CDATA_NODE) {
         res += node.childNodes[i].nodeValue;
       }
     }
     return res;
-
-  } else if (node.nodeName === 'integer') {
-    invariant(
-      !isEmptyNode(node),
-      'Cannot parse "" as integer.'
-    );
+  } else if (node.nodeName === "integer") {
+    invariant(!isEmptyNode(node), 'Cannot parse "" as integer.');
     return parseInt(node.childNodes[0].nodeValue, 10);
-
-  } else if (node.nodeName === 'real') {
-    invariant(
-      !isEmptyNode(node),
-      'Cannot parse "" as real.'
-    );
-    res = '';
-    for (i=0; i < node.childNodes.length; i++) {
+  } else if (node.nodeName === "real") {
+    invariant(!isEmptyNode(node), 'Cannot parse "" as real.');
+    res = "";
+    for (i = 0; i < node.childNodes.length; i++) {
       if (node.childNodes[i].nodeType === TEXT_NODE) {
         res += node.childNodes[i].nodeValue;
       }
     }
     return parseFloat(res);
-
-  } else if (node.nodeName === 'data') {
-    res = '';
+  } else if (node.nodeName === "data") {
+    res = "";
     if (isEmptyNode(node)) {
-      return Buffer.from(res, 'base64');
+      return Buffer.from(res, "base64");
     }
-    for (i=0; i < node.childNodes.length; i++) {
+    for (i = 0; i < node.childNodes.length; i++) {
       if (node.childNodes[i].nodeType === TEXT_NODE) {
-        res += node.childNodes[i].nodeValue.replace(/\s+/g, '');
+        res += node.childNodes[i].nodeValue.replace(/\s+/g, "");
       }
     }
-    return Buffer.from(res, 'base64');
-
-  } else if (node.nodeName === 'date') {
-    invariant(
-      !isEmptyNode(node),
-      'Cannot parse "" as Date.'
-    )
+    return Buffer.from(res, "base64");
+  } else if (node.nodeName === "date") {
+    invariant(!isEmptyNode(node), 'Cannot parse "" as Date.');
     return new Date(node.childNodes[0].nodeValue);
-
-  } else if (node.nodeName === 'null') {
+  } else if (node.nodeName === "null") {
     return null;
-
-  } else if (node.nodeName === 'true') {
+  } else if (node.nodeName === "true") {
     return true;
-
-  } else if (node.nodeName === 'false') {
+  } else if (node.nodeName === "false") {
     return false;
   } else {
-    throw new Error('Invalid PLIST tag ' + node.nodeName);
+    throw new Error("Invalid PLIST tag " + node.nodeName);
   }
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"@xmldom/xmldom":6,"buffer":9}],2:[function(require,module,exports){
-'use strict'
+},{"@xmldom/xmldom":8,"buffer":11}],2:[function(require,module,exports){
+'use strict';
 
 /**
  * Ponyfill for `Array.prototype.find` which is only available in ES6 runtimes.
  *
- * Works with anything that has a `length` property and index access properties, including NodeList.
+ * Works with anything that has a `length` property and index access properties,
+ * including NodeList.
  *
- * @template {unknown} T
- * @param {Array<T> | ({length:number, [number]: T})} list
- * @param {function (item: T, index: number, list:Array<T> | ({length:number, [number]: T})):boolean} predicate
- * @param {Partial<Pick<ArrayConstructor['prototype'], 'find'>>?} ac `Array.prototype` by default,
- * 				allows injecting a custom implementation in tests
+ * @param {T[] | { length: number; [number]: T }} list
+ * @param {function (item: T, index: number, list:T[]):boolean} predicate
+ * @param {Partial<Pick<ArrayConstructor['prototype'], 'find'>>?} ac
+ * Allows injecting a custom implementation in tests (`Array.prototype` by default).
  * @returns {T | undefined}
- *
+ * @template {unknown} T
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find
  * @see https://tc39.es/ecma262/multipage/indexed-collections.html#sec-array.prototype.find
  */
@@ -255,7 +236,7 @@ function find(list, predicate, ac) {
 		return ac.find.call(list, predicate);
 	}
 	for (var i = 0; i < list.length; i++) {
-		if (Object.prototype.hasOwnProperty.call(list, i)) {
+		if (hasOwn(list, i)) {
 			var item = list[i];
 			if (predicate.call(undefined, item, i, list)) {
 				return item;
@@ -271,90 +252,292 @@ function find(list, predicate, ac) {
  *
  * Is used to create "enum like" objects.
  *
- * @template T
- * @param {T} object the object to freeze
- * @param {Pick<ObjectConstructor, 'freeze'> = Object} oc `Object` by default,
- * 				allows to inject custom object constructor for tests
- * @returns {Readonly<T>}
+ * If `Object.getOwnPropertyDescriptors` is available,
+ * a new object with all properties of object but without any prototype is created and returned
+ * after freezing it.
  *
+ * @param {T} object
+ * The object to freeze.
+ * @param {Pick<ObjectConstructor, 'create' | 'freeze' | 'getOwnPropertyDescriptors'>} [oc=Object]
+ * `Object` by default,
+ * allows to inject custom object constructor for tests.
+ * @returns {Readonly<T>}
+ * @template {Object} T
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze
+ * @prettierignore
  */
 function freeze(object, oc) {
 	if (oc === undefined) {
-		oc = Object
+		oc = Object;
 	}
-	return oc && typeof oc.freeze === 'function' ? oc.freeze(object) : object
+	if (oc && typeof oc.getOwnPropertyDescriptors === 'function') {
+		object = oc.create(null, oc.getOwnPropertyDescriptors(object));
+	}
+	return oc && typeof oc.freeze === 'function' ? oc.freeze(object) : object;
 }
 
 /**
- * Since we can not rely on `Object.assign` we provide a simplified version
- * that is sufficient for our needs.
+ * Implementation for `Object.hasOwn` but ES5 compatible.
+ *
+ * @param {any} object
+ * @param {string | number} key
+ * @returns {boolean}
+ */
+function hasOwn(object, key) {
+	return Object.prototype.hasOwnProperty.call(object, key);
+}
+
+/**
+ * Since xmldom can not rely on `Object.assign`,
+ * it uses/provides a simplified version that is sufficient for its needs.
  *
  * @param {Object} target
  * @param {Object | null | undefined} source
- *
- * @returns {Object} target
- * @throws TypeError if target is not an object
- *
+ * @returns {Object}
+ * The target with the merged/overridden properties.
+ * @throws {TypeError}
+ * If target is not an object.
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
  * @see https://tc39.es/ecma262/multipage/fundamental-objects.html#sec-object.assign
  */
 function assign(target, source) {
 	if (target === null || typeof target !== 'object') {
-		throw new TypeError('target is not an object')
+		throw new TypeError('target is not an object');
 	}
 	for (var key in source) {
-		if (Object.prototype.hasOwnProperty.call(source, key)) {
-			target[key] = source[key]
+		if (hasOwn(source, key)) {
+			target[key] = source[key];
 		}
 	}
-	return target
+	return target;
+}
+
+/**
+ * A number of attributes are boolean attributes.
+ * The presence of a boolean attribute on an element represents the `true` value,
+ * and the absence of the attribute represents the `false` value.
+ *
+ * If the attribute is present, its value must either be the empty string, or a value that is
+ * an ASCII case-insensitive match for the attribute's canonical name,
+ * with no leading or trailing whitespace.
+ *
+ * Note: The values `"true"` and `"false"` are not allowed on boolean attributes.
+ * To represent a `false` value, the attribute has to be omitted altogether.
+ *
+ * @see https://html.spec.whatwg.org/#boolean-attributes
+ * @see https://html.spec.whatwg.org/#attributes-3
+ */
+var HTML_BOOLEAN_ATTRIBUTES = freeze({
+	allowfullscreen: true,
+	async: true,
+	autofocus: true,
+	autoplay: true,
+	checked: true,
+	controls: true,
+	default: true,
+	defer: true,
+	disabled: true,
+	formnovalidate: true,
+	hidden: true,
+	ismap: true,
+	itemscope: true,
+	loop: true,
+	multiple: true,
+	muted: true,
+	nomodule: true,
+	novalidate: true,
+	open: true,
+	playsinline: true,
+	readonly: true,
+	required: true,
+	reversed: true,
+	selected: true,
+});
+
+/**
+ * Check if `name` is matching one of the HTML boolean attribute names.
+ * This method doesn't check if such attributes are allowed in the context of the current
+ * document/parsing.
+ *
+ * @param {string} name
+ * @returns {boolean}
+ * @see {@link HTML_BOOLEAN_ATTRIBUTES}
+ * @see https://html.spec.whatwg.org/#boolean-attributes
+ * @see https://html.spec.whatwg.org/#attributes-3
+ */
+function isHTMLBooleanAttribute(name) {
+	return hasOwn(HTML_BOOLEAN_ATTRIBUTES, name.toLowerCase());
+}
+
+/**
+ * Void elements only have a start tag; end tags must not be specified for void elements.
+ * These elements should be written as self-closing like this: `<area />`.
+ * This should not be confused with optional tags that HTML allows to omit the end tag for
+ * (like `li`, `tr` and others), which can have content after them,
+ * so they can not be written as self-closing.
+ * xmldom does not have any logic for optional end tags cases,
+ * and will report them as a warning.
+ * Content that would go into the unopened element,
+ * will instead be added as a sibling text node.
+ *
+ * @type {Readonly<{
+ * 	area: boolean;
+ * 	col: boolean;
+ * 	img: boolean;
+ * 	wbr: boolean;
+ * 	link: boolean;
+ * 	hr: boolean;
+ * 	source: boolean;
+ * 	br: boolean;
+ * 	input: boolean;
+ * 	param: boolean;
+ * 	meta: boolean;
+ * 	embed: boolean;
+ * 	track: boolean;
+ * 	base: boolean;
+ * }>}
+ * @see https://html.spec.whatwg.org/#void-elements
+ * @see https://html.spec.whatwg.org/#optional-tags
+ */
+var HTML_VOID_ELEMENTS = freeze({
+	area: true,
+	base: true,
+	br: true,
+	col: true,
+	embed: true,
+	hr: true,
+	img: true,
+	input: true,
+	link: true,
+	meta: true,
+	param: true,
+	source: true,
+	track: true,
+	wbr: true,
+});
+
+/**
+ * Check if `tagName` is matching one of the HTML void element names.
+ * This method doesn't check if such tags are allowed in the context of the current
+ * document/parsing.
+ *
+ * @param {string} tagName
+ * @returns {boolean}
+ * @see {@link HTML_VOID_ELEMENTS}
+ * @see https://html.spec.whatwg.org/#void-elements
+ */
+function isHTMLVoidElement(tagName) {
+	return hasOwn(HTML_VOID_ELEMENTS, tagName.toLowerCase());
+}
+
+/**
+ * Tag names that are raw text elements according to HTML spec.
+ * The value denotes whether they are escapable or not.
+ *
+ * @see {@link isHTMLEscapableRawTextElement}
+ * @see {@link isHTMLRawTextElement}
+ * @see https://html.spec.whatwg.org/#raw-text-elements
+ * @see https://html.spec.whatwg.org/#escapable-raw-text-elements
+ */
+var HTML_RAW_TEXT_ELEMENTS = freeze({
+	script: false,
+	style: false,
+	textarea: true,
+	title: true,
+});
+
+/**
+ * Check if `tagName` is matching one of the HTML raw text element names.
+ * This method doesn't check if such tags are allowed in the context of the current
+ * document/parsing.
+ *
+ * @param {string} tagName
+ * @returns {boolean}
+ * @see {@link isHTMLEscapableRawTextElement}
+ * @see {@link HTML_RAW_TEXT_ELEMENTS}
+ * @see https://html.spec.whatwg.org/#raw-text-elements
+ * @see https://html.spec.whatwg.org/#escapable-raw-text-elements
+ */
+function isHTMLRawTextElement(tagName) {
+	var key = tagName.toLowerCase();
+	return hasOwn(HTML_RAW_TEXT_ELEMENTS, key) && !HTML_RAW_TEXT_ELEMENTS[key];
+}
+/**
+ * Check if `tagName` is matching one of the HTML escapable raw text element names.
+ * This method doesn't check if such tags are allowed in the context of the current
+ * document/parsing.
+ *
+ * @param {string} tagName
+ * @returns {boolean}
+ * @see {@link isHTMLRawTextElement}
+ * @see {@link HTML_RAW_TEXT_ELEMENTS}
+ * @see https://html.spec.whatwg.org/#raw-text-elements
+ * @see https://html.spec.whatwg.org/#escapable-raw-text-elements
+ */
+function isHTMLEscapableRawTextElement(tagName) {
+	var key = tagName.toLowerCase();
+	return hasOwn(HTML_RAW_TEXT_ELEMENTS, key) && HTML_RAW_TEXT_ELEMENTS[key];
+}
+/**
+ * Only returns true if `value` matches MIME_TYPE.HTML, which indicates an HTML document.
+ *
+ * @param {string} mimeType
+ * @returns {mimeType is 'text/html'}
+ * @see https://www.iana.org/assignments/media-types/text/html
+ * @see https://en.wikipedia.org/wiki/HTML
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMParser/parseFromString
+ * @see https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-domparser-parsefromstring
+ */
+function isHTMLMimeType(mimeType) {
+	return mimeType === MIME_TYPE.HTML;
+}
+/**
+ * For both the `text/html` and the `application/xhtml+xml` namespace the spec defines that the
+ * HTML namespace is provided as the default.
+ *
+ * @param {string} mimeType
+ * @returns {boolean}
+ * @see https://dom.spec.whatwg.org/#dom-document-createelement
+ * @see https://dom.spec.whatwg.org/#dom-domimplementation-createdocument
+ * @see https://dom.spec.whatwg.org/#dom-domimplementation-createhtmldocument
+ */
+function hasDefaultHTMLNamespace(mimeType) {
+	return isHTMLMimeType(mimeType) || mimeType === MIME_TYPE.XML_XHTML_APPLICATION;
 }
 
 /**
  * All mime types that are allowed as input to `DOMParser.parseFromString`
  *
- * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMParser/parseFromString#Argument02 MDN
- * @see https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#domparsersupportedtype WHATWG HTML Spec
- * @see DOMParser.prototype.parseFromString
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMParser/parseFromString#Argument02
+ *      MDN
+ * @see https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#domparsersupportedtype
+ *      WHATWG HTML Spec
+ * @see {@link DOMParser.prototype.parseFromString}
  */
 var MIME_TYPE = freeze({
 	/**
 	 * `text/html`, the only mime type that triggers treating an XML document as HTML.
 	 *
-	 * @see DOMParser.SupportedType.isHTML
 	 * @see https://www.iana.org/assignments/media-types/text/html IANA MimeType registration
 	 * @see https://en.wikipedia.org/wiki/HTML Wikipedia
 	 * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMParser/parseFromString MDN
-	 * @see https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-domparser-parsefromstring WHATWG HTML Spec
+	 * @see https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-domparser-parsefromstring
+	 *      WHATWG HTML Spec
 	 */
 	HTML: 'text/html',
 
 	/**
-	 * Helper method to check a mime type if it indicates an HTML document
-	 *
-	 * @param {string} [value]
-	 * @returns {boolean}
-	 *
-	 * @see https://www.iana.org/assignments/media-types/text/html IANA MimeType registration
-	 * @see https://en.wikipedia.org/wiki/HTML Wikipedia
-	 * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMParser/parseFromString MDN
-	 * @see https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-domparser-parsefromstring 	 */
-	isHTML: function (value) {
-		return value === MIME_TYPE.HTML
-	},
-
-	/**
 	 * `application/xml`, the standard mime type for XML documents.
 	 *
-	 * @see https://www.iana.org/assignments/media-types/application/xml IANA MimeType registration
+	 * @see https://www.iana.org/assignments/media-types/application/xml IANA MimeType
+	 *      registration
 	 * @see https://tools.ietf.org/html/rfc7303#section-9.1 RFC 7303
 	 * @see https://en.wikipedia.org/wiki/XML_and_MIME Wikipedia
 	 */
 	XML_APPLICATION: 'application/xml',
 
 	/**
-	 * `text/html`, an alias for `application/xml`.
+	 * `text/xml`, an alias for `application/xml`.
 	 *
 	 * @see https://tools.ietf.org/html/rfc7303#section-9.2 RFC 7303
 	 * @see https://www.iana.org/assignments/media-types/text/xml IANA MimeType registration
@@ -366,7 +549,8 @@ var MIME_TYPE = freeze({
 	 * `application/xhtml+xml`, indicates an XML document that has the default HTML namespace,
 	 * but is parsed as an XML document.
 	 *
-	 * @see https://www.iana.org/assignments/media-types/application/xhtml+xml IANA MimeType registration
+	 * @see https://www.iana.org/assignments/media-types/application/xhtml+xml IANA MimeType
+	 *      registration
 	 * @see https://dom.spec.whatwg.org/#dom-domimplementation-createdocument WHATWG DOM Spec
 	 * @see https://en.wikipedia.org/wiki/XHTML Wikipedia
 	 */
@@ -380,8 +564,31 @@ var MIME_TYPE = freeze({
 	 * @see https://en.wikipedia.org/wiki/Scalable_Vector_Graphics Wikipedia
 	 */
 	XML_SVG_IMAGE: 'image/svg+xml',
-})
+});
+/**
+ * @typedef {'application/xhtml+xml' | 'application/xml' | 'image/svg+xml' | 'text/html' | 'text/xml'}
+ * MimeType
+ */
+/**
+ * @type {MimeType[]}
+ * @private
+ * Basically `Object.values`, which is not available in ES5.
+ */
+var _MIME_TYPES = Object.keys(MIME_TYPE).map(function (key) {
+	return MIME_TYPE[key];
+});
 
+/**
+ * Only returns true if `mimeType` is one of the allowed values for
+ * `DOMParser.parseFromString`.
+ *
+ * @param {string} mimeType
+ * @returns {mimeType is 'application/xhtml+xml' | 'application/xml' | 'image/svg+xml' |  'text/html' | 'text/xml'}
+ *
+ */
+function isValidMimeType(mimeType) {
+	return _MIME_TYPES.indexOf(mimeType) > -1;
+}
 /**
  * Namespaces that are used in this code base.
  *
@@ -394,17 +601,6 @@ var NAMESPACE = freeze({
 	 * @see http://www.w3.org/1999/xhtml
 	 */
 	HTML: 'http://www.w3.org/1999/xhtml',
-
-	/**
-	 * Checks if `uri` equals `NAMESPACE.HTML`.
-	 *
-	 * @param {string} [uri]
-	 *
-	 * @see NAMESPACE.HTML
-	 */
-	isHTML: function (uri) {
-		return uri === NAMESPACE.HTML
-	},
 
 	/**
 	 * The SVG namespace.
@@ -421,34 +617,53 @@ var NAMESPACE = freeze({
 	XML: 'http://www.w3.org/XML/1998/namespace',
 
 	/**
-	 * The `xmlns:` namespace
+	 * The `xmlns:` namespace.
 	 *
 	 * @see https://www.w3.org/2000/xmlns/
 	 */
 	XMLNS: 'http://www.w3.org/2000/xmlns/',
-})
+});
 
 exports.assign = assign;
 exports.find = find;
 exports.freeze = freeze;
+exports.HTML_BOOLEAN_ATTRIBUTES = HTML_BOOLEAN_ATTRIBUTES;
+exports.HTML_RAW_TEXT_ELEMENTS = HTML_RAW_TEXT_ELEMENTS;
+exports.HTML_VOID_ELEMENTS = HTML_VOID_ELEMENTS;
+exports.hasDefaultHTMLNamespace = hasDefaultHTMLNamespace;
+exports.hasOwn = hasOwn;
+exports.isHTMLBooleanAttribute = isHTMLBooleanAttribute;
+exports.isHTMLRawTextElement = isHTMLRawTextElement;
+exports.isHTMLEscapableRawTextElement = isHTMLEscapableRawTextElement;
+exports.isHTMLMimeType = isHTMLMimeType;
+exports.isHTMLVoidElement = isHTMLVoidElement;
+exports.isValidMimeType = isValidMimeType;
 exports.MIME_TYPE = MIME_TYPE;
 exports.NAMESPACE = NAMESPACE;
 
 },{}],3:[function(require,module,exports){
-var conventions = require("./conventions");
-var dom = require('./dom')
+'use strict';
+
+var conventions = require('./conventions');
+var dom = require('./dom');
+var errors = require('./errors');
 var entities = require('./entities');
 var sax = require('./sax');
 
 var DOMImplementation = dom.DOMImplementation;
 
+var hasDefaultHTMLNamespace = conventions.hasDefaultHTMLNamespace;
+var isHTMLMimeType = conventions.isHTMLMimeType;
+var isValidMimeType = conventions.isValidMimeType;
+var MIME_TYPE = conventions.MIME_TYPE;
 var NAMESPACE = conventions.NAMESPACE;
+var ParseError = errors.ParseError;
 
-var ParseError = sax.ParseError;
 var XMLReader = sax.XMLReader;
 
 /**
- * Normalizes line ending according to https://www.w3.org/TR/xml11/#sec-line-ends:
+ * Normalizes line ending according to <https://www.w3.org/TR/xml11/#sec-line-ends>,
+ * including some Unicode "newline" characters:
  *
  * > XML parsed entities are often stored in computer files which,
  * > for editing convenience, are organized into lines.
@@ -457,21 +672,21 @@ var XMLReader = sax.XMLReader;
  * >
  * > To simplify the tasks of applications, the XML processor must behave
  * > as if it normalized all line breaks in external parsed entities (including the document entity)
- * > on input, before parsing, by translating all of the following to a single #xA character:
+ * > on input, before parsing, by translating the following to a single #xA character:
  * >
- * > 1. the two-character sequence #xD #xA
- * > 2. the two-character sequence #xD #x85
- * > 3. the single character #x85
- * > 4. the single character #x2028
- * > 5. any #xD character that is not immediately followed by #xA or #x85.
+ * > 1. the two-character sequence #xD #xA,
+ * > 2. the two-character sequence #xD #x85,
+ * > 3. the single character #x85,
+ * > 4. the single character #x2028,
+ * > 5. the single character #x2029,
+ * > 6. any #xD character that is not immediately followed by #xA or #x85.
  *
  * @param {string} input
  * @returns {string}
+ * @prettierignore
  */
 function normalizeLineEndings(input) {
-	return input
-		.replace(/\r[\n\u0085]/g, '\n')
-		.replace(/[\r\u0085\u2028]/g, '\n')
+	return input.replace(/\r[\n\u0085]/g, '\n').replace(/[\r\u0085\u2028\u2029]/g, '\n');
 }
 
 /**
@@ -482,229 +697,457 @@ function normalizeLineEndings(input) {
 
 /**
  * @typedef DOMParserOptions
- * @property {DOMHandler} [domBuilder]
+ * @property {typeof assign} [assign]
+ * The method to use instead of `conventions.assign`, which is used to copy values from
+ * `options` before they are used for parsing.
+ * @property {typeof DOMHandler} [domHandler]
+ * For internal testing: The class for creating an instance for handling events from the SAX
+ * parser.
+ * *****Warning: By configuring a faulty implementation, the specified behavior can completely
+ * be broken.*****.
  * @property {Function} [errorHandler]
- * @property {(string) => string} [normalizeLineEndings] used to replace line endings before parsing
- * 						defaults to `normalizeLineEndings`
- * @property {Locator} [locator]
- * @property {Record<string, string>} [xmlns]
+ * DEPRECATED! use `onError` instead.
+ * @property {function(level:ErrorLevel, message:string, context: DOMHandler):void}
+ * [onError]
+ * A function invoked for every error that occurs during parsing.
  *
- * @see normalizeLineEndings
+ * If it is not provided, all errors are reported to `console.error`
+ * and only `fatalError`s are thrown as a `ParseError`,
+ * which prevents any further processing.
+ * If the provided method throws, a `ParserError` is thrown,
+ * which prevents any further processing.
+ *
+ * Be aware that many `warning`s are considered an error that prevents further processing in
+ * most implementations.
+ * @property {boolean} [locator=true]
+ * Configures if the nodes created during parsing will have a `lineNumber` and a `columnNumber`
+ * attribute describing their location in the XML string.
+ * Default is true.
+ * @property {(string) => string} [normalizeLineEndings]
+ * used to replace line endings before parsing, defaults to exported `normalizeLineEndings`,
+ * which normalizes line endings according to <https://www.w3.org/TR/xml11/#sec-line-ends>,
+ * including some Unicode "newline" characters.
+ * @property {Object} [xmlns]
+ * The XML namespaces that should be assumed when parsing.
+ * The default namespace can be provided by the key that is the empty string.
+ * When the `mimeType` for HTML, XHTML or SVG are passed to `parseFromString`,
+ * the default namespace that will be used,
+ * will be overridden according to the specification.
+ * @see {@link normalizeLineEndings}
  */
 
 /**
- * The DOMParser interface provides the ability to parse XML or HTML source code
- * from a string into a DOM `Document`.
+ * The DOMParser interface provides the ability to parse XML or HTML source code from a string
+ * into a DOM `Document`.
  *
- * _xmldom is different from the spec in that it allows an `options` parameter,
- * to override the default behavior._
+ * ***xmldom is different from the spec in that it allows an `options` parameter,
+ * to control the behavior***.
  *
+ * @class
  * @param {DOMParserOptions} [options]
- * @constructor
- *
  * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMParser
  * @see https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-parsing-and-serialization
  */
-function DOMParser(options){
-	this.options = options ||{locator:{}};
+function DOMParser(options) {
+	options = options || {};
+	if (options.locator === undefined) {
+		options.locator = true;
+	}
+
+	/**
+	 * The method to use instead of `conventions.assign`, which is used to copy values from
+	 * `options`
+	 * before they are used for parsing.
+	 *
+	 * @type {conventions.assign}
+	 * @private
+	 * @see {@link conventions.assign}
+	 * @readonly
+	 */
+	this.assign = options.assign || conventions.assign;
+
+	/**
+	 * For internal testing: The class for creating an instance for handling events from the SAX
+	 * parser.
+	 * *****Warning: By configuring a faulty implementation, the specified behavior can completely
+	 * be broken*****.
+	 *
+	 * @type {typeof DOMHandler}
+	 * @private
+	 * @readonly
+	 */
+	this.domHandler = options.domHandler || DOMHandler;
+
+	/**
+	 * A function that is invoked for every error that occurs during parsing.
+	 *
+	 * If it is not provided, all errors are reported to `console.error`
+	 * and only `fatalError`s are thrown as a `ParseError`,
+	 * which prevents any further processing.
+	 * If the provided method throws, a `ParserError` is thrown,
+	 * which prevents any further processing.
+	 *
+	 * Be aware that many `warning`s are considered an error that prevents further processing in
+	 * most implementations.
+	 *
+	 * @type {function(level:ErrorLevel, message:string, context: DOMHandler):void}
+	 * @see {@link onErrorStopParsing}
+	 * @see {@link onWarningStopParsing}
+	 */
+	this.onError = options.onError || options.errorHandler;
+	if (options.errorHandler && typeof options.errorHandler !== 'function') {
+		throw new TypeError('errorHandler object is no longer supported, switch to onError!');
+	} else if (options.errorHandler) {
+		options.errorHandler('warning', 'The `errorHandler` option has been deprecated, use `onError` instead!', this);
+	}
+
+	/**
+	 * used to replace line endings before parsing, defaults to `normalizeLineEndings`
+	 *
+	 * @type {(string) => string}
+	 * @readonly
+	 */
+	this.normalizeLineEndings = options.normalizeLineEndings || normalizeLineEndings;
+
+	/**
+	 * Configures if the nodes created during parsing will have a `lineNumber` and a
+	 * `columnNumber`
+	 * attribute describing their location in the XML string.
+	 * Default is true.
+	 *
+	 * @type {boolean}
+	 * @readonly
+	 */
+	this.locator = !!options.locator;
+
+	/**
+	 * The default namespace can be provided by the key that is the empty string.
+	 * When the `mimeType` for HTML, XHTML or SVG are passed to `parseFromString`,
+	 * the default namespace that will be used,
+	 * will be overridden according to the specification.
+	 *
+	 * @type {Readonly<Object>}
+	 * @readonly
+	 */
+	this.xmlns = this.assign(Object.create(null), options.xmlns);
 }
 
-DOMParser.prototype.parseFromString = function(source,mimeType){
-	var options = this.options;
-	var sax =  new XMLReader();
-	var domBuilder = options.domBuilder || new DOMHandler();//contentHandler and LexicalHandler
-	var errorHandler = options.errorHandler;
-	var locator = options.locator;
-	var defaultNSMap = options.xmlns||{};
-	var isHTML = /\/x?html?$/.test(mimeType);//mimeType.toLowerCase().indexOf('html') > -1;
-  	var entityMap = isHTML ? entities.HTML_ENTITIES : entities.XML_ENTITIES;
-	if(locator){
-		domBuilder.setDocumentLocator(locator)
+/**
+ * Parses `source` using the options in the way configured by the `DOMParserOptions` of `this`
+ * `DOMParser`. If `mimeType` is `text/html` an HTML `Document` is created,
+ * otherwise an XML `Document` is created.
+ *
+ * __It behaves different from the description in the living standard__:
+ * - Uses the `options` passed to the `DOMParser` constructor to modify the behavior.
+ * - Any unexpected input is reported to `onError` with either a `warning`,
+ * `error` or `fatalError` level.
+ * - Any `fatalError` throws a `ParseError` which prevents further processing.
+ * - Any error thrown by `onError` is converted to a `ParseError` which prevents further
+ * processing - If no `Document` was created during parsing it is reported as a `fatalError`.
+ * *****Warning: By configuring a faulty DOMHandler implementation,
+ * the specified behavior can completely be broken*****.
+ *
+ * @param {string} source
+ * The XML mime type only allows string input!
+ * @param {string} [mimeType='application/xml']
+ * the mimeType or contentType of the document to be created determines the `type` of document
+ * created (XML or HTML)
+ * @returns {Document}
+ * The `Document` node.
+ * @throws {ParseError}
+ * for any `fatalError` or anything that is thrown by `onError`
+ * @throws {TypeError}
+ * for any invalid `mimeType`
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMParser/parseFromString
+ * @see https://html.spec.whatwg.org/#dom-domparser-parsefromstring-dev
+ */
+DOMParser.prototype.parseFromString = function (source, mimeType) {
+	if (!isValidMimeType(mimeType)) {
+		throw new TypeError('DOMParser.parseFromString: the provided mimeType "' + mimeType + '" is not valid.');
+	}
+	var defaultNSMap = this.assign(Object.create(null), this.xmlns);
+	var entityMap = entities.XML_ENTITIES;
+	var defaultNamespace = defaultNSMap[''] || null;
+	if (hasDefaultHTMLNamespace(mimeType)) {
+		entityMap = entities.HTML_ENTITIES;
+		defaultNamespace = NAMESPACE.HTML;
+	} else if (mimeType === MIME_TYPE.XML_SVG_IMAGE) {
+		defaultNamespace = NAMESPACE.SVG;
+	}
+	defaultNSMap[''] = defaultNamespace;
+	defaultNSMap.xml = defaultNSMap.xml || NAMESPACE.XML;
+
+	var domBuilder = new this.domHandler({
+		mimeType: mimeType,
+		defaultNamespace: defaultNamespace,
+		onError: this.onError,
+	});
+	var locator = this.locator ? {} : undefined;
+	if (this.locator) {
+		domBuilder.setDocumentLocator(locator);
 	}
 
-	sax.errorHandler = buildErrorHandler(errorHandler,domBuilder,locator);
-	sax.domBuilder = options.domBuilder || domBuilder;
-	if(isHTML){
-		defaultNSMap[''] = NAMESPACE.HTML;
+	var sax = new XMLReader();
+	sax.errorHandler = domBuilder;
+	sax.domBuilder = domBuilder;
+	var isXml = !conventions.isHTMLMimeType(mimeType);
+	if (isXml && typeof source !== 'string') {
+		sax.errorHandler.fatalError('source is not a string');
 	}
-	defaultNSMap.xml = defaultNSMap.xml || NAMESPACE.XML;
-	var normalize = options.normalizeLineEndings || normalizeLineEndings;
-	if (source && typeof source === 'string') {
-		sax.parse(
-			normalize(source),
-			defaultNSMap,
-			entityMap
-		)
-	} else {
-		sax.errorHandler.error('invalid doc source')
+	sax.parse(this.normalizeLineEndings(String(source)), defaultNSMap, entityMap);
+	if (!domBuilder.doc.documentElement) {
+		sax.errorHandler.fatalError('missing root element');
 	}
 	return domBuilder.doc;
-}
-function buildErrorHandler(errorImpl,domBuilder,locator){
-	if(!errorImpl){
-		if(domBuilder instanceof DOMHandler){
-			return domBuilder;
-		}
-		errorImpl = domBuilder ;
-	}
-	var errorHandler = {}
-	var isCallback = errorImpl instanceof Function;
-	locator = locator||{}
-	function build(key){
-		var fn = errorImpl[key];
-		if(!fn && isCallback){
-			fn = errorImpl.length == 2?function(msg){errorImpl(key,msg)}:errorImpl;
-		}
-		errorHandler[key] = fn && function(msg){
-			fn('[xmldom '+key+']\t'+msg+_locator(locator));
-		}||function(){};
-	}
-	build('warning');
-	build('error');
-	build('fatalError');
-	return errorHandler;
+};
+
+/**
+ * @typedef DOMHandlerOptions
+ * @property {string} [mimeType=MIME_TYPE.XML_APPLICATION]
+ * @property {string | null} [defaultNamespace=null]
+ */
+/**
+ * The class that is used to handle events from the SAX parser to create the related DOM
+ * elements.
+ *
+ * Some methods are only implemented as an empty function,
+ * since they are (at least currently) not relevant for xmldom.
+ *
+ * @class
+ * @param {DOMHandlerOptions} [options]
+ * @see http://www.saxproject.org/apidoc/org/xml/sax/ext/DefaultHandler2.html
+ */
+function DOMHandler(options) {
+	var opt = options || {};
+	/**
+	 * The mime type is used to determine if the DOM handler will create an XML or HTML document.
+	 * Only if it is set to `text/html` it will create an HTML document.
+	 * It defaults to MIME_TYPE.XML_APPLICATION.
+	 *
+	 * @type {string}
+	 * @see {@link MIME_TYPE}
+	 * @readonly
+	 */
+	this.mimeType = opt.mimeType || MIME_TYPE.XML_APPLICATION;
+
+	/**
+	 * The namespace to use to create an XML document.
+	 * For the following reasons this is required:
+	 * - The SAX API for `startDocument` doesn't offer any way to pass a namespace,
+	 * since at that point there is no way for the parser to know what the default namespace from
+	 * the document will be.
+	 * - When creating using `DOMImplementation.createDocument` it is required to pass a
+	 * namespace,
+	 * to determine the correct `Document.contentType`, which should match `this.mimeType`.
+	 * - When parsing an XML document with the `application/xhtml+xml` mimeType,
+	 * the HTML namespace needs to be the default namespace.
+	 *
+	 * @type {string | null}
+	 * @private
+	 * @readonly
+	 */
+	this.defaultNamespace = opt.defaultNamespace || null;
+
+	/**
+	 * @type {boolean}
+	 * @private
+	 */
+	this.cdata = false;
+
+	/**
+	 * The last `Element` that was created by `startElement`.
+	 * `endElement` sets it to the `currentElement.parentNode`.
+	 *
+	 * Note: The sax parser currently sets it to white space text nodes between tags.
+	 *
+	 * @type {Element | Node | undefined}
+	 * @private
+	 */
+	this.currentElement = undefined;
+
+	/**
+	 * The Document that is created as part of `startDocument`,
+	 * and returned by `DOMParser.parseFromString`.
+	 *
+	 * @type {Document | undefined}
+	 * @readonly
+	 */
+	this.doc = undefined;
+
+	/**
+	 * The locator is stored as part of setDocumentLocator.
+	 * It is controlled and mutated by the SAX parser to store the current parsing position.
+	 * It is used by DOMHandler to set `columnNumber` and `lineNumber`
+	 * on the DOM nodes.
+	 *
+	 * @type {Readonly<Locator> | undefined}
+	 * @private
+	 * @readonly (the
+	 * sax parser currently sometimes set's it)
+	 */
+	this.locator = undefined;
+	/**
+	 * @type {function (level:ErrorLevel ,message:string, context:DOMHandler):void}
+	 * @readonly
+	 */
+	this.onError = opt.onError;
 }
 
-//console.log('#\n\n\n\n\n\n\n####')
-/**
- * +ContentHandler+ErrorHandler
- * +LexicalHandler+EntityResolver2
- * -DeclHandler-DTDHandler
- *
- * DefaultHandler:EntityResolver, DTDHandler, ContentHandler, ErrorHandler
- * DefaultHandler2:DefaultHandler,LexicalHandler, DeclHandler, EntityResolver2
- * @link http://www.saxproject.org/apidoc/org/xml/sax/helpers/DefaultHandler.html
- */
-function DOMHandler() {
-    this.cdata = false;
-}
-function position(locator,node){
+function position(locator, node) {
 	node.lineNumber = locator.lineNumber;
 	node.columnNumber = locator.columnNumber;
 }
-/**
- * @see org.xml.sax.ContentHandler#startDocument
- * @link http://www.saxproject.org/apidoc/org/xml/sax/ContentHandler.html
- */
-DOMHandler.prototype = {
-	startDocument : function() {
-    	this.doc = new DOMImplementation().createDocument(null, null, null);
-    	if (this.locator) {
-        	this.doc.documentURI = this.locator.systemId;
-    	}
-	},
-	startElement:function(namespaceURI, localName, qName, attrs) {
-		var doc = this.doc;
-	    var el = doc.createElementNS(namespaceURI, qName||localName);
-	    var len = attrs.length;
-	    appendElement(this, el);
-	    this.currentElement = el;
 
-		this.locator && position(this.locator,el)
-	    for (var i = 0 ; i < len; i++) {
-	        var namespaceURI = attrs.getURI(i);
-	        var value = attrs.getValue(i);
-	        var qName = attrs.getQName(i);
+DOMHandler.prototype = {
+	/**
+	 * Either creates an XML or an HTML document and stores it under `this.doc`.
+	 * If it is an XML document, `this.defaultNamespace` is used to create it,
+	 * and it will not contain any `childNodes`.
+	 * If it is an HTML document, it will be created without any `childNodes`.
+	 *
+	 * @see http://www.saxproject.org/apidoc/org/xml/sax/ContentHandler.html
+	 */
+	startDocument: function () {
+		var impl = new DOMImplementation();
+		this.doc = isHTMLMimeType(this.mimeType) ? impl.createHTMLDocument(false) : impl.createDocument(this.defaultNamespace, '');
+	},
+	startElement: function (namespaceURI, localName, qName, attrs) {
+		var doc = this.doc;
+		var el = doc.createElementNS(namespaceURI, qName || localName);
+		var len = attrs.length;
+		appendElement(this, el);
+		this.currentElement = el;
+
+		this.locator && position(this.locator, el);
+		for (var i = 0; i < len; i++) {
+			var namespaceURI = attrs.getURI(i);
+			var value = attrs.getValue(i);
+			var qName = attrs.getQName(i);
 			var attr = doc.createAttributeNS(namespaceURI, qName);
-			this.locator &&position(attrs.getLocator(i),attr);
+			this.locator && position(attrs.getLocator(i), attr);
 			attr.value = attr.nodeValue = value;
-			el.setAttributeNode(attr)
-	    }
+			el.setAttributeNode(attr);
+		}
 	},
-	endElement:function(namespaceURI, localName, qName) {
-		var current = this.currentElement
-		var tagName = current.tagName;
-		this.currentElement = current.parentNode;
+	endElement: function (namespaceURI, localName, qName) {
+		this.currentElement = this.currentElement.parentNode;
 	},
-	startPrefixMapping:function(prefix, uri) {
+	startPrefixMapping: function (prefix, uri) {},
+	endPrefixMapping: function (prefix) {},
+	processingInstruction: function (target, data) {
+		var ins = this.doc.createProcessingInstruction(target, data);
+		this.locator && position(this.locator, ins);
+		appendElement(this, ins);
 	},
-	endPrefixMapping:function(prefix) {
-	},
-	processingInstruction:function(target, data) {
-	    var ins = this.doc.createProcessingInstruction(target, data);
-	    this.locator && position(this.locator,ins)
-	    appendElement(this, ins);
-	},
-	ignorableWhitespace:function(ch, start, length) {
-	},
-	characters:function(chars, start, length) {
-		chars = _toString.apply(this,arguments)
+	ignorableWhitespace: function (ch, start, length) {},
+	characters: function (chars, start, length) {
+		chars = _toString.apply(this, arguments);
 		//console.log(chars)
-		if(chars){
+		if (chars) {
 			if (this.cdata) {
 				var charNode = this.doc.createCDATASection(chars);
 			} else {
 				var charNode = this.doc.createTextNode(chars);
 			}
-			if(this.currentElement){
+			if (this.currentElement) {
 				this.currentElement.appendChild(charNode);
-			}else if(/^\s*$/.test(chars)){
+			} else if (/^\s*$/.test(chars)) {
 				this.doc.appendChild(charNode);
 				//process xml
 			}
-			this.locator && position(this.locator,charNode)
+			this.locator && position(this.locator, charNode);
 		}
 	},
-	skippedEntity:function(name) {
-	},
-	endDocument:function() {
+	skippedEntity: function (name) {},
+	endDocument: function () {
 		this.doc.normalize();
 	},
-	setDocumentLocator:function (locator) {
-	    if(this.locator = locator){// && !('lineNumber' in locator)){
-	    	locator.lineNumber = 0;
-	    }
+	/**
+	 * Stores the locator to be able to set the `columnNumber` and `lineNumber`
+	 * on the created DOM nodes.
+	 *
+	 * @param {Locator} locator
+	 */
+	setDocumentLocator: function (locator) {
+		if (locator) {
+			locator.lineNumber = 0;
+		}
+		this.locator = locator;
 	},
 	//LexicalHandler
-	comment:function(chars, start, length) {
-		chars = _toString.apply(this,arguments)
-	    var comm = this.doc.createComment(chars);
-	    this.locator && position(this.locator,comm)
-	    appendElement(this, comm);
+	comment: function (chars, start, length) {
+		chars = _toString.apply(this, arguments);
+		var comm = this.doc.createComment(chars);
+		this.locator && position(this.locator, comm);
+		appendElement(this, comm);
 	},
 
-	startCDATA:function() {
-	    //used in characters() methods
-	    this.cdata = true;
+	startCDATA: function () {
+		//used in characters() methods
+		this.cdata = true;
 	},
-	endCDATA:function() {
-	    this.cdata = false;
+	endCDATA: function () {
+		this.cdata = false;
 	},
 
-	startDTD:function(name, publicId, systemId) {
+	startDTD: function (name, publicId, systemId, internalSubset) {
 		var impl = this.doc.implementation;
-	    if (impl && impl.createDocumentType) {
-	        var dt = impl.createDocumentType(name, publicId, systemId);
-	        this.locator && position(this.locator,dt)
-	        appendElement(this, dt);
-					this.doc.doctype = dt;
-	    }
+		if (impl && impl.createDocumentType) {
+			var dt = impl.createDocumentType(name, publicId, systemId, internalSubset);
+			this.locator && position(this.locator, dt);
+			appendElement(this, dt);
+			this.doc.doctype = dt;
+		}
+	},
+	reportError: function (level, message) {
+		if (typeof this.onError === 'function') {
+			try {
+				this.onError(level, message, this);
+			} catch (e) {
+				throw new ParseError('Reporting ' + level + ' "' + message + '" caused ' + e, this.locator);
+			}
+		} else {
+			console.error('[xmldom ' + level + ']\t' + message, _locator(this.locator));
+		}
 	},
 	/**
-	 * @see org.xml.sax.ErrorHandler
-	 * @link http://www.saxproject.org/apidoc/org/xml/sax/ErrorHandler.html
+	 * @see http://www.saxproject.org/apidoc/org/xml/sax/ErrorHandler.html
 	 */
-	warning:function(error) {
-		console.warn('[xmldom warning]\t'+error,_locator(this.locator));
+	warning: function (message) {
+		this.reportError('warning', message);
 	},
-	error:function(error) {
-		console.error('[xmldom error]\t'+error,_locator(this.locator));
+	error: function (message) {
+		this.reportError('error', message);
 	},
-	fatalError:function(error) {
-		throw new ParseError(error, this.locator);
+	/**
+	 * This function reports a fatal error and throws a ParseError.
+	 *
+	 * @param {string} message
+	 * - The message to be used for reporting and throwing the error.
+	 * @returns {never}
+	 * This function always throws an error and never returns a value.
+	 * @throws {ParseError}
+	 * Always throws a ParseError with the provided message.
+	 */
+	fatalError: function (message) {
+		this.reportError('fatalError', message);
+		throw new ParseError(message, this.locator);
+	},
+};
+
+function _locator(l) {
+	if (l) {
+		return '\n@#[line:' + l.lineNumber + ',col:' + l.columnNumber + ']';
 	}
 }
-function _locator(l){
-	if(l){
-		return '\n@'+(l.systemId ||'')+'#[line:'+l.lineNumber+',col:'+l.columnNumber+']'
-	}
-}
-function _toString(chars,start,length){
-	if(typeof chars == 'string'){
-		return chars.substr(start,length)
-	}else{//java sax connect width xmldom on rhino(what about: "? && !(chars instanceof String)")
-		if(chars.length >= start+length || start){
-			return new java.lang.String(chars,start,length)+'';
+
+function _toString(chars, start, length) {
+	if (typeof chars == 'string') {
+		return chars.substr(start, length);
+	} else {
+		//java sax connect width xmldom on rhino(what about: "? && !(chars instanceof String)")
+		if (chars.length >= start + length || start) {
+			return new java.lang.String(chars, start, length) + '';
 		}
 		return chars;
 	}
@@ -741,665 +1184,1850 @@ function _toString(chars,start,length){
  *  #notationDecl(name, publicId, systemId) {};
  *  #unparsedEntityDecl(name, publicId, systemId, notationName) {};
  */
-"endDTD,startEntity,endEntity,attributeDecl,elementDecl,externalEntityDecl,internalEntityDecl,resolveEntity,getExternalSubset,notationDecl,unparsedEntityDecl".replace(/\w+/g,function(key){
-	DOMHandler.prototype[key] = function(){return null}
-})
+'endDTD,startEntity,endEntity,attributeDecl,elementDecl,externalEntityDecl,internalEntityDecl,resolveEntity,getExternalSubset,notationDecl,unparsedEntityDecl'.replace(
+	/\w+/g,
+	function (key) {
+		DOMHandler.prototype[key] = function () {
+			return null;
+		};
+	}
+);
 
 /* Private static helpers treated below as private instance methods, so don't need to add these to the public API; we might use a Relator to also get rid of non-standard public properties */
-function appendElement (hander,node) {
-    if (!hander.currentElement) {
-        hander.doc.appendChild(node);
-    } else {
-        hander.currentElement.appendChild(node);
-    }
-}//appendChild and setAttributeNS are preformance key
+function appendElement(handler, node) {
+	if (!handler.currentElement) {
+		handler.doc.appendChild(node);
+	} else {
+		handler.currentElement.appendChild(node);
+	}
+}
+
+/**
+ * A method that prevents any further parsing when an `error`
+ * with level `error` is reported during parsing.
+ *
+ * @see {@link DOMParserOptions.onError}
+ * @see {@link onWarningStopParsing}
+ */
+function onErrorStopParsing(level) {
+	if (level === 'error') throw 'onErrorStopParsing';
+}
+
+/**
+ * A method that prevents any further parsing when any `error` is reported during parsing.
+ *
+ * @see {@link DOMParserOptions.onError}
+ * @see {@link onErrorStopParsing}
+ */
+function onWarningStopParsing() {
+	throw 'onWarningStopParsing';
+}
 
 exports.__DOMHandler = DOMHandler;
-exports.normalizeLineEndings = normalizeLineEndings;
 exports.DOMParser = DOMParser;
+exports.normalizeLineEndings = normalizeLineEndings;
+exports.onErrorStopParsing = onErrorStopParsing;
+exports.onWarningStopParsing = onWarningStopParsing;
 
-},{"./conventions":2,"./dom":4,"./entities":5,"./sax":7}],4:[function(require,module,exports){
-var conventions = require("./conventions");
+},{"./conventions":2,"./dom":4,"./entities":5,"./errors":6,"./sax":9}],4:[function(require,module,exports){
+'use strict';
 
+var conventions = require('./conventions');
 var find = conventions.find;
+var hasDefaultHTMLNamespace = conventions.hasDefaultHTMLNamespace;
+var hasOwn = conventions.hasOwn;
+var isHTMLMimeType = conventions.isHTMLMimeType;
+var isHTMLRawTextElement = conventions.isHTMLRawTextElement;
+var isHTMLVoidElement = conventions.isHTMLVoidElement;
+var MIME_TYPE = conventions.MIME_TYPE;
 var NAMESPACE = conventions.NAMESPACE;
 
 /**
- * A prerequisite for `[].filter`, to drop elements that are empty
- * @param {string} input
- * @returns {boolean}
+ * Private DOM Constructor symbol
+ *
+ * Internal symbol used for construction of all classes whose constructors should be private.
+ * Currently used for checks in `Node`, `Document`, `Element`, `Attr`, `CharacterData`, `Text`, `Comment`,
+ * `CDATASection`, `DocumentType`, `Notation`, `Entity`, `EntityReference`, `DocumentFragment`, `ProcessingInstruction`
+ * so the constructor can't be used from outside the module.
  */
-function notEmptyString (input) {
-	return input !== ''
-}
+var PDC = Symbol();
+
+var errors = require('./errors');
+var DOMException = errors.DOMException;
+var DOMExceptionName = errors.DOMExceptionName;
+
+var g = require('./grammar');
+
 /**
- * @see https://infra.spec.whatwg.org/#split-on-ascii-whitespace
- * @see https://infra.spec.whatwg.org/#ascii-whitespace
+ * Checks if the given symbol equals the Private DOM Constructor symbol (PDC)
+ * and throws an Illegal constructor exception when the symbols don't match.
+ * This ensures that the constructor remains private and can't be used outside this module.
+ */
+function checkSymbol(symbol) {
+	if (symbol !== PDC) {
+		throw new TypeError('Illegal constructor');
+	}
+}
+
+/**
+ * A prerequisite for `[].filter`, to drop elements that are empty.
  *
  * @param {string} input
- * @returns {string[]} (can be empty)
+ * The string to be checked.
+ * @returns {boolean}
+ * Returns `true` if the input string is not empty, `false` otherwise.
+ */
+function notEmptyString(input) {
+	return input !== '';
+}
+/**
+ * Splits a string on ASCII whitespace characters (U+0009 TAB, U+000A LF, U+000C FF, U+000D CR,
+ * U+0020 SPACE).
+ * It follows the definition from the infra specification from WHATWG.
+ *
+ * @param {string} input
+ * The string to be split.
+ * @returns {string[]}
+ * An array of the split strings. The array can be empty if the input string is empty or only
+ * contains whitespace characters.
+ * @see {@link https://infra.spec.whatwg.org/#split-on-ascii-whitespace}
+ * @see {@link https://infra.spec.whatwg.org/#ascii-whitespace}
  */
 function splitOnASCIIWhitespace(input) {
 	// U+0009 TAB, U+000A LF, U+000C FF, U+000D CR, U+0020 SPACE
-	return input ? input.split(/[\t\n\f\r ]+/).filter(notEmptyString) : []
+	return input ? input.split(/[\t\n\f\r ]+/).filter(notEmptyString) : [];
 }
 
 /**
  * Adds element as a key to current if it is not already present.
  *
  * @param {Record<string, boolean | undefined>} current
+ * The current record object to which the element will be added as a key.
+ * The object's keys are string types and values are either boolean or undefined.
  * @param {string} element
+ * The string to be added as a key to the current record.
  * @returns {Record<string, boolean | undefined>}
+ * The updated record object after the addition of the new element.
  */
-function orderedSetReducer (current, element) {
-	if (!current.hasOwnProperty(element)) {
+function orderedSetReducer(current, element) {
+	if (!hasOwn(current, element)) {
 		current[element] = true;
 	}
 	return current;
 }
 
 /**
- * @see https://infra.spec.whatwg.org/#ordered-set
+ * Converts a string into an ordered set by splitting the input on ASCII whitespace and
+ * ensuring uniqueness of elements.
+ * This follows the definition of an ordered set from the infra specification by WHATWG.
+ *
  * @param {string} input
+ * The input string to be transformed into an ordered set.
  * @returns {string[]}
+ * An array of unique strings obtained from the input, preserving the original order.
+ * The array can be empty if the input string is empty or only contains whitespace characters.
+ * @see {@link https://infra.spec.whatwg.org/#ordered-set}
  */
 function toOrderedSet(input) {
 	if (!input) return [];
 	var list = splitOnASCIIWhitespace(input);
-	return Object.keys(list.reduce(orderedSetReducer, {}))
+	return Object.keys(list.reduce(orderedSetReducer, {}));
 }
 
 /**
- * Uses `list.indexOf` to implement something like `Array.prototype.includes`,
- * which we can not rely on being available.
+ * Uses `list.indexOf` to implement a function that behaves like `Array.prototype.includes`.
+ * This function is used in environments where `Array.prototype.includes` may not be available.
  *
  * @param {any[]} list
+ * The array in which to search for the element.
  * @returns {function(any): boolean}
+ * A function that accepts an element and returns a boolean indicating whether the element is
+ * included in the provided list.
  */
-function arrayIncludes (list) {
-	return function(element) {
+function arrayIncludes(list) {
+	return function (element) {
 		return list && list.indexOf(element) !== -1;
+	};
+}
+
+/**
+ * Validates a qualified name based on the criteria provided in the DOM specification by
+ * WHATWG.
+ *
+ * @param {string} qualifiedName
+ * The qualified name to be validated.
+ * @throws {DOMException}
+ * With code {@link DOMException.INVALID_CHARACTER_ERR} if the qualified name contains an
+ * invalid character.
+ * @see {@link https://dom.spec.whatwg.org/#validate}
+ */
+function validateQualifiedName(qualifiedName) {
+	if (!g.QName_exact.test(qualifiedName)) {
+		throw new DOMException(DOMException.INVALID_CHARACTER_ERR, 'invalid character in qualified name "' + qualifiedName + '"');
 	}
 }
 
-function copy(src,dest){
-	for(var p in src){
-		if (Object.prototype.hasOwnProperty.call(src, p)) {
+/**
+ * Validates a qualified name and the namespace associated with it,
+ * based on the criteria provided in the DOM specification by WHATWG.
+ *
+ * @param {string | null} namespace
+ * The namespace to be validated. It can be a string or null.
+ * @param {string} qualifiedName
+ * The qualified name to be validated.
+ * @returns {[namespace: string | null, prefix: string | null, localName: string]}
+ * Returns a tuple with the namespace,
+ * prefix and local name of the qualified name.
+ * @throws {DOMException}
+ * Throws a DOMException if the qualified name or the namespace is not valid.
+ * @see {@link https://dom.spec.whatwg.org/#validate-and-extract}
+ */
+function validateAndExtract(namespace, qualifiedName) {
+	validateQualifiedName(qualifiedName);
+	namespace = namespace || null;
+	/**
+	 * @type {string | null}
+	 */
+	var prefix = null;
+	var localName = qualifiedName;
+	if (qualifiedName.indexOf(':') >= 0) {
+		var splitResult = qualifiedName.split(':');
+		prefix = splitResult[0];
+		localName = splitResult[1];
+	}
+	if (prefix !== null && namespace === null) {
+		throw new DOMException(DOMException.NAMESPACE_ERR, 'prefix is non-null and namespace is null');
+	}
+	if (prefix === 'xml' && namespace !== conventions.NAMESPACE.XML) {
+		throw new DOMException(DOMException.NAMESPACE_ERR, 'prefix is "xml" and namespace is not the XML namespace');
+	}
+	if ((prefix === 'xmlns' || qualifiedName === 'xmlns') && namespace !== conventions.NAMESPACE.XMLNS) {
+		throw new DOMException(
+			DOMException.NAMESPACE_ERR,
+			'either qualifiedName or prefix is "xmlns" and namespace is not the XMLNS namespace'
+		);
+	}
+	if (namespace === conventions.NAMESPACE.XMLNS && prefix !== 'xmlns' && qualifiedName !== 'xmlns') {
+		throw new DOMException(
+			DOMException.NAMESPACE_ERR,
+			'namespace is the XMLNS namespace and neither qualifiedName nor prefix is "xmlns"'
+		);
+	}
+	return [namespace, prefix, localName];
+}
+
+/**
+ * Copies properties from one object to another.
+ * It only copies the object's own (not inherited) properties.
+ *
+ * @param {Object} src
+ * The source object from which properties are copied.
+ * @param {Object} dest
+ * The destination object to which properties are copied.
+ */
+function copy(src, dest) {
+	for (var p in src) {
+		if (hasOwn(src, p)) {
 			dest[p] = src[p];
 		}
 	}
 }
 
 /**
-^\w+\.prototype\.([_\w]+)\s*=\s*((?:.*\{\s*?[\r\n][\s\S]*?^})|\S.*?(?=[;\r\n]));?
-^\w+\.prototype\.([_\w]+)\s*=\s*(\S.*?(?=[;\r\n]));?
+ * Extends a class with the properties and methods of a super class.
+ * It uses a form of prototypal inheritance, and establishes the `constructor` property
+ * correctly(?).
+ *
+ * It is not clear to the current maintainers if this implementation is making sense,
+ * since it creates an intermediate prototype function,
+ * which all properties of `Super` are copied onto using `_copy`.
+ *
+ * @param {Object} Class
+ * The class that is to be extended.
+ * @param {Object} Super
+ * The super class from which properties and methods are inherited.
+ * @private
  */
-function _extends(Class,Super){
+function _extends(Class, Super) {
 	var pt = Class.prototype;
-	if(!(pt instanceof Super)){
-		function t(){};
+	if (!(pt instanceof Super)) {
+		function t() {}
 		t.prototype = Super.prototype;
 		t = new t();
-		copy(pt,t);
+		copy(pt, t);
 		Class.prototype = pt = t;
 	}
-	if(pt.constructor != Class){
-		if(typeof Class != 'function'){
-			console.error("unknown Class:"+Class)
+	if (pt.constructor != Class) {
+		if (typeof Class != 'function') {
+			console.error('unknown Class:' + Class);
 		}
-		pt.constructor = Class
+		pt.constructor = Class;
 	}
 }
 
-// Node Types
-var NodeType = {}
-var ELEMENT_NODE                = NodeType.ELEMENT_NODE                = 1;
-var ATTRIBUTE_NODE              = NodeType.ATTRIBUTE_NODE              = 2;
-var TEXT_NODE                   = NodeType.TEXT_NODE                   = 3;
-var CDATA_SECTION_NODE          = NodeType.CDATA_SECTION_NODE          = 4;
-var ENTITY_REFERENCE_NODE       = NodeType.ENTITY_REFERENCE_NODE       = 5;
-var ENTITY_NODE                 = NodeType.ENTITY_NODE                 = 6;
-var PROCESSING_INSTRUCTION_NODE = NodeType.PROCESSING_INSTRUCTION_NODE = 7;
-var COMMENT_NODE                = NodeType.COMMENT_NODE                = 8;
-var DOCUMENT_NODE               = NodeType.DOCUMENT_NODE               = 9;
-var DOCUMENT_TYPE_NODE          = NodeType.DOCUMENT_TYPE_NODE          = 10;
-var DOCUMENT_FRAGMENT_NODE      = NodeType.DOCUMENT_FRAGMENT_NODE      = 11;
-var NOTATION_NODE               = NodeType.NOTATION_NODE               = 12;
+var NodeType = {};
+var ELEMENT_NODE = (NodeType.ELEMENT_NODE = 1);
+var ATTRIBUTE_NODE = (NodeType.ATTRIBUTE_NODE = 2);
+var TEXT_NODE = (NodeType.TEXT_NODE = 3);
+var CDATA_SECTION_NODE = (NodeType.CDATA_SECTION_NODE = 4);
+var ENTITY_REFERENCE_NODE = (NodeType.ENTITY_REFERENCE_NODE = 5);
+var ENTITY_NODE = (NodeType.ENTITY_NODE = 6);
+var PROCESSING_INSTRUCTION_NODE = (NodeType.PROCESSING_INSTRUCTION_NODE = 7);
+var COMMENT_NODE = (NodeType.COMMENT_NODE = 8);
+var DOCUMENT_NODE = (NodeType.DOCUMENT_NODE = 9);
+var DOCUMENT_TYPE_NODE = (NodeType.DOCUMENT_TYPE_NODE = 10);
+var DOCUMENT_FRAGMENT_NODE = (NodeType.DOCUMENT_FRAGMENT_NODE = 11);
+var NOTATION_NODE = (NodeType.NOTATION_NODE = 12);
 
-// ExceptionCode
-var ExceptionCode = {}
-var ExceptionMessage = {};
-var INDEX_SIZE_ERR              = ExceptionCode.INDEX_SIZE_ERR              = ((ExceptionMessage[1]="Index size error"),1);
-var DOMSTRING_SIZE_ERR          = ExceptionCode.DOMSTRING_SIZE_ERR          = ((ExceptionMessage[2]="DOMString size error"),2);
-var HIERARCHY_REQUEST_ERR       = ExceptionCode.HIERARCHY_REQUEST_ERR       = ((ExceptionMessage[3]="Hierarchy request error"),3);
-var WRONG_DOCUMENT_ERR          = ExceptionCode.WRONG_DOCUMENT_ERR          = ((ExceptionMessage[4]="Wrong document"),4);
-var INVALID_CHARACTER_ERR       = ExceptionCode.INVALID_CHARACTER_ERR       = ((ExceptionMessage[5]="Invalid character"),5);
-var NO_DATA_ALLOWED_ERR         = ExceptionCode.NO_DATA_ALLOWED_ERR         = ((ExceptionMessage[6]="No data allowed"),6);
-var NO_MODIFICATION_ALLOWED_ERR = ExceptionCode.NO_MODIFICATION_ALLOWED_ERR = ((ExceptionMessage[7]="No modification allowed"),7);
-var NOT_FOUND_ERR               = ExceptionCode.NOT_FOUND_ERR               = ((ExceptionMessage[8]="Not found"),8);
-var NOT_SUPPORTED_ERR           = ExceptionCode.NOT_SUPPORTED_ERR           = ((ExceptionMessage[9]="Not supported"),9);
-var INUSE_ATTRIBUTE_ERR         = ExceptionCode.INUSE_ATTRIBUTE_ERR         = ((ExceptionMessage[10]="Attribute in use"),10);
-//level2
-var INVALID_STATE_ERR        	= ExceptionCode.INVALID_STATE_ERR        	= ((ExceptionMessage[11]="Invalid state"),11);
-var SYNTAX_ERR               	= ExceptionCode.SYNTAX_ERR               	= ((ExceptionMessage[12]="Syntax error"),12);
-var INVALID_MODIFICATION_ERR 	= ExceptionCode.INVALID_MODIFICATION_ERR 	= ((ExceptionMessage[13]="Invalid modification"),13);
-var NAMESPACE_ERR            	= ExceptionCode.NAMESPACE_ERR           	= ((ExceptionMessage[14]="Invalid namespace"),14);
-var INVALID_ACCESS_ERR       	= ExceptionCode.INVALID_ACCESS_ERR      	= ((ExceptionMessage[15]="Invalid access"),15);
+var DocumentPosition = conventions.freeze({
+	DOCUMENT_POSITION_DISCONNECTED: 1,
+	DOCUMENT_POSITION_PRECEDING: 2,
+	DOCUMENT_POSITION_FOLLOWING: 4,
+	DOCUMENT_POSITION_CONTAINS: 8,
+	DOCUMENT_POSITION_CONTAINED_BY: 16,
+	DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC: 32,
+});
 
+//helper functions for compareDocumentPosition
 /**
- * DOM Level 2
- * Object DOMException
- * @see http://www.w3.org/TR/2000/REC-DOM-Level-2-Core-20001113/ecma-script-binding.html
- * @see http://www.w3.org/TR/REC-DOM-Level-1/ecma-script-language-binding.html
+ * Finds the common ancestor in two parent chains.
+ *
+ * @param {Node[]} a
+ * The first parent chain.
+ * @param {Node[]} b
+ * The second parent chain.
+ * @returns {Node}
+ * The common ancestor node if it exists. If there is no common ancestor, the function will
+ * return `null`.
  */
-function DOMException(code, message) {
-	if(message instanceof Error){
-		var error = message;
-	}else{
-		error = this;
-		Error.call(this, ExceptionMessage[code]);
-		this.message = ExceptionMessage[code];
-		if(Error.captureStackTrace) Error.captureStackTrace(this, DOMException);
+function commonAncestor(a, b) {
+	if (b.length < a.length) return commonAncestor(b, a);
+	var c = null;
+	for (var n in a) {
+		if (a[n] !== b[n]) return c;
+		c = a[n];
 	}
-	error.code = code;
-	if(message) this.message = this.message + ": " + message;
-	return error;
-};
-DOMException.prototype = Error.prototype;
-copy(ExceptionCode,DOMException)
+	return c;
+}
 
 /**
- * @see http://www.w3.org/TR/2000/REC-DOM-Level-2-Core-20001113/core.html#ID-536297177
- * The NodeList interface provides the abstraction of an ordered collection of nodes, without defining or constraining how this collection is implemented. NodeList objects in the DOM are live.
- * The items in the NodeList are accessible via an integral index, starting from 0.
+ * Assigns a unique identifier to a document to ensure consistency while comparing unrelated
+ * nodes.
+ *
+ * @param {Document} doc
+ * The document to which a unique identifier is to be assigned.
+ * @returns {string}
+ * The unique identifier of the document. If the document already had a unique identifier, the
+ * function will return the existing one.
  */
-function NodeList() {
-};
+function docGUID(doc) {
+	if (!doc.guid) doc.guid = Math.random();
+	return doc.guid;
+}
+//-- end of helper functions
+
+/**
+ * The NodeList interface provides the abstraction of an ordered collection of nodes,
+ * without defining or constraining how this collection is implemented.
+ * NodeList objects in the DOM are live.
+ * The items in the NodeList are accessible via an integral index, starting from 0.
+ * You can also access the items of the NodeList with a `for...of` loop.
+ *
+ * @class NodeList
+ * @see http://www.w3.org/TR/2000/REC-DOM-Level-2-Core-20001113/core.html#ID-536297177
+ * @constructs NodeList
+ */
+function NodeList() {}
 NodeList.prototype = {
 	/**
-	 * The number of nodes in the list. The range of valid child node indices is 0 to length-1 inclusive.
-	 * @standard level1
+	 * The number of nodes in the list. The range of valid child node indices is 0 to length-1
+	 * inclusive.
+	 *
+	 * @type {number}
 	 */
-	length:0,
+	length: 0,
 	/**
-	 * Returns the indexth item in the collection. If index is greater than or equal to the number of nodes in the list, this returns null.
-	 * @standard level1
-	 * @param index  unsigned long
-	 *   Index into the collection.
-	 * @return Node
-	 * 	The node at the indexth position in the NodeList, or null if that is not a valid index.
+	 * Returns the item at `index`. If index is greater than or equal to the number of nodes in
+	 * the list, this returns null.
+	 *
+	 * @param index
+	 * Unsigned long Index into the collection.
+	 * @returns {Node | null}
+	 * The node at position `index` in the NodeList,
+	 * or null if that is not a valid index.
 	 */
-	item: function(index) {
-		return this[index] || null;
+	item: function (index) {
+		return index >= 0 && index < this.length ? this[index] : null;
 	},
-	toString:function(isHTML,nodeFilter){
-		for(var buf = [], i = 0;i<this.length;i++){
-			serializeToString(this[i],buf,isHTML,nodeFilter);
+	/**
+	 * Returns a string representation of the NodeList.
+	 *
+	 * Accepts the same `options` object as `XMLSerializer.prototype.serializeToString`
+	 * (`requireWellFormed`, `splitCDATASections`, `nodeFilter`). Passing a function is treated as
+	 * a legacy `nodeFilter` for backward compatibility.
+	 *
+	 * @param {Object | function} [options]
+	 * @param {boolean} [options.requireWellFormed=false]
+	 * @param {boolean} [options.splitCDATASections=true]
+	 * @param {function} [options.nodeFilter]
+	 * @returns {string}
+	 */
+	toString: function (options) {
+		var opts;
+		if (typeof options === 'function') {
+			opts = { requireWellFormed: false, splitCDATASections: true, nodeFilter: options };
+		} else if (!!options) {
+			opts = {
+				requireWellFormed: !!options.requireWellFormed,
+				splitCDATASections: options.splitCDATASections !== false,
+				nodeFilter: options.nodeFilter || null,
+			};
+		} else {
+			opts = { requireWellFormed: false, splitCDATASections: true, nodeFilter: null };
+		}
+		for (var buf = [], i = 0; i < this.length; i++) {
+			serializeToString(this[i], buf, null, opts);
 		}
 		return buf.join('');
 	},
 	/**
-	 * @private
-	 * @param {function (Node):boolean} predicate
+	 * Filters the NodeList based on a predicate.
+	 *
+	 * @param {function(Node): boolean} predicate
+	 * - A predicate function to filter the NodeList.
 	 * @returns {Node[]}
+	 * An array of nodes that satisfy the predicate.
+	 * @private
 	 */
 	filter: function (predicate) {
 		return Array.prototype.filter.call(this, predicate);
 	},
 	/**
-	 * @private
+	 * Returns the first index at which a given node can be found in the NodeList, or -1 if it is
+	 * not present.
+	 *
 	 * @param {Node} item
+	 * - The Node item to locate in the NodeList.
 	 * @returns {number}
+	 * The first index of the node in the NodeList; -1 if not found.
+	 * @private
 	 */
 	indexOf: function (item) {
 		return Array.prototype.indexOf.call(this, item);
 	},
 };
+NodeList.prototype[Symbol.iterator] = function () {
+	var me = this;
+	var index = 0;
 
-function LiveNodeList(node,refresh){
+	return {
+		next: function () {
+			if (index < me.length) {
+				return {
+					value: me[index++],
+					done: false,
+				};
+			} else {
+				return {
+					done: true,
+				};
+			}
+		},
+		return: function () {
+			return {
+				done: true,
+			};
+		},
+	};
+};
+
+/**
+ * Represents a live collection of nodes that is automatically updated when its associated
+ * document changes.
+ *
+ * @class LiveNodeList
+ * @param {Node} node
+ * The associated node.
+ * @param {function} refresh
+ * The function to refresh the live node list.
+ * @augments NodeList
+ * @constructs LiveNodeList
+ */
+function LiveNodeList(node, refresh) {
 	this._node = node;
-	this._refresh = refresh
+	this._refresh = refresh;
 	_updateLiveList(this);
 }
-function _updateLiveList(list){
+/**
+ * Updates the live node list.
+ *
+ * @param {LiveNodeList} list
+ * The live node list to update.
+ * @private
+ */
+function _updateLiveList(list) {
 	var inc = list._node._inc || list._node.ownerDocument._inc;
-	if(list._inc != inc){
+	if (list._inc !== inc) {
 		var ls = list._refresh(list._node);
-		//console.log(ls.length)
-		__set__(list,'length',ls.length);
-		copy(ls,list);
+		__set__(list, 'length', ls.length);
+		if (!list.$$length || ls.length < list.$$length) {
+			for (var i = ls.length; i in list; i++) {
+				if (hasOwn(list, i)) {
+					delete list[i];
+				}
+			}
+		}
+		copy(ls, list);
 		list._inc = inc;
 	}
 }
-LiveNodeList.prototype.item = function(i){
+/**
+ * Returns the node at position `index` in the LiveNodeList, or null if that is not a valid
+ * index.
+ *
+ * @param {number} i
+ * Index into the collection.
+ * @returns {Node | null}
+ * The node at position `index` in the LiveNodeList, or null if that is not a valid index.
+ */
+LiveNodeList.prototype.item = function (i) {
 	_updateLiveList(this);
-	return this[i];
-}
+	return this[i] || null;
+};
 
-_extends(LiveNodeList,NodeList);
+_extends(LiveNodeList, NodeList);
 
 /**
- * Objects implementing the NamedNodeMap interface are used
- * to represent collections of nodes that can be accessed by name.
+ * Objects implementing the NamedNodeMap interface are used to represent collections of nodes
+ * that can be accessed by name.
  * Note that NamedNodeMap does not inherit from NodeList;
  * NamedNodeMaps are not maintained in any particular order.
- * Objects contained in an object implementing NamedNodeMap may also be accessed by an ordinal index,
+ * Objects contained in an object implementing NamedNodeMap may also be accessed by an ordinal
+ * index,
  * but this is simply to allow convenient enumeration of the contents of a NamedNodeMap,
  * and does not imply that the DOM specifies an order to these Nodes.
  * NamedNodeMap objects in the DOM are live.
  * used for attributes or DocumentType entities
+ *
+ * This implementation only supports property indices, but does not support named properties,
+ * as specified in the living standard.
+ *
+ * @class NamedNodeMap
+ * @see https://dom.spec.whatwg.org/#interface-namednodemap
+ * @see https://webidl.spec.whatwg.org/#dfn-supported-property-names
+ * @constructs NamedNodeMap
  */
-function NamedNodeMap() {
-};
-
-function _findNodeIndex(list,node){
-	var i = list.length;
-	while(i--){
-		if(list[i] === node){return i}
+function NamedNodeMap() {}
+/**
+ * Returns the index of a node within the list.
+ *
+ * @param {Array} list
+ * The list of nodes.
+ * @param {Node} node
+ * The node to find.
+ * @returns {number}
+ * The index of the node within the list, or -1 if not found.
+ * @private
+ */
+function _findNodeIndex(list, node) {
+	var i = 0;
+	while (i < list.length) {
+		if (list[i] === node) {
+			return i;
+		}
+		i++;
 	}
 }
-
-function _addNamedNode(el,list,newAttr,oldAttr){
-	if(oldAttr){
-		list[_findNodeIndex(list,oldAttr)] = newAttr;
-	}else{
-		list[list.length++] = newAttr;
+/**
+ * Adds a new attribute to the list and updates the owner element of the attribute.
+ *
+ * @param {Element} el
+ * The element which will become the owner of the new attribute.
+ * @param {NamedNodeMap} list
+ * The list to which the new attribute will be added.
+ * @param {Attr} newAttr
+ * The new attribute to be added.
+ * @param {Attr} oldAttr
+ * The old attribute to be replaced, or null if no attribute is to be replaced.
+ * @returns {void}
+ * @private
+ */
+function _addNamedNode(el, list, newAttr, oldAttr) {
+	if (oldAttr) {
+		list[_findNodeIndex(list, oldAttr)] = newAttr;
+	} else {
+		list[list.length] = newAttr;
+		list.length++;
 	}
-	if(el){
+	if (el) {
 		newAttr.ownerElement = el;
 		var doc = el.ownerDocument;
-		if(doc){
-			oldAttr && _onRemoveAttribute(doc,el,oldAttr);
-			_onAddAttribute(doc,el,newAttr);
+		if (doc) {
+			oldAttr && _onRemoveAttribute(doc, el, oldAttr);
+			_onAddAttribute(doc, el, newAttr);
 		}
 	}
 }
-function _removeNamedNode(el,list,attr){
+/**
+ * Removes an attribute from the list and updates the owner element of the attribute.
+ *
+ * @param {Element} el
+ * The element which is the current owner of the attribute.
+ * @param {NamedNodeMap} list
+ * The list from which the attribute will be removed.
+ * @param {Attr} attr
+ * The attribute to be removed.
+ * @returns {void}
+ * @private
+ */
+function _removeNamedNode(el, list, attr) {
 	//console.log('remove attr:'+attr)
-	var i = _findNodeIndex(list,attr);
-	if(i>=0){
-		var lastIndex = list.length-1
-		while(i<lastIndex){
-			list[i] = list[++i]
+	var i = _findNodeIndex(list, attr);
+	if (i >= 0) {
+		var lastIndex = list.length - 1;
+		while (i <= lastIndex) {
+			list[i] = list[++i];
 		}
 		list.length = lastIndex;
-		if(el){
+		if (el) {
 			var doc = el.ownerDocument;
-			if(doc){
-				_onRemoveAttribute(doc,el,attr);
-				attr.ownerElement = null;
+			if (doc) {
+				_onRemoveAttribute(doc, el, attr);
 			}
+			attr.ownerElement = null;
 		}
-	}else{
-		throw new DOMException(NOT_FOUND_ERR,new Error(el.tagName+'@'+attr))
 	}
 }
 NamedNodeMap.prototype = {
-	length:0,
-	item:NodeList.prototype.item,
-	getNamedItem: function(key) {
-//		if(key.indexOf(':')>0 || key == 'xmlns'){
-//			return null;
-//		}
-		//console.log()
-		var i = this.length;
-		while(i--){
+	length: 0,
+	item: NodeList.prototype.item,
+
+	/**
+	 * Get an attribute by name. Note: Name is in lower case in case of HTML namespace and
+	 * document.
+	 *
+	 * @param {string} localName
+	 * The local name of the attribute.
+	 * @returns {Attr | null}
+	 * The attribute with the given local name, or null if no such attribute exists.
+	 * @see https://dom.spec.whatwg.org/#concept-element-attributes-get-by-name
+	 */
+	getNamedItem: function (localName) {
+		if (this._ownerElement && this._ownerElement._isInHTMLDocumentAndNamespace()) {
+			localName = localName.toLowerCase();
+		}
+		var i = 0;
+		while (i < this.length) {
 			var attr = this[i];
-			//console.log(attr.nodeName,key)
-			if(attr.nodeName == key){
+			if (attr.nodeName === localName) {
 				return attr;
 			}
-		}
-	},
-	setNamedItem: function(attr) {
-		var el = attr.ownerElement;
-		if(el && el!=this._ownerElement){
-			throw new DOMException(INUSE_ATTRIBUTE_ERR);
-		}
-		var oldAttr = this.getNamedItem(attr.nodeName);
-		_addNamedNode(this._ownerElement,this,attr,oldAttr);
-		return oldAttr;
-	},
-	/* returns Node */
-	setNamedItemNS: function(attr) {// raises: WRONG_DOCUMENT_ERR,NO_MODIFICATION_ALLOWED_ERR,INUSE_ATTRIBUTE_ERR
-		var el = attr.ownerElement, oldAttr;
-		if(el && el!=this._ownerElement){
-			throw new DOMException(INUSE_ATTRIBUTE_ERR);
-		}
-		oldAttr = this.getNamedItemNS(attr.namespaceURI,attr.localName);
-		_addNamedNode(this._ownerElement,this,attr,oldAttr);
-		return oldAttr;
-	},
-
-	/* returns Node */
-	removeNamedItem: function(key) {
-		var attr = this.getNamedItem(key);
-		_removeNamedNode(this._ownerElement,this,attr);
-		return attr;
-
-
-	},// raises: NOT_FOUND_ERR,NO_MODIFICATION_ALLOWED_ERR
-
-	//for level2
-	removeNamedItemNS:function(namespaceURI,localName){
-		var attr = this.getNamedItemNS(namespaceURI,localName);
-		_removeNamedNode(this._ownerElement,this,attr);
-		return attr;
-	},
-	getNamedItemNS: function(namespaceURI, localName) {
-		var i = this.length;
-		while(i--){
-			var node = this[i];
-			if(node.localName == localName && node.namespaceURI == namespaceURI){
-				return node;
-			}
+			i++;
 		}
 		return null;
-	}
+	},
+
+	/**
+	 * Set an attribute.
+	 *
+	 * @param {Attr} attr
+	 * The attribute to set.
+	 * @returns {Attr | null}
+	 * The old attribute with the same local name and namespace URI as the new one, or null if no
+	 * such attribute exists.
+	 * @throws {DOMException}
+	 * With code:
+	 * - {@link INUSE_ATTRIBUTE_ERR} - If the attribute is already an attribute of another
+	 * element.
+	 * @see https://dom.spec.whatwg.org/#concept-element-attributes-set
+	 */
+	setNamedItem: function (attr) {
+		var el = attr.ownerElement;
+		if (el && el !== this._ownerElement) {
+			throw new DOMException(DOMException.INUSE_ATTRIBUTE_ERR);
+		}
+		var oldAttr = this.getNamedItemNS(attr.namespaceURI, attr.localName);
+		if (oldAttr === attr) {
+			return attr;
+		}
+		_addNamedNode(this._ownerElement, this, attr, oldAttr);
+		return oldAttr;
+	},
+
+	/**
+	 * Set an attribute, replacing an existing attribute with the same local name and namespace
+	 * URI if one exists.
+	 *
+	 * @param {Attr} attr
+	 * The attribute to set.
+	 * @returns {Attr | null}
+	 * The old attribute with the same local name and namespace URI as the new one, or null if no
+	 * such attribute exists.
+	 * @throws {DOMException}
+	 * Throws a DOMException with the name "InUseAttributeError" if the attribute is already an
+	 * attribute of another element.
+	 * @see https://dom.spec.whatwg.org/#concept-element-attributes-set
+	 */
+	setNamedItemNS: function (attr) {
+		return this.setNamedItem(attr);
+	},
+
+	/**
+	 * Removes an attribute specified by the local name.
+	 *
+	 * @param {string} localName
+	 * The local name of the attribute to be removed.
+	 * @returns {Attr}
+	 * The attribute node that was removed.
+	 * @throws {DOMException}
+	 * With code:
+	 * - {@link DOMException.NOT_FOUND_ERR} if no attribute with the given name is found.
+	 * @see https://dom.spec.whatwg.org/#dom-namednodemap-removenameditem
+	 * @see https://dom.spec.whatwg.org/#concept-element-attributes-remove-by-name
+	 */
+	removeNamedItem: function (localName) {
+		var attr = this.getNamedItem(localName);
+		if (!attr) {
+			throw new DOMException(DOMException.NOT_FOUND_ERR, localName);
+		}
+		_removeNamedNode(this._ownerElement, this, attr);
+		return attr;
+	},
+
+	/**
+	 * Removes an attribute specified by the namespace and local name.
+	 *
+	 * @param {string | null} namespaceURI
+	 * The namespace URI of the attribute to be removed.
+	 * @param {string} localName
+	 * The local name of the attribute to be removed.
+	 * @returns {Attr}
+	 * The attribute node that was removed.
+	 * @throws {DOMException}
+	 * With code:
+	 * - {@link DOMException.NOT_FOUND_ERR} if no attribute with the given namespace URI and local
+	 * name is found.
+	 * @see https://dom.spec.whatwg.org/#dom-namednodemap-removenameditemns
+	 * @see https://dom.spec.whatwg.org/#concept-element-attributes-remove-by-namespace
+	 */
+	removeNamedItemNS: function (namespaceURI, localName) {
+		var attr = this.getNamedItemNS(namespaceURI, localName);
+		if (!attr) {
+			throw new DOMException(DOMException.NOT_FOUND_ERR, namespaceURI ? namespaceURI + ' : ' + localName : localName);
+		}
+		_removeNamedNode(this._ownerElement, this, attr);
+		return attr;
+	},
+
+	/**
+	 * Get an attribute by namespace and local name.
+	 *
+	 * @param {string | null} namespaceURI
+	 * The namespace URI of the attribute.
+	 * @param {string} localName
+	 * The local name of the attribute.
+	 * @returns {Attr | null}
+	 * The attribute with the given namespace URI and local name, or null if no such attribute
+	 * exists.
+	 * @see https://dom.spec.whatwg.org/#concept-element-attributes-get-by-namespace
+	 */
+	getNamedItemNS: function (namespaceURI, localName) {
+		if (!namespaceURI) {
+			namespaceURI = null;
+		}
+		var i = 0;
+		while (i < this.length) {
+			var node = this[i];
+			if (node.localName === localName && node.namespaceURI === namespaceURI) {
+				return node;
+			}
+			i++;
+		}
+		return null;
+	},
+};
+NamedNodeMap.prototype[Symbol.iterator] = function () {
+	var me = this;
+	var index = 0;
+
+	return {
+		next: function () {
+			if (index < me.length) {
+				return {
+					value: me[index++],
+					done: false,
+				};
+			} else {
+				return {
+					done: true,
+				};
+			}
+		},
+		return: function () {
+			return {
+				done: true,
+			};
+		},
+	};
 };
 
 /**
- * The DOMImplementation interface represents an object providing methods
- * which are not dependent on any particular document.
+ * The DOMImplementation interface provides a number of methods for performing operations that
+ * are independent of any particular instance of the document object model.
+ *
+ * The DOMImplementation interface represents an object providing methods which are not
+ * dependent on any particular document.
  * Such an object is returned by the `Document.implementation` property.
  *
- * __The individual methods describe the differences compared to the specs.__
+ * **The individual methods describe the differences compared to the specs**.
  *
- * @constructor
- *
+ * @class DOMImplementation
  * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMImplementation MDN
- * @see https://www.w3.org/TR/REC-DOM-Level-1/level-one-core.html#ID-102161490 DOM Level 1 Core (Initial)
+ * @see https://www.w3.org/TR/REC-DOM-Level-1/level-one-core.html#ID-102161490 DOM Level 1 Core
+ *      (Initial)
  * @see https://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-102161490 DOM Level 2 Core
  * @see https://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-102161490 DOM Level 3 Core
  * @see https://dom.spec.whatwg.org/#domimplementation DOM Living Standard
+ * @constructs DOMImplementation
  */
-function DOMImplementation() {
-}
+function DOMImplementation() {}
 
 DOMImplementation.prototype = {
 	/**
-	 * The DOMImplementation.hasFeature() method returns a Boolean flag indicating if a given feature is supported.
-	 * The different implementations fairly diverged in what kind of features were reported.
-	 * The latest version of the spec settled to force this method to always return true, where the functionality was accurate and in use.
+	 * Test if the DOM implementation implements a specific feature and version, as specified in
+	 * {@link https://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMFeatures DOM Features}.
 	 *
-	 * @deprecated It is deprecated and modern browsers return true in all cases.
+	 * The DOMImplementation.hasFeature() method returns a Boolean flag indicating if a given
+	 * feature is supported. The different implementations fairly diverged in what kind of
+	 * features were reported. The latest version of the spec settled to force this method to
+	 * always return true, where the functionality was accurate and in use.
 	 *
+	 * @deprecated
+	 * It is deprecated and modern browsers return true in all cases.
+	 * @function DOMImplementation#hasFeature
 	 * @param {string} feature
+	 * The name of the feature to test.
 	 * @param {string} [version]
-	 * @returns {boolean} always true
-	 *
+	 * This is the version number of the feature to test.
+	 * @returns {boolean}
+	 * Always returns true.
 	 * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMImplementation/hasFeature MDN
 	 * @see https://www.w3.org/TR/REC-DOM-Level-1/level-one-core.html#ID-5CED94D7 DOM Level 1 Core
 	 * @see https://dom.spec.whatwg.org/#dom-domimplementation-hasfeature DOM Living Standard
+	 * @see https://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-5CED94D7 DOM Level 3 Core
 	 */
-	hasFeature: function(feature, version) {
-			return true;
+	hasFeature: function (feature, version) {
+		return true;
 	},
 	/**
-	 * Creates an XML Document object of the specified type with its document element.
+	 * Creates a DOM Document object of the specified type with its document element. Note that
+	 * based on the {@link DocumentType}
+	 * given to create the document, the implementation may instantiate specialized
+	 * {@link Document} objects that support additional features than the "Core", such as "HTML"
+	 * {@link https://www.w3.org/TR/DOM-Level-3-Core/references.html#DOM2HTML DOM Level 2 HTML}.
+	 * On the other hand, setting the {@link DocumentType} after the document was created makes
+	 * this very unlikely to happen. Alternatively, specialized {@link Document} creation methods,
+	 * such as createHTMLDocument
+	 * {@link https://www.w3.org/TR/DOM-Level-3-Core/references.html#DOM2HTML DOM Level 2 HTML},
+	 * can be used to obtain specific types of {@link Document} objects.
 	 *
 	 * __It behaves slightly different from the description in the living standard__:
-	 * - There is no interface/class `XMLDocument`, it returns a `Document` instance.
-	 * - `contentType`, `encoding`, `mode`, `origin`, `url` fields are currently not declared.
-	 * - this implementation is not validating names or qualified names
-	 *   (when parsing XML strings, the SAX parser takes care of that)
+	 * - There is no interface/class `XMLDocument`, it returns a `Document`
+	 * instance (with it's `type` set to `'xml'`).
+	 * - `encoding`, `mode`, `origin`, `url` fields are currently not declared.
 	 *
-	 * @param {string|null} namespaceURI
-	 * @param {string} qualifiedName
-	 * @param {DocumentType=null} doctype
+	 * @function DOMImplementation.createDocument
+	 * @param {string | null} namespaceURI
+	 * The
+	 * {@link https://www.w3.org/TR/DOM-Level-3-Core/glossary.html#dt-namespaceURI namespace URI}
+	 * of the document element to create or null.
+	 * @param {string | null} qualifiedName
+	 * The
+	 * {@link https://www.w3.org/TR/DOM-Level-3-Core/glossary.html#dt-qualifiedname qualified name}
+	 * of the document element to be created or null.
+	 * @param {DocumentType | null} [doctype=null]
+	 * The type of document to be created or null. When doctype is not null, its
+	 * {@link Node#ownerDocument} attribute is set to the document being created. Default is
+	 * `null`
 	 * @returns {Document}
+	 * A new {@link Document} object with its document element. If the NamespaceURI,
+	 * qualifiedName, and doctype are null, the returned {@link Document} is empty with no
+	 * document element.
+	 * @throws {DOMException}
+	 * With code:
 	 *
+	 * - `INVALID_CHARACTER_ERR`: Raised if the specified qualified name is not an XML name
+	 * according to {@link https://www.w3.org/TR/DOM-Level-3-Core/references.html#XML XML 1.0}.
+	 * - `NAMESPACE_ERR`: Raised if the qualifiedName is malformed, if the qualifiedName has a
+	 * prefix and the namespaceURI is null, or if the qualifiedName is null and the namespaceURI
+	 * is different from null, or if the qualifiedName has a prefix that is "xml" and the
+	 * namespaceURI is different from "{@link http://www.w3.org/XML/1998/namespace}"
+	 * {@link https://www.w3.org/TR/DOM-Level-3-Core/references.html#Namespaces XML Namespaces},
+	 * or if the DOM implementation does not support the "XML" feature but a non-null namespace
+	 * URI was provided, since namespaces were defined by XML.
+	 * - `WRONG_DOCUMENT_ERR`: Raised if doctype has already been used with a different document
+	 * or was created from a different implementation.
+	 * - `NOT_SUPPORTED_ERR`: May be raised if the implementation does not support the feature
+	 * "XML" and the language exposed through the Document does not support XML Namespaces (such
+	 * as {@link https://www.w3.org/TR/DOM-Level-3-Core/references.html#HTML40 HTML 4.01}).
+	 * @since DOM Level 2.
+	 * @see {@link #createHTMLDocument}
 	 * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMImplementation/createDocument MDN
-	 * @see https://www.w3.org/TR/DOM-Level-2-Core/core.html#Level-2-Core-DOM-createDocument DOM Level 2 Core (initial)
-	 * @see https://dom.spec.whatwg.org/#dom-domimplementation-createdocument  DOM Level 2 Core
-	 *
-	 * @see https://dom.spec.whatwg.org/#validate-and-extract DOM: Validate and extract
-	 * @see https://www.w3.org/TR/xml/#NT-NameStartChar XML Spec: Names
-	 * @see https://www.w3.org/TR/xml-names/#ns-qualnames XML Namespaces: Qualified names
+	 * @see https://dom.spec.whatwg.org/#dom-domimplementation-createdocument DOM Living Standard
+	 * @see https://www.w3.org/TR/DOM-Level-3-Core/core.html#Level-2-Core-DOM-createDocument DOM
+	 *      Level 3 Core
+	 * @see https://www.w3.org/TR/DOM-Level-2-Core/core.html#Level-2-Core-DOM-createDocument DOM
+	 *      Level 2 Core (initial)
 	 */
-	createDocument: function(namespaceURI,  qualifiedName, doctype){
-		var doc = new Document();
+	createDocument: function (namespaceURI, qualifiedName, doctype) {
+		var contentType = MIME_TYPE.XML_APPLICATION;
+		if (namespaceURI === NAMESPACE.HTML) {
+			contentType = MIME_TYPE.XML_XHTML_APPLICATION;
+		} else if (namespaceURI === NAMESPACE.SVG) {
+			contentType = MIME_TYPE.XML_SVG_IMAGE;
+		}
+		var doc = new Document(PDC, { contentType: contentType });
 		doc.implementation = this;
 		doc.childNodes = new NodeList();
 		doc.doctype = doctype || null;
-		if (doctype){
+		if (doctype) {
 			doc.appendChild(doctype);
 		}
-		if (qualifiedName){
+		if (qualifiedName) {
 			var root = doc.createElementNS(namespaceURI, qualifiedName);
 			doc.appendChild(root);
 		}
 		return doc;
 	},
 	/**
-	 * Returns a doctype, with the given `qualifiedName`, `publicId`, and `systemId`.
+	 * Creates an empty DocumentType node. Entity declarations and notations are not made
+	 * available. Entity reference expansions and default attribute additions do not occur.
 	 *
-	 * __This behavior is slightly different from the in the specs__:
-	 * - this implementation is not validating names or qualified names
-	 *   (when parsing XML strings, the SAX parser takes care of that)
+	 * **This behavior is slightly different from the one in the specs**:
+	 * - `encoding`, `mode`, `origin`, `url` fields are currently not declared.
+	 * - `publicId` and `systemId` contain the raw data including any possible quotes,
+	 *   so they can always be serialized back to the original value
+	 * - `internalSubset` contains the raw string between `[` and `]` if present,
+	 *   but is not parsed or validated in any form.
 	 *
+	 * @function DOMImplementation#createDocumentType
 	 * @param {string} qualifiedName
+	 * The {@link https://www.w3.org/TR/DOM-Level-3-Core/glossary.html#dt-qualifiedname qualified
+	 * name} of the document type to be created.
 	 * @param {string} [publicId]
+	 * The external subset public identifier. Stored verbatim including surrounding quotes.
+	 * When serialized with `requireWellFormed: true`, the serializer throws `InvalidStateError`
+	 * if the value is non-empty and does not match the XML `PubidLiteral` production
+	 * (W3C DOM Parsing §3.2.1.3; XML 1.0 production [12]). Creation-time validation is not
+	 * enforced — deferred to a future breaking release.
 	 * @param {string} [systemId]
-	 * @returns {DocumentType} which can either be used with `DOMImplementation.createDocument` upon document creation
-	 * 				  or can be put into the document via methods like `Node.insertBefore()` or `Node.replaceChild()`
+	 * The external subset system identifier. Stored verbatim including surrounding quotes.
+	 * When serialized with `requireWellFormed: true`, the serializer throws `InvalidStateError`
+	 * if the value is non-empty and does not match the XML `SystemLiteral` production
+	 * (W3C DOM Parsing §3.2.1.3; XML 1.0 production [11]). Creation-time validation is not
+	 * enforced — deferred to a future breaking release.
+	 * @param {string} [internalSubset]
+	 * The internal subset or an empty string if it is not present. Stored verbatim.
+	 * When serialized with `requireWellFormed: true`, the serializer throws `InvalidStateError`
+	 * if the value contains `"]>"`. Creation-time validation is not enforced.
+	 * @returns {DocumentType}
+	 * A new {@link DocumentType} node with {@link Node#ownerDocument} set to null.
+	 * @throws {DOMException}
+	 * With code:
 	 *
-	 * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMImplementation/createDocumentType MDN
-	 * @see https://www.w3.org/TR/DOM-Level-2-Core/core.html#Level-2-Core-DOM-createDocType DOM Level 2 Core
-	 * @see https://dom.spec.whatwg.org/#dom-domimplementation-createdocumenttype DOM Living Standard
-	 *
-	 * @see https://dom.spec.whatwg.org/#validate-and-extract DOM: Validate and extract
-	 * @see https://www.w3.org/TR/xml/#NT-NameStartChar XML Spec: Names
-	 * @see https://www.w3.org/TR/xml-names/#ns-qualnames XML Namespaces: Qualified names
+	 * - `INVALID_CHARACTER_ERR`: Raised if the specified qualified name is not an XML name
+	 * according to {@link https://www.w3.org/TR/DOM-Level-3-Core/references.html#XML XML 1.0}.
+	 * - `NAMESPACE_ERR`: Raised if the qualifiedName is malformed.
+	 * - `NOT_SUPPORTED_ERR`: May be raised if the implementation does not support the feature
+	 * "XML" and the language exposed through the Document does not support XML Namespaces (such
+	 * as {@link https://www.w3.org/TR/DOM-Level-3-Core/references.html#HTML40 HTML 4.01}).
+	 * @since DOM Level 2.
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMImplementation/createDocumentType
+	 *      MDN
+	 * @see https://dom.spec.whatwg.org/#dom-domimplementation-createdocumenttype DOM Living
+	 *      Standard
+	 * @see https://www.w3.org/TR/DOM-Level-3-Core/core.html#Level-3-Core-DOM-createDocType DOM
+	 *      Level 3 Core
+	 * @see https://www.w3.org/TR/DOM-Level-2-Core/core.html#Level-2-Core-DOM-createDocType DOM
+	 *      Level 2 Core
+	 * @see https://github.com/xmldom/xmldom/blob/master/CHANGELOG.md#050
+	 * @see https://www.w3.org/TR/DOM-Level-2-Core/#core-ID-Core-DocType-internalSubset
+	 * @prettierignore
 	 */
-	createDocumentType: function(qualifiedName, publicId, systemId){
-		var node = new DocumentType();
+	createDocumentType: function (qualifiedName, publicId, systemId, internalSubset) {
+		validateQualifiedName(qualifiedName);
+		var node = new DocumentType(PDC);
 		node.name = qualifiedName;
 		node.nodeName = qualifiedName;
 		node.publicId = publicId || '';
 		node.systemId = systemId || '';
+		node.internalSubset = internalSubset || '';
+		node.childNodes = new NodeList();
 
 		return node;
-	}
+	},
+	/**
+	 * Returns an HTML document, that might already have a basic DOM structure.
+	 *
+	 * __It behaves slightly different from the description in the living standard__:
+	 * - If the first argument is `false` no initial nodes are added (steps 3-7 in the specs are
+	 * omitted)
+	 * - `encoding`, `mode`, `origin`, `url` fields are currently not declared.
+	 *
+	 * @param {string | false} [title]
+	 * A string containing the title to give the new HTML document.
+	 * @returns {Document}
+	 * The HTML document.
+	 * @since WHATWG Living Standard.
+	 * @see {@link #createDocument}
+	 * @see https://dom.spec.whatwg.org/#dom-domimplementation-createhtmldocument
+	 * @see https://dom.spec.whatwg.org/#html-document
+	 */
+	createHTMLDocument: function (title) {
+		var doc = new Document(PDC, { contentType: MIME_TYPE.HTML });
+		doc.implementation = this;
+		doc.childNodes = new NodeList();
+		if (title !== false) {
+			doc.doctype = this.createDocumentType('html');
+			doc.doctype.ownerDocument = doc;
+			doc.appendChild(doc.doctype);
+			var htmlNode = doc.createElement('html');
+			doc.appendChild(htmlNode);
+			var headNode = doc.createElement('head');
+			htmlNode.appendChild(headNode);
+			if (typeof title === 'string') {
+				var titleNode = doc.createElement('title');
+				titleNode.appendChild(doc.createTextNode(title));
+				headNode.appendChild(titleNode);
+			}
+			htmlNode.appendChild(doc.createElement('body'));
+		}
+		return doc;
+	},
 };
-
 
 /**
+ * The DOM Node interface is an abstract base class upon which many other DOM API objects are
+ * based, thus letting those object types to be used similarly and often interchangeably. As an
+ * abstract class, there is no such thing as a plain Node object. All objects that implement
+ * Node functionality are based on one of its subclasses. Most notable are Document, Element,
+ * and DocumentFragment.
+ *
+ * In addition, every kind of DOM node is represented by an interface based on Node. These
+ * include Attr, CharacterData (which Text, Comment, CDATASection and ProcessingInstruction are
+ * all based on), and DocumentType.
+ *
+ * In some cases, a particular feature of the base Node interface may not apply to one of its
+ * child interfaces; in that case, the inheriting node may return null or throw an exception,
+ * depending on circumstances. For example, attempting to add children to a node type that
+ * cannot have children will throw an exception.
+ *
+ * **This behavior is slightly different from the in the specs**:
+ * - unimplemented interfaces: `EventTarget`
+ *
+ * @class
+ * @abstract
+ * @param {Symbol} symbol
  * @see http://www.w3.org/TR/2000/REC-DOM-Level-2-Core-20001113/core.html#ID-1950641247
+ * @see https://dom.spec.whatwg.org/#node
+ * @prettierignore
  */
-
-function Node() {
-};
+function Node(symbol) {
+	checkSymbol(symbol);
+}
 
 Node.prototype = {
-	firstChild : null,
-	lastChild : null,
-	previousSibling : null,
-	nextSibling : null,
-	attributes : null,
-	parentNode : null,
-	childNodes : null,
-	ownerDocument : null,
-	nodeValue : null,
-	namespaceURI : null,
-	prefix : null,
-	localName : null,
-	// Modified in DOM Level 2:
-	insertBefore:function(newChild, refChild){//raises
-		return _insertBefore(this,newChild,refChild);
+	/**
+	 * The first child of this node.
+	 *
+	 * @type {Node | null}
+	 */
+	firstChild: null,
+	/**
+	 * The last child of this node.
+	 *
+	 * @type {Node | null}
+	 */
+	lastChild: null,
+	/**
+	 * The previous sibling of this node.
+	 *
+	 * @type {Node | null}
+	 */
+	previousSibling: null,
+	/**
+	 * The next sibling of this node.
+	 *
+	 * @type {Node | null}
+	 */
+	nextSibling: null,
+	/**
+	 * The parent node of this node.
+	 *
+	 * @type {Node | null}
+	 */
+	parentNode: null,
+	/**
+	 * The parent element of this node.
+	 *
+	 * @type {Element | null}
+	 */
+	get parentElement() {
+		return this.parentNode && this.parentNode.nodeType === this.ELEMENT_NODE ? this.parentNode : null;
 	},
-	replaceChild:function(newChild, oldChild){//raises
-		_insertBefore(this, newChild,oldChild, assertPreReplacementValidityInDocument);
-		if(oldChild){
+	/**
+	 * The child nodes of this node.
+	 *
+	 * @type {NodeList}
+	 */
+	childNodes: null,
+	/**
+	 * The document object associated with this node.
+	 *
+	 * @type {Document | null}
+	 */
+	ownerDocument: null,
+	/**
+	 * The value of this node.
+	 *
+	 * @type {string | null}
+	 */
+	nodeValue: null,
+	/**
+	 * The namespace URI of this node.
+	 *
+	 * @type {string | null}
+	 */
+	namespaceURI: null,
+	/**
+	 * The prefix of the namespace for this node.
+	 *
+	 * @type {string | null}
+	 */
+	prefix: null,
+	/**
+	 * The local part of the qualified name of this node.
+	 *
+	 * @type {string | null}
+	 */
+	localName: null,
+	/**
+	 * The baseURI is currently always `about:blank`,
+	 * since that's what happens when you create a document from scratch.
+	 *
+	 * @type {'about:blank'}
+	 */
+	baseURI: 'about:blank',
+	/**
+	 * Is true if this node is part of a document.
+	 *
+	 * @type {boolean}
+	 */
+	get isConnected() {
+		var rootNode = this.getRootNode();
+		return rootNode && rootNode.nodeType === rootNode.DOCUMENT_NODE;
+	},
+	/**
+	 * Checks whether `other` is an inclusive descendant of this node.
+	 *
+	 * @param {Node | null | undefined} other
+	 * The node to check.
+	 * @returns {boolean}
+	 * True if `other` is an inclusive descendant of this node; false otherwise.
+	 * @see https://dom.spec.whatwg.org/#dom-node-contains
+	 */
+	contains: function (other) {
+		if (!other) return false;
+		var parent = other;
+		do {
+			if (this === parent) return true;
+			parent = parent.parentNode;
+		} while (parent);
+		return false;
+	},
+	/**
+	 * @typedef GetRootNodeOptions
+	 * @property {boolean} [composed=false]
+	 */
+	/**
+	 * Searches for the root node of this node.
+	 *
+	 * **This behavior is slightly different from the in the specs**:
+	 * - ignores `options.composed`, since `ShadowRoot`s are unsupported, always returns root.
+	 *
+	 * @param {GetRootNodeOptions} [options]
+	 * @returns {Node}
+	 * Root node.
+	 * @see https://dom.spec.whatwg.org/#dom-node-getrootnode
+	 * @see https://dom.spec.whatwg.org/#concept-shadow-including-root
+	 */
+	getRootNode: function (options) {
+		var parent = this;
+		do {
+			if (!parent.parentNode) {
+				return parent;
+			}
+			parent = parent.parentNode;
+		} while (parent);
+	},
+	/**
+	 * Checks whether the given node is equal to this node.
+	 *
+	 * Two nodes are equal when they have the same type, defining characteristics (for the type),
+	 * and the same childNodes. The comparison is iterative to avoid stack overflows on
+	 * deeply-nested trees. Attribute nodes of each Element pair are also pushed onto the stack
+	 * and compared the same way.
+	 *
+	 * @param {Node} [otherNode]
+	 * @returns {boolean}
+	 * @see https://dom.spec.whatwg.org/#concept-node-equals
+	 * @see ../docs/walk-dom.md.
+	 */
+	isEqualNode: function (otherNode) {
+		if (!otherNode) return false;
+
+		// Use an explicit {node, other} pair stack to avoid call-stack overflow on deep trees.
+		// walkDOM cannot be used here — parallel two-tree traversal requires pairing
+		// corresponding nodes at each step across both trees simultaneously.
+		var stack = [{ node: this, other: otherNode }];
+		while (stack.length > 0) {
+			var pair = stack.pop();
+			var node = pair.node;
+			var other = pair.other;
+
+			if (node.nodeType !== other.nodeType) return false;
+
+			switch (node.nodeType) {
+				case node.DOCUMENT_TYPE_NODE:
+					if (node.name !== other.name) return false;
+					if (node.publicId !== other.publicId) return false;
+					if (node.systemId !== other.systemId) return false;
+					break;
+				case node.ELEMENT_NODE:
+					if (node.namespaceURI !== other.namespaceURI) return false;
+					if (node.prefix !== other.prefix) return false;
+					if (node.localName !== other.localName) return false;
+					if (node.attributes.length !== other.attributes.length) return false;
+					for (var i = 0; i < node.attributes.length; i++) {
+						var attr = node.attributes.item(i);
+						var otherAttr = other.getAttributeNodeNS(attr.namespaceURI, attr.localName);
+						if (!otherAttr) return false;
+						stack.push({ node: attr, other: otherAttr });
+					}
+					break;
+				case node.ATTRIBUTE_NODE:
+					if (node.namespaceURI !== other.namespaceURI) return false;
+					if (node.localName !== other.localName) return false;
+					if (node.value !== other.value) return false;
+					break;
+				case node.PROCESSING_INSTRUCTION_NODE:
+					if (node.target !== other.target || node.data !== other.data) return false;
+					break;
+				case node.TEXT_NODE:
+				case node.CDATA_SECTION_NODE:
+				case node.COMMENT_NODE:
+					if (node.data !== other.data) return false;
+					break;
+			}
+
+			if (node.childNodes.length !== other.childNodes.length) return false;
+
+			// Push children in reverse order so index 0 is processed first (LIFO).
+			for (var i = node.childNodes.length - 1; i >= 0; i--) {
+				stack.push({ node: node.childNodes[i], other: other.childNodes[i] });
+			}
+		}
+
+		return true;
+	},
+	/**
+	 * Checks whether or not the given node is this node.
+	 *
+	 * @param {Node} [otherNode]
+	 */
+	isSameNode: function (otherNode) {
+		return this === otherNode;
+	},
+	/**
+	 * Inserts a node before a reference node as a child of this node.
+	 *
+	 * @param {Node} newChild
+	 * The new child node to be inserted.
+	 * @param {Node | null} refChild
+	 * The reference node before which newChild will be inserted.
+	 * @returns {Node}
+	 * The new child node successfully inserted.
+	 * @throws {DOMException}
+	 * Throws a DOMException if inserting the node would result in a DOM tree that is not
+	 * well-formed, or if `child` is provided but is not a child of `parent`.
+	 * See {@link _insertBefore} for more details.
+	 * @since Modified in DOM L2
+	 */
+	insertBefore: function (newChild, refChild) {
+		return _insertBefore(this, newChild, refChild);
+	},
+	/**
+	 * Replaces an old child node with a new child node within this node.
+	 *
+	 * @param {Node} newChild
+	 * The new node that is to replace the old node.
+	 * If it already exists in the DOM, it is removed from its original position.
+	 * @param {Node} oldChild
+	 * The existing child node to be replaced.
+	 * @returns {Node}
+	 * Returns the replaced child node.
+	 * @throws {DOMException}
+	 * Throws a DOMException if replacing the node would result in a DOM tree that is not
+	 * well-formed, or if `oldChild` is not a child of `this`.
+	 * This can also occur if the pre-replacement validity assertion fails.
+	 * See {@link _insertBefore}, {@link Node.removeChild}, and
+	 * {@link assertPreReplacementValidityInDocument} for more details.
+	 * @see https://dom.spec.whatwg.org/#concept-node-replace
+	 */
+	replaceChild: function (newChild, oldChild) {
+		_insertBefore(this, newChild, oldChild, assertPreReplacementValidityInDocument);
+		if (oldChild) {
 			this.removeChild(oldChild);
 		}
 	},
-	removeChild:function(oldChild){
-		return _removeChild(this,oldChild);
+	/**
+	 * Removes an existing child node from this node.
+	 *
+	 * @param {Node} oldChild
+	 * The child node to be removed.
+	 * @returns {Node}
+	 * Returns the removed child node.
+	 * @throws {DOMException}
+	 * Throws a DOMException if `oldChild` is not a child of `this`.
+	 * See {@link _removeChild} for more details.
+	 */
+	removeChild: function (oldChild) {
+		return _removeChild(this, oldChild);
 	},
-	appendChild:function(newChild){
-		return this.insertBefore(newChild,null);
+	/**
+	 * Appends a child node to this node.
+	 *
+	 * @param {Node} newChild
+	 * The child node to be appended to this node.
+	 * If it already exists in the DOM, it is removed from its original position.
+	 * @returns {Node}
+	 * Returns the appended child node.
+	 * @throws {DOMException}
+	 * Throws a DOMException if appending the node would result in a DOM tree that is not
+	 * well-formed, or if `newChild` is not a valid Node.
+	 * See {@link insertBefore} for more details.
+	 */
+	appendChild: function (newChild) {
+		return this.insertBefore(newChild, null);
 	},
-	hasChildNodes:function(){
+	/**
+	 * Determines whether this node has any child nodes.
+	 *
+	 * @returns {boolean}
+	 * Returns true if this node has any child nodes, and false otherwise.
+	 */
+	hasChildNodes: function () {
 		return this.firstChild != null;
 	},
-	cloneNode:function(deep){
-		return cloneNode(this.ownerDocument||this,this,deep);
+	/**
+	 * Creates a copy of the calling node.
+	 *
+	 * @param {boolean} deep
+	 * If true, the contents of the node are recursively copied.
+	 * If false, only the node itself (and its attributes, if it is an element) are copied.
+	 * @returns {Node}
+	 * Returns the newly created copy of the node.
+	 * @throws {DOMException}
+	 * May throw a DOMException if operations within {@link Element#setAttributeNode} or
+	 * {@link Node#appendChild} (which are potentially invoked in this method) do not meet their
+	 * specific constraints.
+	 * @see {@link cloneNode}
+	 */
+	cloneNode: function (deep) {
+		return cloneNode(this.ownerDocument || this, this, deep);
 	},
-	// Modified in DOM Level 2:
-	normalize:function(){
-		var child = this.firstChild;
-		while(child){
-			var next = child.nextSibling;
-			if(next && next.nodeType == TEXT_NODE && child.nodeType == TEXT_NODE){
-				this.removeChild(next);
-				child.appendData(next.data);
-			}else{
-				child.normalize();
-				child = next;
-			}
-		}
+	/**
+	 * Puts the specified node and all of its subtree into a "normalized" form. In a normalized
+	 * subtree, no text nodes in the subtree are empty and there are no adjacent text nodes.
+	 *
+	 * Specifically, this method merges any adjacent text nodes (i.e., nodes for which `nodeType`
+	 * is `TEXT_NODE`) into a single node with the combined data. It also removes any empty text
+	 * nodes.
+	 *
+	 * This method iterativly traverses all child nodes to normalize all descendent nodes within
+	 * the subtree.
+	 *
+	 * @throws {DOMException}
+	 * May throw a DOMException if operations within removeChild or appendData (which are
+	 * potentially invoked in this method) do not meet their specific constraints.
+	 * @since Modified in DOM Level 2
+	 * @see {@link Node.removeChild}
+	 * @see {@link CharacterData.appendData}
+	 * @see ../docs/walk-dom.md.
+	 */
+	normalize: function () {
+		walkDOM(this, null, {
+			enter: function (node) {
+				// Merge adjacent text children of node before walkDOM schedules them.
+				// walkDOM reads lastChild/previousSibling after enter returns, so the
+				// surviving post-merge children are what it descends into.
+				var child = node.firstChild;
+				while (child) {
+					var next = child.nextSibling;
+					if (next !== null && next.nodeType === TEXT_NODE && child.nodeType === TEXT_NODE) {
+						node.removeChild(next);
+						child.appendData(next.data);
+						// Do not advance child: re-check new nextSibling for another text run
+					} else {
+						child = next;
+					}
+				}
+				return true; // descend into surviving children
+			},
+		});
 	},
-  	// Introduced in DOM Level 2:
-	isSupported:function(feature, version){
-		return this.ownerDocument.implementation.hasFeature(feature,version);
+	/**
+	 * Checks whether the DOM implementation implements a specific feature and its version.
+	 *
+	 * @deprecated
+	 * Since `DOMImplementation.hasFeature` is deprecated and always returns true.
+	 * @param {string} feature
+	 * The package name of the feature to test. This is the same name that can be passed to the
+	 * method `hasFeature` on `DOMImplementation`.
+	 * @param {string} version
+	 * This is the version number of the package name to test.
+	 * @returns {boolean}
+	 * Returns true in all cases in the current implementation.
+	 * @since Introduced in DOM Level 2
+	 * @see {@link DOMImplementation.hasFeature}
+	 */
+	isSupported: function (feature, version) {
+		return this.ownerDocument.implementation.hasFeature(feature, version);
 	},
-    // Introduced in DOM Level 2:
-    hasAttributes:function(){
-    	return this.attributes.length>0;
-    },
 	/**
 	 * Look up the prefix associated to the given namespace URI, starting from this node.
 	 * **The default namespace declarations are ignored by this method.**
 	 * See Namespace Prefix Lookup for details on the algorithm used by this method.
 	 *
-	 * _Note: The implementation seems to be incomplete when compared to the algorithm described in the specs._
+	 * **This behavior is different from the in the specs**:
+	 * - no node type specific handling
+	 * - uses the internal attribute _nsMap for resolving namespaces that is updated when changing attributes
 	 *
 	 * @param {string | null} namespaceURI
+	 * The namespace URI for which to find the associated prefix.
 	 * @returns {string | null}
+	 * The associated prefix, if found; otherwise, null.
 	 * @see https://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-lookupNamespacePrefix
 	 * @see https://www.w3.org/TR/DOM-Level-3-Core/namespaces-algorithms.html#lookupNamespacePrefixAlgo
 	 * @see https://dom.spec.whatwg.org/#dom-node-lookupprefix
 	 * @see https://github.com/xmldom/xmldom/issues/322
+	 * @prettierignore
 	 */
-    lookupPrefix:function(namespaceURI){
-    	var el = this;
-    	while(el){
-    		var map = el._nsMap;
-    		//console.dir(map)
-    		if(map){
-    			for(var n in map){
-						if (Object.prototype.hasOwnProperty.call(map, n) && map[n] === namespaceURI) {
-							return n;
-						}
-    			}
-    		}
-    		el = el.nodeType == ATTRIBUTE_NODE?el.ownerDocument : el.parentNode;
-    	}
-    	return null;
-    },
-    // Introduced in DOM Level 3:
-    lookupNamespaceURI:function(prefix){
-    	var el = this;
-    	while(el){
-    		var map = el._nsMap;
-    		//console.dir(map)
-    		if(map){
-    			if(Object.prototype.hasOwnProperty.call(map, prefix)){
-    				return map[prefix] ;
-    			}
-    		}
-    		el = el.nodeType == ATTRIBUTE_NODE?el.ownerDocument : el.parentNode;
-    	}
-    	return null;
-    },
-    // Introduced in DOM Level 3:
-    isDefaultNamespace:function(namespaceURI){
-    	var prefix = this.lookupPrefix(namespaceURI);
-    	return prefix == null;
-    }
+	lookupPrefix: function (namespaceURI) {
+		var el = this;
+		while (el) {
+			var map = el._nsMap;
+			//console.dir(map)
+			if (map) {
+				for (var n in map) {
+					if (hasOwn(map, n) && map[n] === namespaceURI) {
+						return n;
+					}
+				}
+			}
+			el = el.nodeType == ATTRIBUTE_NODE ? el.ownerDocument : el.parentNode;
+		}
+		return null;
+	},
+	/**
+	 * This function is used to look up the namespace URI associated with the given prefix,
+	 * starting from this node.
+	 *
+	 * **This behavior is different from the in the specs**:
+	 * - no node type specific handling
+	 * - uses the internal attribute _nsMap for resolving namespaces that is updated when changing attributes
+	 *
+	 * @param {string | null} prefix
+	 * The prefix for which to find the associated namespace URI.
+	 * @returns {string | null}
+	 * The associated namespace URI, if found; otherwise, null.
+	 * @since DOM Level 3
+	 * @see https://dom.spec.whatwg.org/#dom-node-lookupnamespaceuri
+	 * @see https://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-lookupNamespaceURI
+	 * @prettierignore
+	 */
+	lookupNamespaceURI: function (prefix) {
+		var el = this;
+		while (el) {
+			var map = el._nsMap;
+			//console.dir(map)
+			if (map) {
+				if (hasOwn(map, prefix)) {
+					return map[prefix];
+				}
+			}
+			el = el.nodeType == ATTRIBUTE_NODE ? el.ownerDocument : el.parentNode;
+		}
+		return null;
+	},
+	/**
+	 * Determines whether the given namespace URI is the default namespace.
+	 *
+	 * The function works by looking up the prefix associated with the given namespace URI. If no
+	 * prefix is found (i.e., the namespace URI is not registered in the namespace map of this
+	 * node or any of its ancestors), it returns `true`, implying the namespace URI is considered
+	 * the default.
+	 *
+	 * **This behavior is different from the in the specs**:
+	 * - no node type specific handling
+	 * - uses the internal attribute _nsMap for resolving namespaces that is updated when changing attributes
+	 *
+	 * @param {string | null} namespaceURI
+	 * The namespace URI to be checked.
+	 * @returns {boolean}
+	 * Returns true if the given namespace URI is the default namespace, false otherwise.
+	 * @since DOM Level 3
+	 * @see https://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-isDefaultNamespace
+	 * @see https://dom.spec.whatwg.org/#dom-node-isdefaultnamespace
+	 * @prettierignore
+	 */
+	isDefaultNamespace: function (namespaceURI) {
+		var prefix = this.lookupPrefix(namespaceURI);
+		return prefix == null;
+	},
+	/**
+	 * Compares the reference node with a node with regard to their position in the document and
+	 * according to the document order.
+	 *
+	 * @param {Node} other
+	 * The node to compare the reference node to.
+	 * @returns {number}
+	 * Returns how the node is positioned relatively to the reference node according to the
+	 * bitmask. 0 if reference node and given node are the same.
+	 * @since DOM Level 3
+	 * @see https://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407/core.html#Node3-compare
+	 * @see https://dom.spec.whatwg.org/#dom-node-comparedocumentposition
+	 */
+	compareDocumentPosition: function (other) {
+		if (this === other) return 0;
+		var node1 = other;
+		var node2 = this;
+		var attr1 = null;
+		var attr2 = null;
+		if (node1 instanceof Attr) {
+			attr1 = node1;
+			node1 = attr1.ownerElement;
+		}
+		if (node2 instanceof Attr) {
+			attr2 = node2;
+			node2 = attr2.ownerElement;
+			if (attr1 && node1 && node2 === node1) {
+				for (var i = 0, attr; (attr = node2.attributes[i]); i++) {
+					if (attr === attr1)
+						return DocumentPosition.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC + DocumentPosition.DOCUMENT_POSITION_PRECEDING;
+					if (attr === attr2)
+						return DocumentPosition.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC + DocumentPosition.DOCUMENT_POSITION_FOLLOWING;
+				}
+			}
+		}
+		if (!node1 || !node2 || node2.ownerDocument !== node1.ownerDocument) {
+			return (
+				DocumentPosition.DOCUMENT_POSITION_DISCONNECTED +
+				DocumentPosition.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC +
+				(docGUID(node2.ownerDocument) > docGUID(node1.ownerDocument)
+					? DocumentPosition.DOCUMENT_POSITION_FOLLOWING
+					: DocumentPosition.DOCUMENT_POSITION_PRECEDING)
+			);
+		}
+		if (attr2 && node1 === node2) {
+			return DocumentPosition.DOCUMENT_POSITION_CONTAINS + DocumentPosition.DOCUMENT_POSITION_PRECEDING;
+		}
+		if (attr1 && node1 === node2) {
+			return DocumentPosition.DOCUMENT_POSITION_CONTAINED_BY + DocumentPosition.DOCUMENT_POSITION_FOLLOWING;
+		}
+
+		var chain1 = [];
+		var ancestor1 = node1.parentNode;
+		while (ancestor1) {
+			if (!attr2 && ancestor1 === node2) {
+				return DocumentPosition.DOCUMENT_POSITION_CONTAINED_BY + DocumentPosition.DOCUMENT_POSITION_FOLLOWING;
+			}
+			chain1.push(ancestor1);
+			ancestor1 = ancestor1.parentNode;
+		}
+		chain1.reverse();
+
+		var chain2 = [];
+		var ancestor2 = node2.parentNode;
+		while (ancestor2) {
+			if (!attr1 && ancestor2 === node1) {
+				return DocumentPosition.DOCUMENT_POSITION_CONTAINS + DocumentPosition.DOCUMENT_POSITION_PRECEDING;
+			}
+			chain2.push(ancestor2);
+			ancestor2 = ancestor2.parentNode;
+		}
+		chain2.reverse();
+
+		var ca = commonAncestor(chain1, chain2);
+		for (var n in ca.childNodes) {
+			var child = ca.childNodes[n];
+			if (child === node2) return DocumentPosition.DOCUMENT_POSITION_FOLLOWING;
+			if (child === node1) return DocumentPosition.DOCUMENT_POSITION_PRECEDING;
+			if (chain2.indexOf(child) >= 0) return DocumentPosition.DOCUMENT_POSITION_FOLLOWING;
+			if (chain1.indexOf(child) >= 0) return DocumentPosition.DOCUMENT_POSITION_PRECEDING;
+		}
+		return 0;
+	},
 };
 
-
-function _xmlEncoder(c){
-	return c == '<' && '&lt;' ||
-         c == '>' && '&gt;' ||
-         c == '&' && '&amp;' ||
-         c == '"' && '&quot;' ||
-         '&#'+c.charCodeAt()+';'
-}
-
-
-copy(NodeType,Node);
-copy(NodeType,Node.prototype);
-
 /**
- * @param callback return true for continue,false for break
- * @return boolean true: break visit;
- */
-function _visitNode(node,callback){
-	if(callback(node)){
-		return true;
-	}
-	if(node = node.firstChild){
-		do{
-			if(_visitNode(node,callback)){return true}
-        }while(node=node.nextSibling)
-    }
-}
-
-
-
-function Document(){
-	this.ownerDocument = this;
-}
-
-function _onAddAttribute(doc,el,newAttr){
-	doc && doc._inc++;
-	var ns = newAttr.namespaceURI ;
-	if(ns === NAMESPACE.XMLNS){
-		//update namespace
-		el._nsMap[newAttr.prefix?newAttr.localName:''] = newAttr.value
-	}
-}
-
-function _onRemoveAttribute(doc,el,newAttr,remove){
-	doc && doc._inc++;
-	var ns = newAttr.namespaceURI ;
-	if(ns === NAMESPACE.XMLNS){
-		//update namespace
-		delete el._nsMap[newAttr.prefix?newAttr.localName:'']
-	}
-}
-
-/**
- * Updates `el.childNodes`, updating the indexed items and it's `length`.
- * Passing `newChild` means it will be appended.
- * Otherwise it's assumed that an item has been removed,
- * and `el.firstNode` and it's `.nextSibling` are used
- * to walk the current list of child nodes.
+ * Encodes special XML characters to their corresponding entities.
  *
- * @param {Document} doc
- * @param {Node} el
- * @param {Node} [newChild]
+ * @param {string} c
+ * The character to be encoded.
+ * @returns {string}
+ * The encoded character.
  * @private
  */
-function _onUpdateChild (doc, el, newChild) {
-	if(doc && doc._inc){
-		doc._inc++;
-		//update childNodes
-		var cs = el.childNodes;
-		if (newChild) {
-			cs[cs.length++] = newChild;
+function _xmlEncoder(c) {
+	return (
+		(c == '<' && '&lt;') || (c == '>' && '&gt;') || (c == '&' && '&amp;') || (c == '"' && '&quot;') || '&#' + c.charCodeAt() + ';'
+	);
+}
+
+copy(NodeType, Node);
+copy(NodeType, Node.prototype);
+copy(DocumentPosition, Node);
+copy(DocumentPosition, Node.prototype);
+
+/**
+ * Visits every node in the subtree rooted at `node` in depth-first pre-order.
+ *
+ * Delegates to {@link walkDOM} for traversal. The `callback` is called on each node;
+ * if it returns a truthy value, traversal stops immediately.
+ *
+ * @param {Node} node
+ * Root of the subtree to visit.
+ * @param {function(Node): *} callback
+ * Called for each node. A truthy return value stops traversal early.
+ */
+function _visitNode(node, callback) {
+	walkDOM(node, null, {
+		enter: function (n) {
+			return callback(n) ? walkDOM.STOP : true;
+		},
+	});
+}
+
+/**
+ * Depth-first pre/post-order DOM tree walker.
+ *
+ * Visits every node in the subtree rooted at `node`. For each node:
+ *
+ * 1. Calls `callbacks.enter(node, context)` before descending into the node's children. The
+ * return value becomes the `context` passed to each child's `enter` call and to the matching
+ * `exit` call.
+ * 2. If `enter` returns `null` or `undefined`, the node's children are skipped;
+ * sibling traversal continues normally.
+ * 3. If `enter` returns `walkDOM.STOP`, the entire traversal is aborted immediately — no
+ * further `enter` or `exit` calls are made.
+ * 4. `lastChild` and `previousSibling` are read **after** `enter` returns, so `enter` may
+ * safely modify the node's own child list before the walker descends. Modifying siblings of
+ * the current node or any other part of the tree produces unpredictable results: nodes already
+ * queued on the stack are visited regardless of DOM changes, and newly inserted nodes outside
+ * the current child list are never visited.
+ * 5. Calls `callbacks.exit(node, context)` (if provided) after all of a node's children have
+ * been visited, passing the same `context` that `enter`
+ * returned for that node.
+ *
+ * This implementation uses an explicit stack and does not recurse — it is safe on arbitrarily
+ * deep trees.
+ *
+ * @param {Node} node
+ * Root of the subtree to walk.
+ * @param {*} context
+ * Initial context value passed to the root node's `enter`.
+ * @param {{ enter: function(Node, *): *, exit?: function(Node, *): void }} callbacks
+ * @returns {void | walkDOM.STOP}
+ * @see ../docs/walk-dom.md.
+ */
+function walkDOM(node, context, callbacks) {
+	// Each stack frame is {node, context, phase}:
+	//   walkDOM.ENTER — call enter, then push children
+	//   walkDOM.EXIT  — call exit
+	var stack = [{ node: node, context: context, phase: walkDOM.ENTER }];
+	while (stack.length > 0) {
+		var frame = stack.pop();
+		if (frame.phase === walkDOM.ENTER) {
+			var childContext = callbacks.enter(frame.node, frame.context);
+			if (childContext === walkDOM.STOP) {
+				return walkDOM.STOP;
+			}
+			// Push exit frame before children so it fires after all children are processed (Last In First Out)
+			stack.push({ node: frame.node, context: childContext, phase: walkDOM.EXIT });
+			if (childContext === null || childContext === undefined) {
+				continue; // skip children
+			}
+			// lastChild is read after enter returns, so enter may modify the child list.
+			var child = frame.node.lastChild;
+			// Traverse from lastChild backwards so that pushing onto the stack
+			// naturally yields firstChild on top (processed first).
+			while (child) {
+				stack.push({ node: child, context: childContext, phase: walkDOM.ENTER });
+				child = child.previousSibling;
+			}
 		} else {
-			var child = el.firstChild;
+			// frame.phase === walkDOM.EXIT
+			if (callbacks.exit) {
+				callbacks.exit(frame.node, frame.context);
+			}
+		}
+	}
+}
+
+/**
+ * Sentinel value returned from a `walkDOM` `enter` callback to abort the entire traversal
+ * immediately.
+ *
+ * @type {symbol}
+ */
+walkDOM.STOP = Symbol('walkDOM.STOP');
+/**
+ * Phase constant for a stack frame that has not yet been visited.
+ * The `enter` callback is called and children are scheduled.
+ *
+ * @type {number}
+ */
+walkDOM.ENTER = 0;
+/**
+ * Phase constant for a stack frame whose subtree has been fully visited.
+ * The `exit` callback is called.
+ *
+ * @type {number}
+ */
+walkDOM.EXIT = 1;
+
+/**
+ * @typedef DocumentOptions
+ * @property {string} [contentType=MIME_TYPE.XML_APPLICATION]
+ */
+/**
+ * The Document interface describes the common properties and methods for any kind of document.
+ *
+ * It should usually be created using `new DOMImplementation().createDocument(...)`
+ * or `new DOMImplementation().createHTMLDocument(...)`.
+ *
+ * The constructor is considered a private API and offers to initially set the `contentType`
+ * property via it's options parameter.
+ *
+ * @class
+ * @param {Symbol} symbol
+ * @param {DocumentOptions} [options]
+ * @augments Node
+ * @private
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Document
+ * @see https://dom.spec.whatwg.org/#interface-document
+ */
+function Document(symbol, options) {
+	checkSymbol(symbol);
+
+	var opt = options || {};
+	this.ownerDocument = this;
+	/**
+	 * The mime type of the document is determined at creation time and can not be modified.
+	 *
+	 * @type {string}
+	 * @see https://dom.spec.whatwg.org/#concept-document-content-type
+	 * @see {@link DOMImplementation}
+	 * @see {@link MIME_TYPE}
+	 * @readonly
+	 */
+	this.contentType = opt.contentType || MIME_TYPE.XML_APPLICATION;
+	/**
+	 * @type {'html' | 'xml'}
+	 * @see https://dom.spec.whatwg.org/#concept-document-type
+	 * @see {@link DOMImplementation}
+	 * @readonly
+	 */
+	this.type = isHTMLMimeType(this.contentType) ? 'html' : 'xml';
+}
+
+/**
+ * Updates the namespace mapping of an element when a new attribute is added.
+ *
+ * @param {Document} doc
+ * The document that the element belongs to.
+ * @param {Element} el
+ * The element to which the attribute is being added.
+ * @param {Attr} newAttr
+ * The new attribute being added.
+ * @private
+ */
+function _onAddAttribute(doc, el, newAttr) {
+	doc && doc._inc++;
+	var ns = newAttr.namespaceURI;
+	if (ns === NAMESPACE.XMLNS) {
+		//update namespace
+		el._nsMap[newAttr.prefix ? newAttr.localName : ''] = newAttr.value;
+	}
+}
+
+/**
+ * Updates the namespace mapping of an element when an attribute is removed.
+ *
+ * @param {Document} doc
+ * The document that the element belongs to.
+ * @param {Element} el
+ * The element from which the attribute is being removed.
+ * @param {Attr} newAttr
+ * The attribute being removed.
+ * @param {boolean} remove
+ * Indicates whether the attribute is to be removed.
+ * @private
+ */
+function _onRemoveAttribute(doc, el, newAttr, remove) {
+	doc && doc._inc++;
+	var ns = newAttr.namespaceURI;
+	if (ns === NAMESPACE.XMLNS) {
+		//update namespace
+		delete el._nsMap[newAttr.prefix ? newAttr.localName : ''];
+	}
+}
+
+/**
+ * Updates `parent.childNodes`, adjusting the indexed items and its `length`.
+ * If `newChild` is provided and has no nextSibling, it will be appended.
+ * Otherwise, it's assumed that an item has been removed or inserted,
+ * and `parent.firstNode` and its `.nextSibling` to re-indexing all child nodes of `parent`.
+ *
+ * @param {Document} doc
+ * The parent document of `el`.
+ * @param {Node} parent
+ * The parent node whose childNodes list needs to be updated.
+ * @param {Node} [newChild]
+ * The new child node to be appended. If not provided, the function assumes a node has been
+ * removed.
+ * @private
+ */
+function _onUpdateChild(doc, parent, newChild) {
+	if (doc && doc._inc) {
+		doc._inc++;
+		var childNodes = parent.childNodes;
+		// assumes nextSibling and previousSibling were already configured upfront
+		if (newChild && !newChild.nextSibling) {
+			// if an item has been appended, we only need to update the last index and the length
+			childNodes[childNodes.length++] = newChild;
+		} else {
+			// otherwise we need to reindex all items,
+			// which can take a while when processing nodes with a lot of children
+			var child = parent.firstChild;
 			var i = 0;
 			while (child) {
-				cs[i++] = child;
+				childNodes[i++] = child;
 				child = child.nextSibling;
 			}
-			cs.length = i;
-			delete cs[cs.length];
+			childNodes.length = i;
+			delete childNodes[childNodes.length];
 		}
 	}
 }
@@ -1408,36 +3036,45 @@ function _onUpdateChild (doc, el, newChild) {
  * Removes the connections between `parentNode` and `child`
  * and any existing `child.previousSibling` or `child.nextSibling`.
  *
+ * @param {Node} parentNode
+ * The parent node from which the child node is to be removed.
+ * @param {Node} child
+ * The child node to be removed from the parentNode.
+ * @returns {Node}
+ * Returns the child node that was removed.
+ * @throws {DOMException}
+ * With code:
+ * - {@link DOMException.NOT_FOUND_ERR} If the parentNode is not the parent of the child node.
+ * @private
  * @see https://github.com/xmldom/xmldom/issues/135
  * @see https://github.com/xmldom/xmldom/issues/145
- *
- * @param {Node} parentNode
- * @param {Node} child
- * @returns {Node} the child that was removed.
- * @private
  */
-function _removeChild (parentNode, child) {
-	var previous = child.previousSibling;
-	var next = child.nextSibling;
-	if (previous) {
-		previous.nextSibling = next;
-	} else {
-		parentNode.firstChild = next;
+function _removeChild(parentNode, child) {
+	if (parentNode !== child.parentNode) {
+		throw new DOMException(DOMException.NOT_FOUND_ERR, "child's parent is not parent");
 	}
-	if (next) {
-		next.previousSibling = previous;
+	var oldPreviousSibling = child.previousSibling;
+	var oldNextSibling = child.nextSibling;
+	if (oldPreviousSibling) {
+		oldPreviousSibling.nextSibling = oldNextSibling;
 	} else {
-		parentNode.lastChild = previous;
+		parentNode.firstChild = oldNextSibling;
 	}
+	if (oldNextSibling) {
+		oldNextSibling.previousSibling = oldPreviousSibling;
+	} else {
+		parentNode.lastChild = oldPreviousSibling;
+	}
+	_onUpdateChild(parentNode.ownerDocument, parentNode);
 	child.parentNode = null;
 	child.previousSibling = null;
 	child.nextSibling = null;
-	_onUpdateChild(parentNode.ownerDocument, parentNode);
 	return child;
 }
 
 /**
  * Returns `true` if `node` can be a parent for insertion.
+ *
  * @param {Node} node
  * @returns {boolean}
  */
@@ -1450,23 +3087,26 @@ function hasValidParentNodeType(node) {
 
 /**
  * Returns `true` if `node` can be inserted according to it's `nodeType`.
+ *
  * @param {Node} node
  * @returns {boolean}
  */
 function hasInsertableNodeType(node) {
 	return (
 		node &&
-		(isElementNode(node) ||
-			isTextNode(node) ||
-			isDocTypeNode(node) ||
-			node.nodeType === Node.DOCUMENT_FRAGMENT_NODE ||
+		(node.nodeType === Node.CDATA_SECTION_NODE ||
 			node.nodeType === Node.COMMENT_NODE ||
-			node.nodeType === Node.PROCESSING_INSTRUCTION_NODE)
+			node.nodeType === Node.DOCUMENT_FRAGMENT_NODE ||
+			node.nodeType === Node.DOCUMENT_TYPE_NODE ||
+			node.nodeType === Node.ELEMENT_NODE ||
+			node.nodeType === Node.PROCESSING_INSTRUCTION_NODE ||
+			node.nodeType === Node.TEXT_NODE)
 	);
 }
 
 /**
- * Returns true if `node` is a DOCTYPE node
+ * Returns true if `node` is a DOCTYPE node.
+ *
  * @param {Node} node
  * @returns {boolean}
  */
@@ -1475,7 +3115,8 @@ function isDocTypeNode(node) {
 }
 
 /**
- * Returns true if the node is an element
+ * Returns true if the node is an element.
+ *
  * @param {Node} node
  * @returns {boolean}
  */
@@ -1483,7 +3124,8 @@ function isElementNode(node) {
 	return node && node.nodeType === Node.ELEMENT_NODE;
 }
 /**
- * Returns true if `node` is a text node
+ * Returns true if `node` is a text node.
+ *
  * @param {Node} node
  * @returns {boolean}
  */
@@ -1495,11 +3137,13 @@ function isTextNode(node) {
  * Check if en element node can be inserted before `child`, or at the end if child is falsy,
  * according to the presence and position of a doctype node on the same level.
  *
- * @param {Document} doc The document node
- * @param {Node} child the node that would become the nextSibling if the element would be inserted
- * @returns {boolean} `true` if an element can be inserted before child
+ * @param {Document} doc
+ * The document node.
+ * @param {Node} child
+ * The node that would become the nextSibling if the element would be inserted.
+ * @returns {boolean}
+ * `true` if an element can be inserted before child.
  * @private
- * https://dom.spec.whatwg.org/#concept-node-ensure-pre-insertion-validity
  */
 function isElementInsertionPossible(doc, child) {
 	var parentChildNodes = doc.childNodes || [];
@@ -1514,11 +3158,13 @@ function isElementInsertionPossible(doc, child) {
  * Check if en element node can be inserted before `child`, or at the end if child is falsy,
  * according to the presence and position of a doctype node on the same level.
  *
- * @param {Node} doc The document node
- * @param {Node} child the node that would become the nextSibling if the element would be inserted
- * @returns {boolean} `true` if an element can be inserted before child
+ * @param {Node} doc
+ * The document node.
+ * @param {Node} child
+ * The node that would become the nextSibling if the element would be inserted.
+ * @returns {boolean}
+ * `true` if an element can be inserted before child.
  * @private
- * https://dom.spec.whatwg.org/#concept-node-ensure-pre-insertion-validity
  */
 function isElementReplacementPossible(doc, child) {
 	var parentChildNodes = doc.childNodes || [];
@@ -1535,28 +3181,41 @@ function isElementReplacementPossible(doc, child) {
 }
 
 /**
- * @private
- * Steps 1-5 of the checks before inserting and before replacing a child are the same.
+ * Asserts pre-insertion validity of a node into a parent before a child.
+ * Throws errors for invalid node combinations that would result in an ill-formed DOM.
  *
- * @param {Node} parent the parent node to insert `node` into
- * @param {Node} node the node to insert
- * @param {Node=} child the node that should become the `nextSibling` of `node`
- * @returns {Node}
- * @throws DOMException for several node combinations that would create a DOM that is not well-formed.
- * @throws DOMException if `child` is provided but is not a child of `parent`.
+ * @param {Node} parent
+ * The parent node to insert `node` into.
+ * @param {Node} node
+ * The node to insert.
+ * @param {Node | null} child
+ * The node that should become the `nextSibling` of `node`. If null, no sibling is considered.
+ * @throws {DOMException}
+ * With code:
+ * - {@link DOMException.HIERARCHY_REQUEST_ERR} If `parent` is not a Document,
+ * DocumentFragment, or Element node.
+ * - {@link DOMException.HIERARCHY_REQUEST_ERR} If `node` is a host-including inclusive
+ * ancestor of `parent`. (Currently not implemented)
+ * - {@link DOMException.NOT_FOUND_ERR} If `child` is non-null and its `parent` is not
+ * `parent`.
+ * - {@link DOMException.HIERARCHY_REQUEST_ERR} If `node` is not a DocumentFragment,
+ * DocumentType, Element, or CharacterData node.
+ * - {@link DOMException.HIERARCHY_REQUEST_ERR} If either `node` is a Text node and `parent` is
+ * a document, or if `node` is a doctype and `parent` is not a document.
+ * @private
  * @see https://dom.spec.whatwg.org/#concept-node-ensure-pre-insertion-validity
  * @see https://dom.spec.whatwg.org/#concept-node-replace
  */
 function assertPreInsertionValidity1to5(parent, node, child) {
 	// 1. If `parent` is not a Document, DocumentFragment, or Element node, then throw a "HierarchyRequestError" DOMException.
 	if (!hasValidParentNodeType(parent)) {
-		throw new DOMException(HIERARCHY_REQUEST_ERR, 'Unexpected parent node type ' + parent.nodeType);
+		throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, 'Unexpected parent node type ' + parent.nodeType);
 	}
 	// 2. If `node` is a host-including inclusive ancestor of `parent`, then throw a "HierarchyRequestError" DOMException.
 	// not implemented!
 	// 3. If `child` is non-null and its parent is not `parent`, then throw a "NotFoundError" DOMException.
 	if (child && child.parentNode !== parent) {
-		throw new DOMException(NOT_FOUND_ERR, 'child not in parent');
+		throw new DOMException(DOMException.NOT_FOUND_ERR, 'child not in parent');
 	}
 	if (
 		// 4. If `node` is not a DocumentFragment, DocumentType, Element, or CharacterData node, then throw a "HierarchyRequestError" DOMException.
@@ -1568,22 +3227,38 @@ function assertPreInsertionValidity1to5(parent, node, child) {
 		(isDocTypeNode(node) && parent.nodeType !== Node.DOCUMENT_NODE)
 	) {
 		throw new DOMException(
-			HIERARCHY_REQUEST_ERR,
+			DOMException.HIERARCHY_REQUEST_ERR,
 			'Unexpected node type ' + node.nodeType + ' for parent node type ' + parent.nodeType
 		);
 	}
 }
 
 /**
- * @private
- * Step 6 of the checks before inserting and before replacing a child are different.
+ * Asserts pre-insertion validity of a node into a document before a child.
+ * Throws errors for invalid node combinations that would result in an ill-formed DOM.
  *
- * @param {Document} parent the parent node to insert `node` into
- * @param {Node} node the node to insert
- * @param {Node | undefined} child the node that should become the `nextSibling` of `node`
+ * @param {Document} parent
+ * The parent node to insert `node` into.
+ * @param {Node} node
+ * The node to insert.
+ * @param {Node | undefined} child
+ * The node that should become the `nextSibling` of `node`. If undefined, no sibling is
+ * considered.
  * @returns {Node}
- * @throws DOMException for several node combinations that would create a DOM that is not well-formed.
- * @throws DOMException if `child` is provided but is not a child of `parent`.
+ * @throws {DOMException}
+ * With code:
+ * - {@link DOMException.HIERARCHY_REQUEST_ERR} If `node` is a DocumentFragment with more than
+ * one element child or has a Text node child.
+ * - {@link DOMException.HIERARCHY_REQUEST_ERR} If `node` is a DocumentFragment with one
+ * element child and either `parent` has an element child, `child` is a doctype, or `child` is
+ * non-null and a doctype is following `child`.
+ * - {@link DOMException.HIERARCHY_REQUEST_ERR} If `node` is an Element and `parent` has an
+ * element child, `child` is a doctype, or `child` is non-null and a doctype is following
+ * `child`.
+ * - {@link DOMException.HIERARCHY_REQUEST_ERR} If `node` is a DocumentType and `parent` has a
+ * doctype child, `child` is non-null and an element is preceding `child`, or `child` is null
+ * and `parent` has an element child.
+ * @private
  * @see https://dom.spec.whatwg.org/#concept-node-ensure-pre-insertion-validity
  * @see https://dom.spec.whatwg.org/#concept-node-replace
  */
@@ -1596,12 +3271,12 @@ function assertPreInsertionValidityInDocument(parent, node, child) {
 		var nodeChildElements = nodeChildNodes.filter(isElementNode);
 		// If node has more than one element child or has a Text node child.
 		if (nodeChildElements.length > 1 || find(nodeChildNodes, isTextNode)) {
-			throw new DOMException(HIERARCHY_REQUEST_ERR, 'More than one element or text in fragment');
+			throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, 'More than one element or text in fragment');
 		}
 		// Otherwise, if `node` has one element child and either `parent` has an element child,
 		// `child` is a doctype, or `child` is non-null and a doctype is following `child`.
 		if (nodeChildElements.length === 1 && !isElementInsertionPossible(parent, child)) {
-			throw new DOMException(HIERARCHY_REQUEST_ERR, 'Element in fragment can not be inserted before doctype');
+			throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, 'Element in fragment can not be inserted before doctype');
 		}
 	}
 	// Element
@@ -1609,37 +3284,40 @@ function assertPreInsertionValidityInDocument(parent, node, child) {
 		// `parent` has an element child, `child` is a doctype,
 		// or `child` is non-null and a doctype is following `child`.
 		if (!isElementInsertionPossible(parent, child)) {
-			throw new DOMException(HIERARCHY_REQUEST_ERR, 'Only one element can be added and only after doctype');
+			throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, 'Only one element can be added and only after doctype');
 		}
 	}
 	// DocumentType
 	if (isDocTypeNode(node)) {
 		// `parent` has a doctype child,
 		if (find(parentChildNodes, isDocTypeNode)) {
-			throw new DOMException(HIERARCHY_REQUEST_ERR, 'Only one doctype is allowed');
+			throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, 'Only one doctype is allowed');
 		}
 		var parentElementChild = find(parentChildNodes, isElementNode);
 		// `child` is non-null and an element is preceding `child`,
 		if (child && parentChildNodes.indexOf(parentElementChild) < parentChildNodes.indexOf(child)) {
-			throw new DOMException(HIERARCHY_REQUEST_ERR, 'Doctype can only be inserted before an element');
+			throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, 'Doctype can only be inserted before an element');
 		}
 		// or `child` is null and `parent` has an element child.
 		if (!child && parentElementChild) {
-			throw new DOMException(HIERARCHY_REQUEST_ERR, 'Doctype can not be appended since element is present');
+			throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, 'Doctype can not be appended since element is present');
 		}
 	}
 }
 
 /**
- * @private
- * Step 6 of the checks before inserting and before replacing a child are different.
- *
- * @param {Document} parent the parent node to insert `node` into
- * @param {Node} node the node to insert
- * @param {Node | undefined} child the node that should become the `nextSibling` of `node`
+ * @param {Document} parent
+ * The parent node to insert `node` into.
+ * @param {Node} node
+ * The node to insert.
+ * @param {Node | undefined} child
+ * the node that should become the `nextSibling` of `node`
  * @returns {Node}
- * @throws DOMException for several node combinations that would create a DOM that is not well-formed.
- * @throws DOMException if `child` is provided but is not a child of `parent`.
+ * @throws {DOMException}
+ * For several node combinations that would create a DOM that is not well-formed.
+ * @throws {DOMException}
+ * If `child` is provided but is not a child of `parent`.
+ * @private
  * @see https://dom.spec.whatwg.org/#concept-node-ensure-pre-insertion-validity
  * @see https://dom.spec.whatwg.org/#concept-node-replace
  */
@@ -1652,18 +3330,18 @@ function assertPreReplacementValidityInDocument(parent, node, child) {
 		var nodeChildElements = nodeChildNodes.filter(isElementNode);
 		// If `node` has more than one element child or has a Text node child.
 		if (nodeChildElements.length > 1 || find(nodeChildNodes, isTextNode)) {
-			throw new DOMException(HIERARCHY_REQUEST_ERR, 'More than one element or text in fragment');
+			throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, 'More than one element or text in fragment');
 		}
 		// Otherwise, if `node` has one element child and either `parent` has an element child that is not `child` or a doctype is following `child`.
 		if (nodeChildElements.length === 1 && !isElementReplacementPossible(parent, child)) {
-			throw new DOMException(HIERARCHY_REQUEST_ERR, 'Element in fragment can not be inserted before doctype');
+			throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, 'Element in fragment can not be inserted before doctype');
 		}
 	}
 	// Element
 	if (isElementNode(node)) {
 		// `parent` has an element child that is not `child` or a doctype is following `child`.
 		if (!isElementReplacementPossible(parent, child)) {
-			throw new DOMException(HIERARCHY_REQUEST_ERR, 'Only one element can be added and only after doctype');
+			throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, 'Only one element can be added and only after doctype');
 		}
 	}
 	// DocumentType
@@ -1674,24 +3352,39 @@ function assertPreReplacementValidityInDocument(parent, node, child) {
 
 		// `parent` has a doctype child that is not `child`,
 		if (find(parentChildNodes, hasDoctypeChildThatIsNotChild)) {
-			throw new DOMException(HIERARCHY_REQUEST_ERR, 'Only one doctype is allowed');
+			throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, 'Only one doctype is allowed');
 		}
 		var parentElementChild = find(parentChildNodes, isElementNode);
 		// or an element is preceding `child`.
 		if (child && parentChildNodes.indexOf(parentElementChild) < parentChildNodes.indexOf(child)) {
-			throw new DOMException(HIERARCHY_REQUEST_ERR, 'Doctype can only be inserted before an element');
+			throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, 'Doctype can only be inserted before an element');
 		}
 	}
 }
 
 /**
- * @private
- * @param {Node} parent the parent node to insert `node` into
- * @param {Node} node the node to insert
- * @param {Node=} child the node that should become the `nextSibling` of `node`
+ * Inserts a node into a parent node before a child node.
+ *
+ * @param {Node} parent
+ * The parent node to insert the node into.
+ * @param {Node} node
+ * The node to insert into the parent.
+ * @param {Node | null} child
+ * The node that should become the next sibling of the node.
+ * If null, the function inserts the node at the end of the children of the parent node.
+ * @param {Function} [_inDocumentAssertion]
+ * An optional function to check pre-insertion validity if parent is a document node.
+ * Defaults to {@link assertPreInsertionValidityInDocument}
  * @returns {Node}
- * @throws DOMException for several node combinations that would create a DOM that is not well-formed.
- * @throws DOMException if `child` is provided but is not a child of `parent`.
+ * Returns the inserted node.
+ * @throws {DOMException}
+ * Throws a DOMException if inserting the node would result in a DOM tree that is not
+ * well-formed. See {@link assertPreInsertionValidity1to5},
+ * {@link assertPreInsertionValidityInDocument}.
+ * @throws {DOMException}
+ * Throws a DOMException if child is provided but is not a child of the parent. See
+ * {@link Node.removeChild}
+ * @private
  * @see https://dom.spec.whatwg.org/#concept-node-ensure-pre-insertion-validity
  */
 function _insertBefore(parent, node, child, _inDocumentAssertion) {
@@ -1705,16 +3398,16 @@ function _insertBefore(parent, node, child, _inDocumentAssertion) {
 	}
 
 	var cp = node.parentNode;
-	if(cp){
-		cp.removeChild(node);//remove and update
+	if (cp) {
+		cp.removeChild(node); //remove and update
 	}
-	if(node.nodeType === DOCUMENT_FRAGMENT_NODE){
+	if (node.nodeType === DOCUMENT_FRAGMENT_NODE) {
 		var newFirst = node.firstChild;
 		if (newFirst == null) {
 			return node;
 		}
 		var newLast = node.lastChild;
-	}else{
+	} else {
 		newFirst = newLast = node;
 	}
 	var pre = child ? child.previousSibling : parent.lastChild;
@@ -1722,76 +3415,54 @@ function _insertBefore(parent, node, child, _inDocumentAssertion) {
 	newFirst.previousSibling = pre;
 	newLast.nextSibling = child;
 
-
-	if(pre){
+	if (pre) {
 		pre.nextSibling = newFirst;
-	}else{
+	} else {
 		parent.firstChild = newFirst;
 	}
-	if(child == null){
+	if (child == null) {
 		parent.lastChild = newLast;
-	}else{
+	} else {
 		child.previousSibling = newLast;
 	}
-	do{
+	do {
 		newFirst.parentNode = parent;
-	}while(newFirst !== newLast && (newFirst= newFirst.nextSibling))
-	_onUpdateChild(parent.ownerDocument||parent, parent);
-	//console.log(parent.lastChild.nextSibling == null)
+	} while (newFirst !== newLast && (newFirst = newFirst.nextSibling));
+	_onUpdateChild(parent.ownerDocument || parent, parent, node);
 	if (node.nodeType == DOCUMENT_FRAGMENT_NODE) {
 		node.firstChild = node.lastChild = null;
 	}
+
 	return node;
 }
 
-/**
- * Appends `newChild` to `parentNode`.
- * If `newChild` is already connected to a `parentNode` it is first removed from it.
- *
- * @see https://github.com/xmldom/xmldom/issues/135
- * @see https://github.com/xmldom/xmldom/issues/145
- * @param {Node} parentNode
- * @param {Node} newChild
- * @returns {Node}
- * @private
- */
-function _appendSingleChild (parentNode, newChild) {
-	if (newChild.parentNode) {
-		newChild.parentNode.removeChild(newChild);
-	}
-	newChild.parentNode = parentNode;
-	newChild.previousSibling = parentNode.lastChild;
-	newChild.nextSibling = null;
-	if (newChild.previousSibling) {
-		newChild.previousSibling.nextSibling = newChild;
-	} else {
-		parentNode.firstChild = newChild;
-	}
-	parentNode.lastChild = newChild;
-	_onUpdateChild(parentNode.ownerDocument, parentNode, newChild);
-	return newChild;
-}
-
 Document.prototype = {
-	//implementation : null,
-	nodeName :  '#document',
-	nodeType :  DOCUMENT_NODE,
+	/**
+	 * The implementation that created this document.
+	 *
+	 * @type DOMImplementation
+	 * @readonly
+	 */
+	implementation: null,
+	nodeName: '#document',
+	nodeType: DOCUMENT_NODE,
 	/**
 	 * The DocumentType node of the document.
 	 *
-	 * @readonly
 	 * @type DocumentType
+	 * @readonly
 	 */
-	doctype :  null,
-	documentElement :  null,
-	_inc : 1,
+	doctype: null,
+	documentElement: null,
+	_inc: 1,
 
-	insertBefore :  function(newChild, refChild){//raises
-		if(newChild.nodeType == DOCUMENT_FRAGMENT_NODE){
+	insertBefore: function (newChild, refChild) {
+		//raises
+		if (newChild.nodeType === DOCUMENT_FRAGMENT_NODE) {
 			var child = newChild.firstChild;
-			while(child){
+			while (child) {
 				var next = child.nextSibling;
-				this.insertBefore(child,refChild);
+				this.insertBefore(child, refChild);
 				child = next;
 			}
 			return newChild;
@@ -1804,11 +3475,12 @@ Document.prototype = {
 
 		return newChild;
 	},
-	removeChild :  function(oldChild){
-		if(this.documentElement == oldChild){
+	removeChild: function (oldChild) {
+		var removed = _removeChild(this, oldChild);
+		if (removed === this.documentElement) {
 			this.documentElement = null;
 		}
-		return _removeChild(this,oldChild);
+		return removed;
 	},
 	replaceChild: function (newChild, oldChild) {
 		//raises
@@ -1821,58 +3493,432 @@ Document.prototype = {
 			this.documentElement = newChild;
 		}
 	},
-	// Introduced in DOM Level 2:
-	importNode : function(importedNode,deep){
-		return importNode(this,importedNode,deep);
+	/**
+	 * Imports a node from another document into this document, creating a new copy owned by this
+	 * document. The source node and its subtree are not modified.
+	 *
+	 * @param {Node} importedNode
+	 * The node to import.
+	 * @param {boolean} deep
+	 * If true, the contents of the node are recursively imported.
+	 * If false, only the node itself (and its attributes, if it is an element) are imported.
+	 * @returns {Node}
+	 * Returns the newly created import of the node.
+	 * @see {@link importNode}
+	 * @see {@link https://dom.spec.whatwg.org/#dom-document-importnode}
+	 */
+	importNode: function (importedNode, deep) {
+		return importNode(this, importedNode, deep);
 	},
 	// Introduced in DOM Level 2:
-	getElementById :	function(id){
+	getElementById: function (id) {
 		var rtv = null;
-		_visitNode(this.documentElement,function(node){
-			if(node.nodeType == ELEMENT_NODE){
-				if(node.getAttribute('id') == id){
+		_visitNode(this.documentElement, function (node) {
+			if (node.nodeType == ELEMENT_NODE) {
+				if (node.getAttribute('id') == id) {
 					rtv = node;
 					return true;
 				}
 			}
-		})
+		});
 		return rtv;
 	},
 
 	/**
-	 * The `getElementsByClassName` method of `Document` interface returns an array-like object
-	 * of all child elements which have **all** of the given class name(s).
+	 * Creates a new `Element` that is owned by this `Document`.
+	 * In HTML Documents `localName` is the lower cased `tagName`,
+	 * otherwise no transformation is being applied.
+	 * When `contentType` implies the HTML namespace, it will be set as `namespaceURI`.
 	 *
-	 * Returns an empty list if `classeNames` is an empty string or only contains HTML white space characters.
+	 * __This implementation differs from the specification:__ - The provided name is not checked
+	 * against the `Name` production,
+	 * so no related error will be thrown.
+	 * - There is no interface `HTMLElement`, it is always an `Element`.
+	 * - There is no support for a second argument to indicate using custom elements.
 	 *
+	 * @param {string} tagName
+	 * @returns {Element}
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/Document/createElement
+	 * @see https://dom.spec.whatwg.org/#dom-document-createelement
+	 * @see https://dom.spec.whatwg.org/#concept-create-element
+	 */
+	createElement: function (tagName) {
+		var node = new Element(PDC);
+		node.ownerDocument = this;
+		if (this.type === 'html') {
+			tagName = tagName.toLowerCase();
+		}
+		if (hasDefaultHTMLNamespace(this.contentType)) {
+			node.namespaceURI = NAMESPACE.HTML;
+		}
+		node.nodeName = tagName;
+		node.tagName = tagName;
+		node.localName = tagName;
+		node.childNodes = new NodeList();
+		var attrs = (node.attributes = new NamedNodeMap());
+		attrs._ownerElement = node;
+		return node;
+	},
+	/**
+	 * @returns {DocumentFragment}
+	 */
+	createDocumentFragment: function () {
+		var node = new DocumentFragment(PDC);
+		node.ownerDocument = this;
+		node.childNodes = new NodeList();
+		return node;
+	},
+	/**
+	 * @param {string} data
+	 * @returns {Text}
+	 */
+	createTextNode: function (data) {
+		var node = new Text(PDC);
+		node.ownerDocument = this;
+		node.childNodes = new NodeList();
+		node.appendData(data);
+		return node;
+	},
+	/**
+	 * @param {string} data
+	 * @returns {Comment}
+	 * @see https://dom.spec.whatwg.org/#dom-document-createcomment
+	 * @see https://www.w3.org/TR/xml/#NT-Comment XML 1.0 production [15]
+	 * @see https://www.w3.org/TR/DOM-Parsing/#dfn-concept-serialize-xml §3.2.1.3
 	 *
-	 * Warning: This is a live LiveNodeList.
+	 *      Note: no validation is performed at creation time. When the resulting document is
+	 *      serialized with `requireWellFormed: true`, the serializer throws `InvalidStateError`
+	 *      if the comment data contains `--` anywhere, ends with `-`, or contains characters
+	 *      outside the XML Char production (W3C DOM Parsing §3.2.1.3). Without that option the
+	 *      data is emitted verbatim.
+	 */
+	createComment: function (data) {
+		var node = new Comment(PDC);
+		node.ownerDocument = this;
+		node.childNodes = new NodeList();
+		node.appendData(data);
+		return node;
+	},
+	/**
+	 * Returns a new CDATASection node whose data is `data`.
+	 *
+	 * __This implementation differs from the specification:__ - calling this method on an HTML
+	 * document does not throw `NotSupportedError`.
+	 *
+	 * @param {string} data
+	 * @returns {CDATASection}
+	 * @throws {DOMException}
+	 * With code `INVALID_CHARACTER_ERR` if `data` contains `"]]>"`.
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/Document/createCDATASection
+	 * @see https://dom.spec.whatwg.org/#dom-document-createcdatasection
+	 */
+	createCDATASection: function (data) {
+		if (data.indexOf(']]>') !== -1) {
+			throw new DOMException(DOMException.INVALID_CHARACTER_ERR, 'data contains "]]>"');
+		}
+		var node = new CDATASection(PDC);
+		node.ownerDocument = this;
+		node.childNodes = new NodeList();
+		node.appendData(data);
+		return node;
+	},
+	/**
+	 * Returns a ProcessingInstruction node whose target is target and data is data.
+	 *
+	 * __This behavior is slightly different from the in the specs__:
+	 * - it does not do any input validation on the arguments and doesn't throw
+	 * "InvalidCharacterError".
+	 *
+	 * Note: When the resulting document is serialized with `requireWellFormed: true`, the
+	 * serializer throws `InvalidStateError` if `.target` contains `:` or is an ASCII
+	 * case-insensitive match for `"xml"`, or if `.data` contains `?>` or characters outside the
+	 * XML Char production (W3C DOM Parsing §3.2.1.7). Without that option the data is emitted
+	 * verbatim.
+	 *
+	 * @param {string} target
+	 * @param {string} data
+	 * @returns {ProcessingInstruction}
+	 * @see https://developer.mozilla.org/docs/Web/API/Document/createProcessingInstruction
+	 * @see https://dom.spec.whatwg.org/#dom-document-createprocessinginstruction
+	 * @see https://www.w3.org/TR/DOM-Parsing/#dfn-concept-serialize-xml §3.2.1.7
+	 */
+	createProcessingInstruction: function (target, data) {
+		var node = new ProcessingInstruction(PDC);
+		node.ownerDocument = this;
+		node.childNodes = new NodeList();
+		node.nodeName = node.target = target;
+		node.nodeValue = node.data = data;
+		return node;
+	},
+	/**
+	 * Creates an `Attr` node that is owned by this document.
+	 * In HTML Documents `localName` is the lower cased `name`,
+	 * otherwise no transformation is being applied.
+	 *
+	 * __This implementation differs from the specification:__ - The provided name is not checked
+	 * against the `Name` production,
+	 * so no related error will be thrown.
+	 *
+	 * @param {string} name
+	 * @returns {Attr}
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/Document/createAttribute
+	 * @see https://dom.spec.whatwg.org/#dom-document-createattribute
+	 */
+	createAttribute: function (name) {
+		if (!g.QName_exact.test(name)) {
+			throw new DOMException(DOMException.INVALID_CHARACTER_ERR, 'invalid character in name "' + name + '"');
+		}
+		if (this.type === 'html') {
+			name = name.toLowerCase();
+		}
+		return this._createAttribute(name);
+	},
+	_createAttribute: function (name) {
+		var node = new Attr(PDC);
+		node.ownerDocument = this;
+		node.childNodes = new NodeList();
+		node.name = name;
+		node.nodeName = name;
+		node.localName = name;
+		node.specified = true;
+		return node;
+	},
+	/**
+	 * Creates an EntityReference object.
+	 * The current implementation does not fill the `childNodes` with those of the corresponding
+	 * `Entity`
+	 *
+	 * @deprecated
+	 * In DOM Level 4.
+	 * @param {string} name
+	 * The name of the entity to reference. No namespace well-formedness checks are performed.
+	 * @returns {EntityReference}
+	 * @throws {DOMException}
+	 * With code `INVALID_CHARACTER_ERR` when `name` is not valid.
+	 * @throws {DOMException}
+	 * with code `NOT_SUPPORTED_ERR` when the document is of type `html`
+	 * @see https://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-392B75AE
+	 */
+	createEntityReference: function (name) {
+		if (!g.Name.test(name)) {
+			throw new DOMException(DOMException.INVALID_CHARACTER_ERR, 'not a valid xml name "' + name + '"');
+		}
+		if (this.type === 'html') {
+			throw new DOMException('document is an html document', DOMExceptionName.NotSupportedError);
+		}
+
+		var node = new EntityReference(PDC);
+		node.ownerDocument = this;
+		node.childNodes = new NodeList();
+		node.nodeName = name;
+		return node;
+	},
+	// Introduced in DOM Level 2:
+	/**
+	 * @param {string} namespaceURI
+	 * @param {string} qualifiedName
+	 * @returns {Element}
+	 */
+	createElementNS: function (namespaceURI, qualifiedName) {
+		var validated = validateAndExtract(namespaceURI, qualifiedName);
+		var node = new Element(PDC);
+		var attrs = (node.attributes = new NamedNodeMap());
+		node.childNodes = new NodeList();
+		node.ownerDocument = this;
+		node.nodeName = qualifiedName;
+		node.tagName = qualifiedName;
+		node.namespaceURI = validated[0];
+		node.prefix = validated[1];
+		node.localName = validated[2];
+		attrs._ownerElement = node;
+		return node;
+	},
+	// Introduced in DOM Level 2:
+	/**
+	 * @param {string} namespaceURI
+	 * @param {string} qualifiedName
+	 * @returns {Attr}
+	 */
+	createAttributeNS: function (namespaceURI, qualifiedName) {
+		var validated = validateAndExtract(namespaceURI, qualifiedName);
+		var node = new Attr(PDC);
+		node.ownerDocument = this;
+		node.childNodes = new NodeList();
+		node.nodeName = qualifiedName;
+		node.name = qualifiedName;
+		node.specified = true;
+		node.namespaceURI = validated[0];
+		node.prefix = validated[1];
+		node.localName = validated[2];
+		return node;
+	},
+};
+_extends(Document, Node);
+
+function Element(symbol) {
+	checkSymbol(symbol);
+
+	this._nsMap = Object.create(null);
+}
+Element.prototype = {
+	nodeType: ELEMENT_NODE,
+	/**
+	 * The attributes of this element.
+	 *
+	 * @type {NamedNodeMap | null}
+	 */
+	attributes: null,
+	getQualifiedName: function () {
+		return this.prefix ? this.prefix + ':' + this.localName : this.localName;
+	},
+	_isInHTMLDocumentAndNamespace: function () {
+		return this.ownerDocument.type === 'html' && this.namespaceURI === NAMESPACE.HTML;
+	},
+	/**
+	 * Implementaton of Level2 Core function hasAttributes.
+	 *
+	 * @returns {boolean}
+	 * True if attribute list is not empty.
+	 * @see https://www.w3.org/TR/DOM-Level-2-Core/#core-ID-NodeHasAttrs
+	 */
+	hasAttributes: function () {
+		return !!(this.attributes && this.attributes.length);
+	},
+	hasAttribute: function (name) {
+		return !!this.getAttributeNode(name);
+	},
+	/**
+	 * Returns element’s first attribute whose qualified name is `name`, and `null`
+	 * if there is no such attribute.
+	 *
+	 * @param {string} name
+	 * @returns {string | null}
+	 */
+	getAttribute: function (name) {
+		var attr = this.getAttributeNode(name);
+		return attr ? attr.value : null;
+	},
+	getAttributeNode: function (name) {
+		if (this._isInHTMLDocumentAndNamespace()) {
+			name = name.toLowerCase();
+		}
+		return this.attributes.getNamedItem(name);
+	},
+	/**
+	 * Sets the value of element’s first attribute whose qualified name is qualifiedName to value.
+	 *
+	 * @param {string} name
+	 * @param {string} value
+	 */
+	setAttribute: function (name, value) {
+		if (this._isInHTMLDocumentAndNamespace()) {
+			name = name.toLowerCase();
+		}
+		var attr = this.getAttributeNode(name);
+		if (attr) {
+			attr.value = attr.nodeValue = '' + value;
+		} else {
+			attr = this.ownerDocument._createAttribute(name);
+			attr.value = attr.nodeValue = '' + value;
+			this.setAttributeNode(attr);
+		}
+	},
+	removeAttribute: function (name) {
+		var attr = this.getAttributeNode(name);
+		attr && this.removeAttributeNode(attr);
+	},
+	setAttributeNode: function (newAttr) {
+		return this.attributes.setNamedItem(newAttr);
+	},
+	setAttributeNodeNS: function (newAttr) {
+		return this.attributes.setNamedItemNS(newAttr);
+	},
+	removeAttributeNode: function (oldAttr) {
+		//console.log(this == oldAttr.ownerElement)
+		return this.attributes.removeNamedItem(oldAttr.nodeName);
+	},
+	//get real attribute name,and remove it by removeAttributeNode
+	removeAttributeNS: function (namespaceURI, localName) {
+		var old = this.getAttributeNodeNS(namespaceURI, localName);
+		old && this.removeAttributeNode(old);
+	},
+
+	hasAttributeNS: function (namespaceURI, localName) {
+		return this.getAttributeNodeNS(namespaceURI, localName) != null;
+	},
+	/**
+	 * Returns element’s attribute whose namespace is `namespaceURI` and local name is
+	 * `localName`,
+	 * or `null` if there is no such attribute.
+	 *
+	 * @param {string} namespaceURI
+	 * @param {string} localName
+	 * @returns {string | null}
+	 */
+	getAttributeNS: function (namespaceURI, localName) {
+		var attr = this.getAttributeNodeNS(namespaceURI, localName);
+		return attr ? attr.value : null;
+	},
+	/**
+	 * Sets the value of element’s attribute whose namespace is `namespaceURI` and local name is
+	 * `localName` to value.
+	 *
+	 * @param {string} namespaceURI
+	 * @param {string} qualifiedName
+	 * @param {string} value
+	 * @see https://dom.spec.whatwg.org/#dom-element-setattributens
+	 */
+	setAttributeNS: function (namespaceURI, qualifiedName, value) {
+		var validated = validateAndExtract(namespaceURI, qualifiedName);
+		var localName = validated[2];
+		var attr = this.getAttributeNodeNS(namespaceURI, localName);
+		if (attr) {
+			attr.value = attr.nodeValue = '' + value;
+		} else {
+			attr = this.ownerDocument.createAttributeNS(namespaceURI, qualifiedName);
+			attr.value = attr.nodeValue = '' + value;
+			this.setAttributeNode(attr);
+		}
+	},
+	getAttributeNodeNS: function (namespaceURI, localName) {
+		return this.attributes.getNamedItemNS(namespaceURI, localName);
+	},
+
+	/**
+	 * Returns a LiveNodeList of all child elements which have **all** of the given class name(s).
+	 *
+	 * Returns an empty list if `classNames` is an empty string or only contains HTML white space
+	 * characters.
+	 *
+	 * Warning: This returns a live LiveNodeList.
 	 * Changes in the DOM will reflect in the array as the changes occur.
 	 * If an element selected by this array no longer qualifies for the selector,
 	 * it will automatically be removed. Be aware of this for iteration purposes.
 	 *
-	 * @param {string} classNames is a string representing the class name(s) to match; multiple class names are separated by (ASCII-)whitespace
-	 *
+	 * @param {string} classNames
+	 * Is a string representing the class name(s) to match; multiple class names are separated by
+	 * (ASCII-)whitespace.
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/Element/getElementsByClassName
 	 * @see https://developer.mozilla.org/en-US/docs/Web/API/Document/getElementsByClassName
 	 * @see https://dom.spec.whatwg.org/#concept-getelementsbyclassname
 	 */
-	getElementsByClassName: function(classNames) {
-		var classNamesSet = toOrderedSet(classNames)
-		return new LiveNodeList(this, function(base) {
+	getElementsByClassName: function (classNames) {
+		var classNamesSet = toOrderedSet(classNames);
+		return new LiveNodeList(this, function (base) {
 			var ls = [];
 			if (classNamesSet.length > 0) {
-				_visitNode(base.documentElement, function(node) {
-					if(node !== base && node.nodeType === ELEMENT_NODE) {
-						var nodeClassNames = node.getAttribute('class')
+				_visitNode(base, function (node) {
+					if (node !== base && node.nodeType === ELEMENT_NODE) {
+						var nodeClassNames = node.getAttribute('class');
 						// can be null if the attribute does not exist
 						if (nodeClassNames) {
 							// before splitting and iterating just compare them for the most common case
 							var matches = classNames === nodeClassNames;
 							if (!matches) {
-								var nodeClassNamesSet = toOrderedSet(nodeClassNames)
-								matches = classNamesSet.every(arrayIncludes(nodeClassNamesSet))
+								var nodeClassNamesSet = toOrderedSet(nodeClassNames);
+								matches = classNamesSet.every(arrayIncludes(nodeClassNamesSet));
 							}
-							if(matches) {
+							if (matches) {
 								ls.push(node);
 							}
 						}
@@ -1883,328 +3929,303 @@ Document.prototype = {
 		});
 	},
 
-	//document factory method:
-	createElement :	function(tagName){
-		var node = new Element();
-		node.ownerDocument = this;
-		node.nodeName = tagName;
-		node.tagName = tagName;
-		node.localName = tagName;
-		node.childNodes = new NodeList();
-		var attrs	= node.attributes = new NamedNodeMap();
-		attrs._ownerElement = node;
-		return node;
-	},
-	createDocumentFragment :	function(){
-		var node = new DocumentFragment();
-		node.ownerDocument = this;
-		node.childNodes = new NodeList();
-		return node;
-	},
-	createTextNode :	function(data){
-		var node = new Text();
-		node.ownerDocument = this;
-		node.appendData(data)
-		return node;
-	},
-	createComment :	function(data){
-		var node = new Comment();
-		node.ownerDocument = this;
-		node.appendData(data)
-		return node;
-	},
-	createCDATASection :	function(data){
-		var node = new CDATASection();
-		node.ownerDocument = this;
-		node.appendData(data)
-		return node;
-	},
-	createProcessingInstruction :	function(target,data){
-		var node = new ProcessingInstruction();
-		node.ownerDocument = this;
-		node.tagName = node.target = target;
-		node.nodeValue= node.data = data;
-		return node;
-	},
-	createAttribute :	function(name){
-		var node = new Attr();
-		node.ownerDocument	= this;
-		node.name = name;
-		node.nodeName	= name;
-		node.localName = name;
-		node.specified = true;
-		return node;
-	},
-	createEntityReference :	function(name){
-		var node = new EntityReference();
-		node.ownerDocument	= this;
-		node.nodeName	= name;
-		return node;
-	},
-	// Introduced in DOM Level 2:
-	createElementNS :	function(namespaceURI,qualifiedName){
-		var node = new Element();
-		var pl = qualifiedName.split(':');
-		var attrs	= node.attributes = new NamedNodeMap();
-		node.childNodes = new NodeList();
-		node.ownerDocument = this;
-		node.nodeName = qualifiedName;
-		node.tagName = qualifiedName;
-		node.namespaceURI = namespaceURI;
-		if(pl.length == 2){
-			node.prefix = pl[0];
-			node.localName = pl[1];
-		}else{
-			//el.prefix = null;
-			node.localName = qualifiedName;
-		}
-		attrs._ownerElement = node;
-		return node;
-	},
-	// Introduced in DOM Level 2:
-	createAttributeNS :	function(namespaceURI,qualifiedName){
-		var node = new Attr();
-		var pl = qualifiedName.split(':');
-		node.ownerDocument = this;
-		node.nodeName = qualifiedName;
-		node.name = qualifiedName;
-		node.namespaceURI = namespaceURI;
-		node.specified = true;
-		if(pl.length == 2){
-			node.prefix = pl[0];
-			node.localName = pl[1];
-		}else{
-			//el.prefix = null;
-			node.localName = qualifiedName;
-		}
-		return node;
-	}
-};
-_extends(Document,Node);
-
-
-function Element() {
-	this._nsMap = {};
-};
-Element.prototype = {
-	nodeType : ELEMENT_NODE,
-	hasAttribute : function(name){
-		return this.getAttributeNode(name)!=null;
-	},
-	getAttribute : function(name){
-		var attr = this.getAttributeNode(name);
-		return attr && attr.value || '';
-	},
-	getAttributeNode : function(name){
-		return this.attributes.getNamedItem(name);
-	},
-	setAttribute : function(name, value){
-		var attr = this.ownerDocument.createAttribute(name);
-		attr.value = attr.nodeValue = "" + value;
-		this.setAttributeNode(attr)
-	},
-	removeAttribute : function(name){
-		var attr = this.getAttributeNode(name)
-		attr && this.removeAttributeNode(attr);
-	},
-
-	//four real opeartion method
-	appendChild:function(newChild){
-		if(newChild.nodeType === DOCUMENT_FRAGMENT_NODE){
-			return this.insertBefore(newChild,null);
-		}else{
-			return _appendSingleChild(this,newChild);
-		}
-	},
-	setAttributeNode : function(newAttr){
-		return this.attributes.setNamedItem(newAttr);
-	},
-	setAttributeNodeNS : function(newAttr){
-		return this.attributes.setNamedItemNS(newAttr);
-	},
-	removeAttributeNode : function(oldAttr){
-		//console.log(this == oldAttr.ownerElement)
-		return this.attributes.removeNamedItem(oldAttr.nodeName);
-	},
-	//get real attribute name,and remove it by removeAttributeNode
-	removeAttributeNS : function(namespaceURI, localName){
-		var old = this.getAttributeNodeNS(namespaceURI, localName);
-		old && this.removeAttributeNode(old);
-	},
-
-	hasAttributeNS : function(namespaceURI, localName){
-		return this.getAttributeNodeNS(namespaceURI, localName)!=null;
-	},
-	getAttributeNS : function(namespaceURI, localName){
-		var attr = this.getAttributeNodeNS(namespaceURI, localName);
-		return attr && attr.value || '';
-	},
-	setAttributeNS : function(namespaceURI, qualifiedName, value){
-		var attr = this.ownerDocument.createAttributeNS(namespaceURI, qualifiedName);
-		attr.value = attr.nodeValue = "" + value;
-		this.setAttributeNode(attr)
-	},
-	getAttributeNodeNS : function(namespaceURI, localName){
-		return this.attributes.getNamedItemNS(namespaceURI, localName);
-	},
-
-	getElementsByTagName : function(tagName){
-		return new LiveNodeList(this,function(base){
+	/**
+	 * Returns a LiveNodeList of elements with the given qualifiedName.
+	 * Searching for all descendants can be done by passing `*` as `qualifiedName`.
+	 *
+	 * All descendants of the specified element are searched, but not the element itself.
+	 * The returned list is live, which means it updates itself with the DOM tree automatically.
+	 * Therefore, there is no need to call `Element.getElementsByTagName()`
+	 * with the same element and arguments repeatedly if the DOM changes in between calls.
+	 *
+	 * When called on an HTML element in an HTML document,
+	 * `getElementsByTagName` lower-cases the argument before searching for it.
+	 * This is undesirable when trying to match camel-cased SVG elements (such as
+	 * `<linearGradient>`) in an HTML document.
+	 * Instead, use `Element.getElementsByTagNameNS()`,
+	 * which preserves the capitalization of the tag name.
+	 *
+	 * `Element.getElementsByTagName` is similar to `Document.getElementsByTagName()`,
+	 * except that it only searches for elements that are descendants of the specified element.
+	 *
+	 * @param {string} qualifiedName
+	 * @returns {LiveNodeList}
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/Element/getElementsByTagName
+	 * @see https://dom.spec.whatwg.org/#concept-getelementsbytagname
+	 */
+	getElementsByTagName: function (qualifiedName) {
+		var isHTMLDocument = (this.nodeType === DOCUMENT_NODE ? this : this.ownerDocument).type === 'html';
+		var lowerQualifiedName = qualifiedName.toLowerCase();
+		return new LiveNodeList(this, function (base) {
 			var ls = [];
-			_visitNode(base,function(node){
-				if(node !== base && node.nodeType == ELEMENT_NODE && (tagName === '*' || node.tagName == tagName)){
+			_visitNode(base, function (node) {
+				if (node === base || node.nodeType !== ELEMENT_NODE) {
+					return;
+				}
+				if (qualifiedName === '*') {
+					ls.push(node);
+				} else {
+					var nodeQualifiedName = node.getQualifiedName();
+					var matchingQName = isHTMLDocument && node.namespaceURI === NAMESPACE.HTML ? lowerQualifiedName : qualifiedName;
+					if (nodeQualifiedName === matchingQName) {
+						ls.push(node);
+					}
+				}
+			});
+			return ls;
+		});
+	},
+	getElementsByTagNameNS: function (namespaceURI, localName) {
+		return new LiveNodeList(this, function (base) {
+			var ls = [];
+			_visitNode(base, function (node) {
+				if (
+					node !== base &&
+					node.nodeType === ELEMENT_NODE &&
+					(namespaceURI === '*' || node.namespaceURI === namespaceURI) &&
+					(localName === '*' || node.localName == localName)
+				) {
 					ls.push(node);
 				}
 			});
 			return ls;
 		});
 	},
-	getElementsByTagNameNS : function(namespaceURI, localName){
-		return new LiveNodeList(this,function(base){
-			var ls = [];
-			_visitNode(base,function(node){
-				if(node !== base && node.nodeType === ELEMENT_NODE && (namespaceURI === '*' || node.namespaceURI === namespaceURI) && (localName === '*' || node.localName == localName)){
-					ls.push(node);
-				}
-			});
-			return ls;
-
-		});
-	}
 };
+Document.prototype.getElementsByClassName = Element.prototype.getElementsByClassName;
 Document.prototype.getElementsByTagName = Element.prototype.getElementsByTagName;
 Document.prototype.getElementsByTagNameNS = Element.prototype.getElementsByTagNameNS;
 
+_extends(Element, Node);
+function Attr(symbol) {
+	checkSymbol(symbol);
 
-_extends(Element,Node);
-function Attr() {
-};
+	this.namespaceURI = null;
+	this.prefix = null;
+	this.ownerElement = null;
+}
 Attr.prototype.nodeType = ATTRIBUTE_NODE;
-_extends(Attr,Node);
+_extends(Attr, Node);
 
-
-function CharacterData() {
-};
+function CharacterData(symbol) {
+	checkSymbol(symbol);
+}
 CharacterData.prototype = {
-	data : '',
-	substringData : function(offset, count) {
-		return this.data.substring(offset, offset+count);
+	data: '',
+	substringData: function (offset, count) {
+		return this.data.substring(offset, offset + count);
 	},
-	appendData: function(text) {
-		text = this.data+text;
+	appendData: function (text) {
+		text = this.data + text;
 		this.nodeValue = this.data = text;
 		this.length = text.length;
 	},
-	insertData: function(offset,text) {
-		this.replaceData(offset,0,text);
-
+	insertData: function (offset, text) {
+		this.replaceData(offset, 0, text);
 	},
-	appendChild:function(newChild){
-		throw new Error(ExceptionMessage[HIERARCHY_REQUEST_ERR])
+	deleteData: function (offset, count) {
+		this.replaceData(offset, count, '');
 	},
-	deleteData: function(offset, count) {
-		this.replaceData(offset,count,"");
-	},
-	replaceData: function(offset, count, text) {
-		var start = this.data.substring(0,offset);
-		var end = this.data.substring(offset+count);
+	replaceData: function (offset, count, text) {
+		var start = this.data.substring(0, offset);
+		var end = this.data.substring(offset + count);
 		text = start + text + end;
 		this.nodeValue = this.data = text;
 		this.length = text.length;
-	}
-}
-_extends(CharacterData,Node);
-function Text() {
+	},
 };
+_extends(CharacterData, Node);
+function Text(symbol) {
+	checkSymbol(symbol);
+}
 Text.prototype = {
-	nodeName : "#text",
-	nodeType : TEXT_NODE,
-	splitText : function(offset) {
+	nodeName: '#text',
+	nodeType: TEXT_NODE,
+	splitText: function (offset) {
 		var text = this.data;
 		var newText = text.substring(offset);
 		text = text.substring(0, offset);
 		this.data = this.nodeValue = text;
 		this.length = text.length;
 		var newNode = this.ownerDocument.createTextNode(newText);
-		if(this.parentNode){
+		if (this.parentNode) {
 			this.parentNode.insertBefore(newNode, this.nextSibling);
 		}
 		return newNode;
-	}
-}
-_extends(Text,CharacterData);
-function Comment() {
+	},
 };
+_extends(Text, CharacterData);
+function Comment(symbol) {
+	checkSymbol(symbol);
+}
 Comment.prototype = {
-	nodeName : "#comment",
-	nodeType : COMMENT_NODE
-}
-_extends(Comment,CharacterData);
-
-function CDATASection() {
+	nodeName: '#comment',
+	nodeType: COMMENT_NODE,
 };
+_extends(Comment, CharacterData);
+
+function CDATASection(symbol) {
+	checkSymbol(symbol);
+}
 CDATASection.prototype = {
-	nodeName : "#cdata-section",
-	nodeType : CDATA_SECTION_NODE
+	nodeName: '#cdata-section',
+	nodeType: CDATA_SECTION_NODE,
+};
+_extends(CDATASection, Text);
+
+/**
+ * @class DocumentType
+ * @augments Node
+ * @property {string} publicId
+ * The external subset public identifier, stored verbatim (including surrounding quotes).
+ * Declared `readonly` by the WHATWG DOM spec; xmldom does not enforce this constraint —
+ * direct property writes succeed and the written value is serialized verbatim.
+ * When serialized with `requireWellFormed: true`, the serializer validates the value against
+ * the XML `PubidLiteral` production and throws `InvalidStateError` if it does not match.
+ * @property {string} systemId
+ * The external subset system identifier, stored verbatim (including surrounding quotes).
+ * Declared `readonly` by the WHATWG DOM spec; xmldom does not enforce this constraint —
+ * direct property writes succeed and the written value is serialized verbatim.
+ * When serialized with `requireWellFormed: true`, the serializer validates the value against
+ * the XML `SystemLiteral` production and throws `InvalidStateError` if it does not match.
+ * @property {string} internalSubset
+ * The internal subset string (the raw content between `[` and `]`), or an empty string.
+ * Declared `readonly` by the WHATWG DOM spec; xmldom does not enforce this constraint —
+ * direct property writes succeed and the written value is serialized verbatim.
+ * When serialized with `requireWellFormed: true`, the serializer throws `InvalidStateError`
+ * if the value contains `"]>"`.
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/DocumentType MDN
+ * @see https://dom.spec.whatwg.org/#interface-documenttype WHATWG DOM
+ * @prettierignore
+ */
+function DocumentType(symbol) {
+	checkSymbol(symbol);
 }
-_extends(CDATASection,CharacterData);
-
-
-function DocumentType() {
-};
 DocumentType.prototype.nodeType = DOCUMENT_TYPE_NODE;
-_extends(DocumentType,Node);
+_extends(DocumentType, Node);
 
-function Notation() {
-};
+function Notation(symbol) {
+	checkSymbol(symbol);
+}
 Notation.prototype.nodeType = NOTATION_NODE;
-_extends(Notation,Node);
+_extends(Notation, Node);
 
-function Entity() {
-};
+function Entity(symbol) {
+	checkSymbol(symbol);
+}
 Entity.prototype.nodeType = ENTITY_NODE;
-_extends(Entity,Node);
+_extends(Entity, Node);
 
-function EntityReference() {
-};
+function EntityReference(symbol) {
+	checkSymbol(symbol);
+}
 EntityReference.prototype.nodeType = ENTITY_REFERENCE_NODE;
-_extends(EntityReference,Node);
+_extends(EntityReference, Node);
 
-function DocumentFragment() {
-};
-DocumentFragment.prototype.nodeName =	"#document-fragment";
-DocumentFragment.prototype.nodeType =	DOCUMENT_FRAGMENT_NODE;
-_extends(DocumentFragment,Node);
+function DocumentFragment(symbol) {
+	checkSymbol(symbol);
+}
+DocumentFragment.prototype.nodeName = '#document-fragment';
+DocumentFragment.prototype.nodeType = DOCUMENT_FRAGMENT_NODE;
+_extends(DocumentFragment, Node);
 
-
-function ProcessingInstruction() {
+function ProcessingInstruction(symbol) {
+	checkSymbol(symbol);
 }
 ProcessingInstruction.prototype.nodeType = PROCESSING_INSTRUCTION_NODE;
-_extends(ProcessingInstruction,Node);
-function XMLSerializer(){}
-XMLSerializer.prototype.serializeToString = function(node,isHtml,nodeFilter){
-	return nodeSerializeToString.call(node,isHtml,nodeFilter);
-}
+_extends(ProcessingInstruction, CharacterData);
+function XMLSerializer() {}
+/**
+ * Returns the result of serializing `node` to XML.
+ *
+ * When `options.requireWellFormed` is `true`, the serializer throws `InvalidStateError` for
+ * content that would produce ill-formed XML (e.g. CDATASection data containing `"]]>"`, Text
+ * data containing characters outside the XML Char production, or a Document with no
+ * `documentElement`).
+ *
+ * When `options.splitCDATASections` is `false`, CDATASection data is emitted verbatim even
+ * when it contains `"]]>"`. When `true` (the default), `"]]>"` sequences are split across
+ * concatenated CDATA sections — this behavior is **deprecated** and will be removed in the
+ * next breaking release. Callers should migrate to `{ requireWellFormed: true }`, which throws
+ * `InvalidStateError` instead of transforming.
+ *
+ * __This implementation differs from the specification:__ - CDATASection serialization is not
+ * specified by W3C DOM Parsing or WHATWG DOM Parsing (see
+ * {@link https://github.com/w3c/DOM-Parsing/issues/38 w3c/DOM-Parsing#38}).
+ * When `splitCDATASections` is `true` (the default), `"]]>"` sequences in CDATASection data
+ * are split across concatenated CDATA sections — this mechanism is derived from DOM Level 3
+ * Core and is **deprecated**. The split mechanics will be removed in the next breaking
+ * release. Callers that rely on this behavior should migrate to `{ requireWellFormed: true }`.
+ * - W3C DOM Parsing §3.2.1.1 requires well-formedness checks on Element `localName`s,
+ * prefixes,
+ * and attribute serialization (duplicate attributes, namespace declarations, attribute value
+ * characters) when `requireWellFormed` is `true`. These checks are **not implemented** in this
+ * release — see the tracking issue filed against the next breaking milestone.
+ *
+ * @param {Node} node
+ * @param {Object | function} [options]
+ * Options object, or a legacy nodeFilter function (backward compatible).
+ * @param {boolean} [options.requireWellFormed=false]
+ * When `true`, throws `InvalidStateError` for content that would produce ill-formed XML.
+ * @param {boolean} [options.splitCDATASections=true]
+ * When `true` (default), splits `"]]>"` sequences in CDATASection data across concatenated
+ * CDATA sections. **Deprecated** — will be removed in the next breaking release.
+ * @param {function} [options.nodeFilter]
+ * A filter function applied to each node before serialization.
+ * @returns {string}
+ * @throws {DOMException}
+ * With name `InvalidStateError` when `requireWellFormed` is `true` and any of the following
+ * conditions hold:
+ * - CDATASection data contains `"]]>"`
+ * - Text data contains characters outside the XML Char production
+ * - a Comment node's data contains `--` anywhere or ends with `-`
+ * - a ProcessingInstruction's target contains `:` or is an ASCII case-insensitive match for
+ * `"xml"`, or its data contains `?>` or characters outside the XML Char production
+ * - a DocumentType's `publicId` is non-empty and does not match the XML `PubidLiteral`
+ * production (W3C DOM Parsing §3.2.1.3; XML 1.0 production [12])
+ * - a DocumentType's `systemId` is non-empty and does not match the XML `SystemLiteral`
+ * production (W3C DOM Parsing §3.2.1.3; XML 1.0 production [11])
+ * - a DocumentType's `internalSubset` contains `"]>"`
+ * - the Document has no `documentElement`
+ * @see https://developer.mozilla.org/docs/Web/API/XMLSerializer/serializeToString
+ * @see https://html.spec.whatwg.org/#dom-xmlserializer-serializetostring
+ * @see https://github.com/w3c/DOM-Parsing/issues/84
+ * @prettierignore
+ */
+XMLSerializer.prototype.serializeToString = function (node, options) {
+	return nodeSerializeToString.call(node, options);
+};
 Node.prototype.toString = nodeSerializeToString;
-function nodeSerializeToString(isHtml,nodeFilter){
+function nodeSerializeToString(options) {
+	// Normalize the user-supplied options into a single internal opts object so that the
+	// internal serializer always works with a consistent shape rather than positional flags.
+	var opts;
+	if (typeof options === 'function') {
+		opts = { requireWellFormed: false, splitCDATASections: true, nodeFilter: options };
+	} else if (options != null) {
+		opts = {
+			requireWellFormed: !!options.requireWellFormed,
+			splitCDATASections: options.splitCDATASections !== false,
+			nodeFilter: options.nodeFilter || null,
+		};
+	} else {
+		opts = { requireWellFormed: false, splitCDATASections: true, nodeFilter: null };
+	}
 	var buf = [];
-	var refNode = this.nodeType == 9 && this.documentElement || this;
+	var refNode = (this.nodeType === DOCUMENT_NODE && this.documentElement) || this;
 	var prefix = refNode.prefix;
 	var uri = refNode.namespaceURI;
 
-	if(uri && prefix == null){
-		//console.log(prefix)
+	if (uri && prefix == null) {
 		var prefix = refNode.lookupPrefix(uri);
-		if(prefix == null){
-			//isHTML = true;
-			var visibleNamespaces=[
-			{namespace:uri,prefix:null}
-			//{namespace:uri,prefix:''}
-			]
+		if (prefix == null) {
+			var visibleNamespaces = [
+				{ namespace: uri, prefix: null },
+				//{namespace:uri,prefix:''}
+			];
 		}
 	}
-	serializeToString(this,buf,isHtml,nodeFilter,visibleNamespaces);
-	//console.log('###',this.nodeType,uri,prefix,buf.join(''))
+	serializeToString(this, buf, visibleNamespaces, opts);
 	return buf.join('');
 }
 
@@ -2221,11 +4242,11 @@ function needNamespaceDefine(node, isHTML, visibleNamespaces) {
 	if (!uri) {
 		return false;
 	}
-	if (prefix === "xml" && uri === NAMESPACE.XML || uri === NAMESPACE.XMLNS) {
+	if ((prefix === 'xml' && uri === NAMESPACE.XML) || uri === NAMESPACE.XMLNS) {
 		return false;
 	}
 
-	var i = visibleNamespaces.length
+	var i = visibleNamespaces.length;
 	while (i--) {
 		var ns = visibleNamespaces[i];
 		// get namespace prefix
@@ -2236,365 +4257,535 @@ function needNamespaceDefine(node, isHTML, visibleNamespaces) {
 	return true;
 }
 /**
- * Well-formed constraint: No < in Attribute Values
+ * Literal whitespace other than space that appear in attribute values are serialized as
+ * their entity references, so they will be preserved.
+ * (In contrast to whitespace literals in the input which are normalized to spaces).
+ *
+ * Well-formed constraint: No < in Attribute Values:
  * > The replacement text of any entity referred to directly or indirectly
  * > in an attribute value must not contain a <.
+ *
  * @see https://www.w3.org/TR/xml11/#CleanAttrVals
  * @see https://www.w3.org/TR/xml11/#NT-AttValue
- *
- * Literal whitespace other than space that appear in attribute values
- * are serialized as their entity references, so they will be preserved.
- * (In contrast to whitespace literals in the input which are normalized to spaces)
  * @see https://www.w3.org/TR/xml11/#AVNormalize
  * @see https://w3c.github.io/DOM-Parsing/#serializing-an-element-s-attributes
+ * @prettierignore
  */
 function addSerializedAttribute(buf, qualifiedName, value) {
-	buf.push(' ', qualifiedName, '="', value.replace(/[<>&"\t\n\r]/g, _xmlEncoder), '"')
+	buf.push(' ', qualifiedName, '="', value.replace(/[<>&"\t\n\r]/g, _xmlEncoder), '"');
 }
 
-function serializeToString(node,buf,isHTML,nodeFilter,visibleNamespaces){
+function serializeToString(node, buf, visibleNamespaces, opts) {
 	if (!visibleNamespaces) {
 		visibleNamespaces = [];
 	}
+	var nodeFilter = opts.nodeFilter;
+	var requireWellFormed = opts.requireWellFormed;
+	var splitCDATASections = opts.splitCDATASections;
+	var doc = node.nodeType === DOCUMENT_NODE ? node : node.ownerDocument;
+	var isHTML = doc.type === 'html';
 
-	if(nodeFilter){
-		node = nodeFilter(node);
-		if(node){
-			if(typeof node == 'string'){
-				buf.push(node);
-				return;
-			}
-		}else{
-			return;
-		}
-		//buf.sort.apply(attrs, attributeSorter);
-	}
+	walkDOM(
+		node,
+		{ ns: visibleNamespaces },
+		{
+			enter: function (n, ctx) {
+				var namespaces = ctx.ns;
 
-	switch(node.nodeType){
-	case ELEMENT_NODE:
-		var attrs = node.attributes;
-		var len = attrs.length;
-		var child = node.firstChild;
-		var nodeName = node.tagName;
-
-		isHTML = NAMESPACE.isHTML(node.namespaceURI) || isHTML
-
-		var prefixedNodeName = nodeName
-		if (!isHTML && !node.prefix && node.namespaceURI) {
-			var defaultNS
-			// lookup current default ns from `xmlns` attribute
-			for (var ai = 0; ai < attrs.length; ai++) {
-				if (attrs.item(ai).name === 'xmlns') {
-					defaultNS = attrs.item(ai).value
-					break
-				}
-			}
-			if (!defaultNS) {
-				// lookup current default ns in visibleNamespaces
-				for (var nsi = visibleNamespaces.length - 1; nsi >= 0; nsi--) {
-					var namespace = visibleNamespaces[nsi]
-					if (namespace.prefix === '' && namespace.namespace === node.namespaceURI) {
-						defaultNS = namespace.namespace
-						break
-					}
-				}
-			}
-			if (defaultNS !== node.namespaceURI) {
-				for (var nsi = visibleNamespaces.length - 1; nsi >= 0; nsi--) {
-					var namespace = visibleNamespaces[nsi]
-					if (namespace.namespace === node.namespaceURI) {
-						if (namespace.prefix) {
-							prefixedNodeName = namespace.prefix + ':' + nodeName
+				if (nodeFilter) {
+					n = nodeFilter(n);
+					if (n) {
+						if (typeof n == 'string') {
+							buf.push(n);
+							return null;
 						}
-						break
+					} else {
+						return null;
 					}
 				}
-			}
-		}
 
-		buf.push('<', prefixedNodeName);
+				switch (n.nodeType) {
+					case ELEMENT_NODE:
+						var attrs = n.attributes;
+						var len = attrs.length;
+						var nodeName = n.tagName;
 
-		for(var i=0;i<len;i++){
-			// add namespaces for attributes
-			var attr = attrs.item(i);
-			if (attr.prefix == 'xmlns') {
-				visibleNamespaces.push({ prefix: attr.localName, namespace: attr.value });
-			}else if(attr.nodeName == 'xmlns'){
-				visibleNamespaces.push({ prefix: '', namespace: attr.value });
-			}
-		}
+						var prefixedNodeName = nodeName;
+						if (!isHTML && !n.prefix && n.namespaceURI) {
+							var defaultNS;
+							// lookup current default ns from `xmlns` attribute
+							for (var ai = 0; ai < attrs.length; ai++) {
+								if (attrs.item(ai).name === 'xmlns') {
+									defaultNS = attrs.item(ai).value;
+									break;
+								}
+							}
+							if (!defaultNS) {
+								// lookup current default ns in visibleNamespaces
+								for (var nsi = namespaces.length - 1; nsi >= 0; nsi--) {
+									var nsEntry = namespaces[nsi];
+									if (nsEntry.prefix === '' && nsEntry.namespace === n.namespaceURI) {
+										defaultNS = nsEntry.namespace;
+										break;
+									}
+								}
+							}
+							if (defaultNS !== n.namespaceURI) {
+								for (var nsi = namespaces.length - 1; nsi >= 0; nsi--) {
+									var nsEntry = namespaces[nsi];
+									if (nsEntry.namespace === n.namespaceURI) {
+										if (nsEntry.prefix) {
+											prefixedNodeName = nsEntry.prefix + ':' + nodeName;
+										}
+										break;
+									}
+								}
+							}
+						}
 
-		for(var i=0;i<len;i++){
-			var attr = attrs.item(i);
-			if (needNamespaceDefine(attr,isHTML, visibleNamespaces)) {
-				var prefix = attr.prefix||'';
-				var uri = attr.namespaceURI;
-				addSerializedAttribute(buf, prefix ? 'xmlns:' + prefix : "xmlns", uri);
-				visibleNamespaces.push({ prefix: prefix, namespace:uri });
-			}
-			serializeToString(attr,buf,isHTML,nodeFilter,visibleNamespaces);
-		}
+						buf.push('<', prefixedNodeName);
 
-		// add namespace for current node
-		if (nodeName === prefixedNodeName && needNamespaceDefine(node, isHTML, visibleNamespaces)) {
-			var prefix = node.prefix||'';
-			var uri = node.namespaceURI;
-			addSerializedAttribute(buf, prefix ? 'xmlns:' + prefix : "xmlns", uri);
-			visibleNamespaces.push({ prefix: prefix, namespace:uri });
-		}
+						// Build a fresh namespace snapshot for this element's children.
+						// The slice prevents sibling elements from inheriting each other's declarations.
+						var childNamespaces = namespaces.slice();
 
-		if(child || isHTML && !/^(?:meta|link|img|br|hr|input)$/i.test(nodeName)){
-			buf.push('>');
-			//if is cdata child node
-			if(isHTML && /^script$/i.test(nodeName)){
-				while(child){
-					if(child.data){
-						buf.push(child.data);
-					}else{
-						serializeToString(child, buf, isHTML, nodeFilter, visibleNamespaces.slice());
-					}
-					child = child.nextSibling;
+						for (var i = 0; i < len; i++) {
+							// add namespaces for attributes
+							var attr = attrs.item(i);
+							if (attr.prefix == 'xmlns') {
+								childNamespaces.push({
+									prefix: attr.localName,
+									namespace: attr.value,
+								});
+							} else if (attr.nodeName == 'xmlns') {
+								childNamespaces.push({ prefix: '', namespace: attr.value });
+							}
+						}
+
+						for (var i = 0; i < len; i++) {
+							var attr = attrs.item(i);
+							if (needNamespaceDefine(attr, isHTML, childNamespaces)) {
+								var attrPrefix = attr.prefix || '';
+								var uri = attr.namespaceURI;
+								addSerializedAttribute(buf, attrPrefix ? 'xmlns:' + attrPrefix : 'xmlns', uri);
+								childNamespaces.push({ prefix: attrPrefix, namespace: uri });
+							}
+							// Apply nodeFilter and serialize the attribute.
+							var filteredAttr = nodeFilter ? nodeFilter(attr) : attr;
+							if (filteredAttr) {
+								if (typeof filteredAttr === 'string') {
+									buf.push(filteredAttr);
+								} else {
+									addSerializedAttribute(buf, filteredAttr.name, filteredAttr.value);
+								}
+							}
+						}
+
+						// add namespace for current node
+						if (nodeName === prefixedNodeName && needNamespaceDefine(n, isHTML, childNamespaces)) {
+							var nodePrefix = n.prefix || '';
+							var uri = n.namespaceURI;
+							addSerializedAttribute(buf, nodePrefix ? 'xmlns:' + nodePrefix : 'xmlns', uri);
+							childNamespaces.push({ prefix: nodePrefix, namespace: uri });
+						}
+
+						// in XML elements can be closed when they have no children
+						var canCloseTag = !n.firstChild;
+						if (canCloseTag && (isHTML || n.namespaceURI === NAMESPACE.HTML)) {
+							// in HTML (doc or ns) only void elements can be closed right away
+							canCloseTag = isHTMLVoidElement(nodeName);
+						}
+						if (canCloseTag) {
+							buf.push('/>');
+							// Self-closing: no children and no closing tag needed from exit.
+							return null;
+						}
+
+						buf.push('>');
+
+						// HTML raw text elements: serialize children as raw data without further descent.
+						if (isHTML && isHTMLRawTextElement(nodeName)) {
+							var child = n.firstChild;
+							while (child) {
+								if (child.data) {
+									buf.push(child.data);
+								} else {
+									serializeToString(child, buf, childNamespaces.slice(), opts);
+								}
+								child = child.nextSibling;
+							}
+							buf.push('</', prefixedNodeName, '>');
+							// Children handled manually above; prevent walkDOM from also traversing them.
+							return null;
+						}
+
+						// Return child context so walkDOM descends; exit will emit the closing tag.
+						return { ns: childNamespaces, tag: prefixedNodeName };
+					case DOCUMENT_NODE:
+					case DOCUMENT_FRAGMENT_NODE:
+						if (requireWellFormed && n.nodeType === DOCUMENT_NODE && n.documentElement == null) {
+							throw new DOMException('The Document has no documentElement', DOMExceptionName.InvalidStateError);
+						}
+						// Pass namespaces through; each child element will slice independently.
+						return { ns: namespaces };
+					case ATTRIBUTE_NODE:
+						addSerializedAttribute(buf, n.name, n.value);
+						return null;
+					case TEXT_NODE:
+						/*
+						 * The ampersand character (&) and the left angle bracket (<) must not appear in their literal form,
+						 * except when used as markup delimiters, or within a comment, a processing instruction,
+						 * or a CDATA section.
+						 * If they are needed elsewhere, they must be escaped using either numeric character
+						 * references or the strings `&amp;` and `&lt;` respectively.
+						 * The right angle bracket (>) may be represented using the string " &gt; ",
+						 * and must, for compatibility, be escaped using either `&gt;`,
+						 * or a character reference when it appears in the string `]]>` in content,
+						 * when that string is not marking the end of a CDATA section.
+						 *
+						 * In the content of elements, character data is any string of characters which does not
+						 * contain the start-delimiter of any markup and does not include the CDATA-section-close
+						 * delimiter, `]]>`.
+						 *
+						 * @see https://www.w3.org/TR/xml/#NT-CharData
+						 * @see https://w3c.github.io/DOM-Parsing/#xml-serializing-a-text-node
+						 */
+						if (requireWellFormed && g.InvalidChar.test(n.data)) {
+							throw new DOMException(
+								'The Text node data contains characters outside the XML Char production',
+								DOMExceptionName.InvalidStateError
+							);
+						}
+						buf.push(n.data.replace(/[<&>]/g, _xmlEncoder));
+						return null;
+					case CDATA_SECTION_NODE:
+						if (requireWellFormed && n.data.indexOf(']]>') !== -1) {
+							throw new DOMException('The CDATASection data contains "]]>"', DOMExceptionName.InvalidStateError);
+						}
+						if (splitCDATASections) {
+							buf.push(g.CDATA_START, n.data.replace(/]]>/g, ']]]]><![CDATA[>'), g.CDATA_END);
+						} else {
+							buf.push(g.CDATA_START, n.data, g.CDATA_END);
+						}
+						return null;
+					case COMMENT_NODE:
+						if (requireWellFormed) {
+							if (g.InvalidChar.test(n.data)) {
+								throw new DOMException(
+									'The comment node data contains characters outside the XML Char production',
+									DOMExceptionName.InvalidStateError
+								);
+							}
+							if (n.data.indexOf('--') !== -1 || n.data[n.data.length - 1] === '-') {
+								throw new DOMException(
+									'The comment node data contains "--" or ends with "-"',
+									DOMExceptionName.InvalidStateError
+								);
+							}
+						}
+						buf.push(g.COMMENT_START, n.data, g.COMMENT_END);
+						return null;
+					case DOCUMENT_TYPE_NODE:
+						var pubid = n.publicId;
+						var sysid = n.systemId;
+						if (requireWellFormed) {
+							if (pubid && !g.PubidLiteral_match.test(pubid)) {
+								throw new DOMException('DocumentType publicId is not a valid PubidLiteral', DOMExceptionName.InvalidStateError);
+							}
+							if (sysid && sysid !== '.' && !g.SystemLiteral_match.test(sysid)) {
+								throw new DOMException('DocumentType systemId is not a valid SystemLiteral', DOMExceptionName.InvalidStateError);
+							}
+							if (n.internalSubset && n.internalSubset.indexOf(']>') !== -1) {
+								throw new DOMException('DocumentType internalSubset contains "]>"', DOMExceptionName.InvalidStateError);
+							}
+						}
+						buf.push(g.DOCTYPE_DECL_START, ' ', n.name);
+						if (pubid) {
+							buf.push(' ', g.PUBLIC, ' ', pubid);
+							if (sysid && sysid !== '.') {
+								buf.push(' ', sysid);
+							}
+						} else if (sysid && sysid !== '.') {
+							buf.push(' ', g.SYSTEM, ' ', sysid);
+						}
+						if (n.internalSubset) {
+							buf.push(' [', n.internalSubset, ']');
+						}
+						buf.push('>');
+						return null;
+					case PROCESSING_INSTRUCTION_NODE:
+						if (requireWellFormed) {
+							if (n.target.indexOf(':') !== -1 || n.target.toLowerCase() === 'xml') {
+								throw new DOMException('The ProcessingInstruction target is not well-formed', DOMExceptionName.InvalidStateError);
+							}
+							if (g.InvalidChar.test(n.data)) {
+								throw new DOMException(
+									'The ProcessingInstruction data contains characters outside the XML Char production',
+									DOMExceptionName.InvalidStateError
+								);
+							}
+							if (n.data.indexOf('?>') !== -1) {
+								throw new DOMException('The ProcessingInstruction data contains "?>"', DOMExceptionName.InvalidStateError);
+							}
+						}
+						buf.push('<?', n.target, ' ', n.data, '?>');
+						return null;
+					case ENTITY_REFERENCE_NODE:
+						buf.push('&', n.nodeName, ';');
+						return null;
+					//case ENTITY_NODE:
+					//case NOTATION_NODE:
+					default:
+						buf.push('??', n.nodeName);
+						return null;
 				}
-			}else
-			{
-				while(child){
-					serializeToString(child, buf, isHTML, nodeFilter, visibleNamespaces.slice());
-					child = child.nextSibling;
-				}
-			}
-			buf.push('</',prefixedNodeName,'>');
-		}else{
-			buf.push('/>');
-		}
-		// remove added visible namespaces
-		//visibleNamespaces.length = startVisibleNamespaces;
-		return;
-	case DOCUMENT_NODE:
-	case DOCUMENT_FRAGMENT_NODE:
-		var child = node.firstChild;
-		while(child){
-			serializeToString(child, buf, isHTML, nodeFilter, visibleNamespaces.slice());
-			child = child.nextSibling;
-		}
-		return;
-	case ATTRIBUTE_NODE:
-		return addSerializedAttribute(buf, node.name, node.value);
-	case TEXT_NODE:
-		/**
-		 * The ampersand character (&) and the left angle bracket (<) must not appear in their literal form,
-		 * except when used as markup delimiters, or within a comment, a processing instruction, or a CDATA section.
-		 * If they are needed elsewhere, they must be escaped using either numeric character references or the strings
-		 * `&amp;` and `&lt;` respectively.
-		 * The right angle bracket (>) may be represented using the string " &gt; ", and must, for compatibility,
-		 * be escaped using either `&gt;` or a character reference when it appears in the string `]]>` in content,
-		 * when that string is not marking the end of a CDATA section.
-		 *
-		 * In the content of elements, character data is any string of characters
-		 * which does not contain the start-delimiter of any markup
-		 * and does not include the CDATA-section-close delimiter, `]]>`.
-		 *
-		 * @see https://www.w3.org/TR/xml/#NT-CharData
-		 * @see https://w3c.github.io/DOM-Parsing/#xml-serializing-a-text-node
-		 */
-		return buf.push(node.data
-			.replace(/[<&>]/g,_xmlEncoder)
-		);
-	case CDATA_SECTION_NODE:
-		return buf.push( '<![CDATA[',node.data,']]>');
-	case COMMENT_NODE:
-		return buf.push( "<!--",node.data,"-->");
-	case DOCUMENT_TYPE_NODE:
-		var pubid = node.publicId;
-		var sysid = node.systemId;
-		buf.push('<!DOCTYPE ',node.name);
-		if(pubid){
-			buf.push(' PUBLIC ', pubid);
-			if (sysid && sysid!='.') {
-				buf.push(' ', sysid);
-			}
-			buf.push('>');
-		}else if(sysid && sysid!='.'){
-			buf.push(' SYSTEM ', sysid, '>');
-		}else{
-			var sub = node.internalSubset;
-			if(sub){
-				buf.push(" [",sub,"]");
-			}
-			buf.push(">");
-		}
-		return;
-	case PROCESSING_INSTRUCTION_NODE:
-		return buf.push( "<?",node.target," ",node.data,"?>");
-	case ENTITY_REFERENCE_NODE:
-		return buf.push( '&',node.nodeName,';');
-	//case ENTITY_NODE:
-	//case NOTATION_NODE:
-	default:
-		buf.push('??',node.nodeName);
-	}
-}
-function importNode(doc,node,deep){
-	var node2;
-	switch (node.nodeType) {
-	case ELEMENT_NODE:
-		node2 = node.cloneNode(false);
-		node2.ownerDocument = doc;
-		//var attrs = node2.attributes;
-		//var len = attrs.length;
-		//for(var i=0;i<len;i++){
-			//node2.setAttributeNodeNS(importNode(doc,attrs.item(i),deep));
-		//}
-	case DOCUMENT_FRAGMENT_NODE:
-		break;
-	case ATTRIBUTE_NODE:
-		deep = true;
-		break;
-	//case ENTITY_REFERENCE_NODE:
-	//case PROCESSING_INSTRUCTION_NODE:
-	////case TEXT_NODE:
-	//case CDATA_SECTION_NODE:
-	//case COMMENT_NODE:
-	//	deep = false;
-	//	break;
-	//case DOCUMENT_NODE:
-	//case DOCUMENT_TYPE_NODE:
-	//cannot be imported.
-	//case ENTITY_NODE:
-	//case NOTATION_NODE：
-	//can not hit in level3
-	//default:throw e;
-	}
-	if(!node2){
-		node2 = node.cloneNode(false);//false
-	}
-	node2.ownerDocument = doc;
-	node2.parentNode = null;
-	if(deep){
-		var child = node.firstChild;
-		while(child){
-			node2.appendChild(importNode(doc,child,deep));
-			child = child.nextSibling;
-		}
-	}
-	return node2;
-}
-//
-//var _relationMap = {firstChild:1,lastChild:1,previousSibling:1,nextSibling:1,
-//					attributes:1,childNodes:1,parentNode:1,documentElement:1,doctype,};
-function cloneNode(doc,node,deep){
-	var node2 = new node.constructor();
-	for (var n in node) {
-		if (Object.prototype.hasOwnProperty.call(node, n)) {
-			var v = node[n];
-			if (typeof v != "object") {
-				if (v != node2[n]) {
-					node2[n] = v;
-				}
-			}
-		}
-	}
-	if(node.childNodes){
-		node2.childNodes = new NodeList();
-	}
-	node2.ownerDocument = doc;
-	switch (node2.nodeType) {
-	case ELEMENT_NODE:
-		var attrs	= node.attributes;
-		var attrs2	= node2.attributes = new NamedNodeMap();
-		var len = attrs.length
-		attrs2._ownerElement = node2;
-		for(var i=0;i<len;i++){
-			node2.setAttributeNode(cloneNode(doc,attrs.item(i),true));
-		}
-		break;;
-	case ATTRIBUTE_NODE:
-		deep = true;
-	}
-	if(deep){
-		var child = node.firstChild;
-		while(child){
-			node2.appendChild(cloneNode(doc,child,deep));
-			child = child.nextSibling;
-		}
-	}
-	return node2;
-}
-
-function __set__(object,key,value){
-	object[key] = value
-}
-//do dynamic
-try{
-	if(Object.defineProperty){
-		Object.defineProperty(LiveNodeList.prototype,'length',{
-			get:function(){
-				_updateLiveList(this);
-				return this.$$length;
-			}
-		});
-
-		Object.defineProperty(Node.prototype,'textContent',{
-			get:function(){
-				return getTextContent(this);
 			},
+			exit: function (n, childCtx) {
+				// Emit the closing tag for elements that were opened (not self-closed, not raw text).
+				if (childCtx && childCtx.tag) {
+					buf.push('</', childCtx.tag, '>');
+				}
+			},
+		}
+	);
+}
+/**
+ * Imports a node from a different document into `doc`, creating a new copy.
+ * Delegates to {@link walkDOM} for traversal. Each node in the subtree is shallow-cloned,
+ * stamped with `doc` as its `ownerDocument`, and detached (`parentNode` set to `null`).
+ * Children are imported recursively when `deep` is `true`; for {@link Attr} nodes `deep` is
+ * always forced to `true`
+ * because an attribute's value lives in a child text node.
+ *
+ * @param {Document} doc
+ * The document that will own the imported node.
+ * @param {Node} node
+ * The node to import.
+ * @param {boolean} deep
+ * If `true`, descendants are imported recursively.
+ * @returns {Node}
+ * The newly imported node, now owned by `doc`.
+ */
+function importNode(doc, node, deep) {
+	var destRoot;
+	walkDOM(node, null, {
+		enter: function (srcNode, destParent) {
+			// Shallow-clone the node and stamp it into the target document.
+			var destNode = srcNode.cloneNode(false);
+			destNode.ownerDocument = doc;
+			destNode.parentNode = null;
+			// capture as the root of the imported subtree or attach to parent.
+			if (destParent === null) {
+				destRoot = destNode;
+			} else {
+				destParent.appendChild(destNode);
+			}
+			// ATTRIBUTE_NODE must always be imported deeply: its value lives in a child text node.
+			var shouldDeep = srcNode.nodeType === ATTRIBUTE_NODE || deep;
+			return shouldDeep ? destNode : null;
+		},
+	});
+	return destRoot;
+}
 
-			set:function(data){
-				switch(this.nodeType){
-				case ELEMENT_NODE:
-				case DOCUMENT_FRAGMENT_NODE:
-					while(this.firstChild){
-						this.removeChild(this.firstChild);
+/**
+ * Creates a copy of a node from an existing one.
+ *
+ * @param {Document} doc
+ * The Document object representing the document that the new node will belong to.
+ * @param {Node} node
+ * The node to clone.
+ * @param {boolean} deep
+ * If true, the contents of the node are recursively copied.
+ * If false, only the node itself (and its attributes, if it is an element) are copied.
+ * @returns {Node}
+ * Returns the newly created copy of the node.
+ * @throws {DOMException}
+ * May throw a DOMException if operations within setAttributeNode or appendChild (which are
+ * potentially invoked in this function) do not meet their specific constraints.
+ */
+function cloneNode(doc, node, deep) {
+	var destRoot;
+	walkDOM(node, null, {
+		enter: function (srcNode, destParent) {
+			// 1. Create a blank node of the same type and copy all scalar own properties.
+			var destNode = new srcNode.constructor(PDC);
+			for (var n in srcNode) {
+				if (hasOwn(srcNode, n)) {
+					var v = srcNode[n];
+					if (typeof v != 'object') {
+						if (v != destNode[n]) {
+							destNode[n] = v;
+						}
 					}
-					if(data || String(data)){
-						this.appendChild(this.ownerDocument.createTextNode(data));
+				}
+			}
+			if (srcNode.childNodes) {
+				destNode.childNodes = new NodeList();
+			}
+			destNode.ownerDocument = doc;
+			// 2. Handle node-type-specific setup.
+			//    Attributes are not DOM children, so they are cloned inline here
+			//    rather than by walkDOM descent.
+			//    ATTRIBUTE_NODE forces deep=true so its own children are walked.
+			var shouldDeep = deep;
+			switch (destNode.nodeType) {
+				case ELEMENT_NODE:
+					var attrs = srcNode.attributes;
+					var attrs2 = (destNode.attributes = new NamedNodeMap());
+					var len = attrs.length;
+					attrs2._ownerElement = destNode;
+					for (var i = 0; i < len; i++) {
+						destNode.setAttributeNode(cloneNode(doc, attrs.item(i), true));
 					}
 					break;
-
-				default:
-					this.data = data;
-					this.value = data;
-					this.nodeValue = data;
-				}
+				case ATTRIBUTE_NODE:
+					shouldDeep = true;
 			}
-		})
-
-		function getTextContent(node){
-			switch(node.nodeType){
-			case ELEMENT_NODE:
-			case DOCUMENT_FRAGMENT_NODE:
-				var buf = [];
-				node = node.firstChild;
-				while(node){
-					if(node.nodeType!==7 && node.nodeType !==8){
-						buf.push(getTextContent(node));
-					}
-					node = node.nextSibling;
-				}
-				return buf.join('');
-			default:
-				return node.nodeValue;
+			// 3. Attach to parent, or capture as the root of the cloned subtree.
+			if (destParent !== null) {
+				destParent.appendChild(destNode);
+			} else {
+				destRoot = destNode;
 			}
-		}
-
-		__set__ = function(object,key,value){
-			//console.log(value)
-			object['$$'+key] = value
-		}
-	}
-}catch(e){//ie8
+			// 4. Return destNode as the context for children (causes walkDOM to descend),
+			//    or null to skip children (shallow clone).
+			return shouldDeep ? destNode : null;
+		},
+	});
+	return destRoot;
 }
 
-//if(typeof require == 'function'){
-	exports.DocumentType = DocumentType;
-	exports.DOMException = DOMException;
-	exports.DOMImplementation = DOMImplementation;
-	exports.Element = Element;
-	exports.Node = Node;
-	exports.NodeList = NodeList;
-	exports.XMLSerializer = XMLSerializer;
-//}
+function __set__(object, key, value) {
+	object[key] = value;
+}
 
-},{"./conventions":2}],5:[function(require,module,exports){
+// Returns a new array of direct Element children.
+// Passed to LiveNodeList to implement ParentNode.children.
+// https://dom.spec.whatwg.org/#dom-parentnode-children
+function childrenRefresh(node) {
+	var ls = [];
+	var child = node.firstChild;
+	while (child) {
+		if (child.nodeType === ELEMENT_NODE) {
+			ls.push(child);
+		}
+		child = child.nextSibling;
+	}
+	return ls;
+}
+
+//do dynamic
+try {
+	if (Object.defineProperty) {
+		Object.defineProperty(LiveNodeList.prototype, 'length', {
+			get: function () {
+				_updateLiveList(this);
+				return this.$$length;
+			},
+		});
+
+		/**
+		 * The text content of this node and its descendants.
+		 *
+		 * For {@link Element} and {@link DocumentFragment} nodes, returns the concatenation of the
+		 * `nodeValue` of every descendant text node, excluding processing instruction and comment
+		 * nodes. For all other node types, returns `nodeValue`.
+		 *
+		 * Setting `textContent` on an element or document fragment replaces all child nodes with a
+		 * single text node; on other nodes it sets `data`, `value`, and `nodeValue` directly.
+		 *
+		 * @type {string | null}
+		 * @see {@link https://dom.spec.whatwg.org/#dom-node-textcontent}
+		 */
+		Object.defineProperty(Node.prototype, 'textContent', {
+			get: function () {
+				if (this.nodeType === ELEMENT_NODE || this.nodeType === DOCUMENT_FRAGMENT_NODE) {
+					var buf = [];
+					walkDOM(this, null, {
+						enter: function (n) {
+							if (n.nodeType === ELEMENT_NODE || n.nodeType === DOCUMENT_FRAGMENT_NODE) {
+								return true; // enter children
+							}
+							if (n.nodeType === PROCESSING_INSTRUCTION_NODE || n.nodeType === COMMENT_NODE) {
+								return null; // excluded from text content
+							}
+							buf.push(n.nodeValue);
+						},
+					});
+					return buf.join('');
+				}
+				return this.nodeValue;
+			},
+
+			set: function (data) {
+				switch (this.nodeType) {
+					case ELEMENT_NODE:
+					case DOCUMENT_FRAGMENT_NODE:
+						while (this.firstChild) {
+							this.removeChild(this.firstChild);
+						}
+						if (data || String(data)) {
+							this.appendChild(this.ownerDocument.createTextNode(data));
+						}
+						break;
+
+					default:
+						this.data = data;
+						this.value = data;
+						this.nodeValue = data;
+				}
+			},
+		});
+
+		Object.defineProperty(Element.prototype, 'children', {
+			get: function () {
+				return new LiveNodeList(this, childrenRefresh);
+			},
+		});
+		Object.defineProperty(Document.prototype, 'children', {
+			get: function () {
+				return new LiveNodeList(this, childrenRefresh);
+			},
+		});
+		Object.defineProperty(DocumentFragment.prototype, 'children', {
+			get: function () {
+				return new LiveNodeList(this, childrenRefresh);
+			},
+		});
+
+		__set__ = function (object, key, value) {
+			//console.log(value)
+			object['$$' + key] = value;
+		};
+	}
+} catch (e) {
+	//ie8
+}
+
+exports._updateLiveList = _updateLiveList;
+exports.Attr = Attr;
+exports.CDATASection = CDATASection;
+exports.CharacterData = CharacterData;
+exports.Comment = Comment;
+exports.Document = Document;
+exports.DocumentFragment = DocumentFragment;
+exports.DocumentType = DocumentType;
+exports.DOMImplementation = DOMImplementation;
+exports.Element = Element;
+exports.Entity = Entity;
+exports.EntityReference = EntityReference;
+exports.LiveNodeList = LiveNodeList;
+exports.NamedNodeMap = NamedNodeMap;
+exports.Node = Node;
+exports.NodeList = NodeList;
+exports.Notation = Notation;
+exports.Text = Text;
+exports.ProcessingInstruction = ProcessingInstruction;
+exports.walkDOM = walkDOM;
+exports.XMLSerializer = XMLSerializer;
+
+},{"./conventions":2,"./errors":6,"./grammar":7}],5:[function(require,module,exports){
 'use strict';
 
 var freeze = require('./conventions').freeze;
@@ -2604,7 +4795,8 @@ var freeze = require('./conventions').freeze;
  *
  * @see https://www.w3.org/TR/2006/REC-xml11-20060816/#sec-predefined-ent W3C XML 1.1
  * @see https://www.w3.org/TR/2008/REC-xml-20081126/#sec-predefined-ent W3C XML 1.0
- * @see https://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references#Predefined_entities_in_XML Wikipedia
+ * @see https://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references#Predefined_entities_in_XML
+ *      Wikipedia
  */
 exports.XML_ENTITIES = freeze({
 	amp: '&',
@@ -2618,15 +4810,18 @@ exports.XML_ENTITIES = freeze({
  * A map of all entities that are detected in an HTML document.
  * They contain all entries from `XML_ENTITIES`.
  *
- * @see XML_ENTITIES
- * @see DOMParser.parseFromString
- * @see DOMImplementation.prototype.createHTMLDocument
- * @see https://html.spec.whatwg.org/#named-character-references WHATWG HTML(5) Spec
+ * @see {@link XML_ENTITIES}
+ * @see {@link DOMParser.parseFromString}
+ * @see {@link DOMImplementation.prototype.createHTMLDocument}
+ * @see https://html.spec.whatwg.org/#named-character-references WHATWG HTML(5)
+ *      Spec
  * @see https://html.spec.whatwg.org/entities.json JSON
  * @see https://www.w3.org/TR/xml-entity-names/ W3C XML Entity Names
  * @see https://www.w3.org/TR/html4/sgml/entities.html W3C HTML4/SGML
- * @see https://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references#Character_entity_references_in_HTML Wikipedia (HTML)
- * @see https://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references#Entities_representing_special_characters_in_XHTML Wikpedia (XHTML)
+ * @see https://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references#Character_entity_references_in_HTML
+ *      Wikipedia (HTML)
+ * @see https://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references#Entities_representing_special_characters_in_XHTML
+ *      Wikpedia (XHTML)
  */
 exports.HTML_ENTITIES = freeze({
 	Aacute: '\u00C1',
@@ -4757,254 +6952,1083 @@ exports.HTML_ENTITIES = freeze({
 });
 
 /**
- * @deprecated use `HTML_ENTITIES` instead
- * @see HTML_ENTITIES
+ * @deprecated
+ * Use `HTML_ENTITIES` instead.
+ * @see {@link HTML_ENTITIES}
  */
 exports.entityMap = exports.HTML_ENTITIES;
 
 },{"./conventions":2}],6:[function(require,module,exports){
-var dom = require('./dom')
-exports.DOMImplementation = dom.DOMImplementation
-exports.XMLSerializer = dom.XMLSerializer
-exports.DOMParser = require('./dom-parser').DOMParser
+'use strict';
 
-},{"./dom":4,"./dom-parser":3}],7:[function(require,module,exports){
-var NAMESPACE = require("./conventions").NAMESPACE;
+var conventions = require('./conventions');
 
-//[4]   	NameStartChar	   ::=   	":" | [A-Z] | "_" | [a-z] | [#xC0-#xD6] | [#xD8-#xF6] | [#xF8-#x2FF] | [#x370-#x37D] | [#x37F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]
-//[4a]   	NameChar	   ::=   	NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
-//[5]   	Name	   ::=   	NameStartChar (NameChar)*
-var nameStartChar = /[A-Z_a-z\xC0-\xD6\xD8-\xF6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]///\u10000-\uEFFFF
-var nameChar = new RegExp("[\\-\\.0-9"+nameStartChar.source.slice(1,-1)+"\\u00B7\\u0300-\\u036F\\u203F-\\u2040]");
-var tagNamePattern = new RegExp('^'+nameStartChar.source+nameChar.source+'*(?:\:'+nameStartChar.source+nameChar.source+'*)?$');
-//var tagNamePattern = /^[a-zA-Z_][\w\-\.]*(?:\:[a-zA-Z_][\w\-\.]*)?$/
-//var handlers = 'resolveEntity,getExternalSubset,characters,endDocument,endElement,endPrefixMapping,ignorableWhitespace,processingInstruction,setDocumentLocator,skippedEntity,startDocument,startElement,startPrefixMapping,notationDecl,unparsedEntityDecl,error,fatalError,warning,attributeDecl,elementDecl,externalEntityDecl,internalEntityDecl,comment,endCDATA,endDTD,endEntity,startCDATA,startDTD,startEntity'.split(',')
+function extendError(constructor, writableName) {
+	constructor.prototype = Object.create(Error.prototype, {
+		constructor: { value: constructor },
+		name: { value: constructor.name, enumerable: true, writable: writableName },
+	});
+}
 
-//S_TAG,	S_ATTR,	S_EQ,	S_ATTR_NOQUOT_VALUE
-//S_ATTR_SPACE,	S_ATTR_END,	S_TAG_SPACE, S_TAG_CLOSE
-var S_TAG = 0;//tag name offerring
-var S_ATTR = 1;//attr name offerring
-var S_ATTR_SPACE=2;//attr name end and space offer
-var S_EQ = 3;//=space?
-var S_ATTR_NOQUOT_VALUE = 4;//attr value(no quot value only)
-var S_ATTR_END = 5;//attr value end and no space(quot end)
-var S_TAG_SPACE = 6;//(attr value end || tag end ) && (space offer)
-var S_TAG_CLOSE = 7;//closed el<el />
+var DOMExceptionName = conventions.freeze({
+	/**
+	 * the default value as defined by the spec
+	 */
+	Error: 'Error',
+	/**
+	 * @deprecated
+	 * Use RangeError instead.
+	 */
+	IndexSizeError: 'IndexSizeError',
+	/**
+	 * @deprecated
+	 * Just to match the related static code, not part of the spec.
+	 */
+	DomstringSizeError: 'DomstringSizeError',
+	HierarchyRequestError: 'HierarchyRequestError',
+	WrongDocumentError: 'WrongDocumentError',
+	InvalidCharacterError: 'InvalidCharacterError',
+	/**
+	 * @deprecated
+	 * Just to match the related static code, not part of the spec.
+	 */
+	NoDataAllowedError: 'NoDataAllowedError',
+	NoModificationAllowedError: 'NoModificationAllowedError',
+	NotFoundError: 'NotFoundError',
+	NotSupportedError: 'NotSupportedError',
+	InUseAttributeError: 'InUseAttributeError',
+	InvalidStateError: 'InvalidStateError',
+	SyntaxError: 'SyntaxError',
+	InvalidModificationError: 'InvalidModificationError',
+	NamespaceError: 'NamespaceError',
+	/**
+	 * @deprecated
+	 * Use TypeError for invalid arguments,
+	 * "NotSupportedError" DOMException for unsupported operations,
+	 * and "NotAllowedError" DOMException for denied requests instead.
+	 */
+	InvalidAccessError: 'InvalidAccessError',
+	/**
+	 * @deprecated
+	 * Just to match the related static code, not part of the spec.
+	 */
+	ValidationError: 'ValidationError',
+	/**
+	 * @deprecated
+	 * Use TypeError instead.
+	 */
+	TypeMismatchError: 'TypeMismatchError',
+	SecurityError: 'SecurityError',
+	NetworkError: 'NetworkError',
+	AbortError: 'AbortError',
+	/**
+	 * @deprecated
+	 * Just to match the related static code, not part of the spec.
+	 */
+	URLMismatchError: 'URLMismatchError',
+	QuotaExceededError: 'QuotaExceededError',
+	TimeoutError: 'TimeoutError',
+	InvalidNodeTypeError: 'InvalidNodeTypeError',
+	DataCloneError: 'DataCloneError',
+	EncodingError: 'EncodingError',
+	NotReadableError: 'NotReadableError',
+	UnknownError: 'UnknownError',
+	ConstraintError: 'ConstraintError',
+	DataError: 'DataError',
+	TransactionInactiveError: 'TransactionInactiveError',
+	ReadOnlyError: 'ReadOnlyError',
+	VersionError: 'VersionError',
+	OperationError: 'OperationError',
+	NotAllowedError: 'NotAllowedError',
+	OptOutError: 'OptOutError',
+});
+var DOMExceptionNames = Object.keys(DOMExceptionName);
+
+function isValidDomExceptionCode(value) {
+	return typeof value === 'number' && value >= 1 && value <= 25;
+}
+function endsWithError(value) {
+	return typeof value === 'string' && value.substring(value.length - DOMExceptionName.Error.length) === DOMExceptionName.Error;
+}
+/**
+ * DOM operations only raise exceptions in "exceptional" circumstances, i.e., when an operation
+ * is impossible to perform (either for logical reasons, because data is lost, or because the
+ * implementation has become unstable). In general, DOM methods return specific error values in
+ * ordinary processing situations, such as out-of-bound errors when using NodeList.
+ *
+ * Implementations should raise other exceptions under other circumstances. For example,
+ * implementations should raise an implementation-dependent exception if a null argument is
+ * passed when null was not expected.
+ *
+ * This implementation supports the following usages:
+ * 1. according to the living standard (both arguments are optional):
+ * ```
+ * new DOMException("message (can be empty)", DOMExceptionNames.HierarchyRequestError)
+ * ```
+ * 2. according to previous xmldom implementation (only the first argument is required):
+ * ```
+ * new DOMException(DOMException.HIERARCHY_REQUEST_ERR, "optional message")
+ * ```
+ * both result in the proper name being set.
+ *
+ * @class DOMException
+ * @param {number | string} messageOrCode
+ * The reason why an operation is not acceptable.
+ * If it is a number, it is used to determine the `name`, see
+ * {@link https://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-258A00AF ExceptionCode}
+ * @param {string | keyof typeof DOMExceptionName | Error} [nameOrMessage]
+ * The `name` to use for the error.
+ * If `messageOrCode` is a number, this arguments is used as the `message` instead.
+ * @augments Error
+ * @see https://webidl.spec.whatwg.org/#idl-DOMException
+ * @see https://webidl.spec.whatwg.org/#dfn-error-names-table
+ * @see https://www.w3.org/TR/DOM-Level-3-Core/core.html#ID-17189187
+ * @see http://www.w3.org/TR/2000/REC-DOM-Level-2-Core-20001113/ecma-script-binding.html
+ * @see http://www.w3.org/TR/REC-DOM-Level-1/ecma-script-language-binding.html
+ */
+function DOMException(messageOrCode, nameOrMessage) {
+	// support old way of passing arguments: first argument is a valid number
+	if (isValidDomExceptionCode(messageOrCode)) {
+		this.name = DOMExceptionNames[messageOrCode];
+		this.message = nameOrMessage || '';
+	} else {
+		this.message = messageOrCode;
+		this.name = endsWithError(nameOrMessage) ? nameOrMessage : DOMExceptionName.Error;
+	}
+	if (Error.captureStackTrace) Error.captureStackTrace(this, DOMException);
+}
+extendError(DOMException, true);
+Object.defineProperties(DOMException.prototype, {
+	code: {
+		enumerable: true,
+		get: function () {
+			var code = DOMExceptionNames.indexOf(this.name);
+			if (isValidDomExceptionCode(code)) return code;
+			return 0;
+		},
+	},
+});
+
+var ExceptionCode = {
+	INDEX_SIZE_ERR: 1,
+	DOMSTRING_SIZE_ERR: 2,
+	HIERARCHY_REQUEST_ERR: 3,
+	WRONG_DOCUMENT_ERR: 4,
+	INVALID_CHARACTER_ERR: 5,
+	NO_DATA_ALLOWED_ERR: 6,
+	NO_MODIFICATION_ALLOWED_ERR: 7,
+	NOT_FOUND_ERR: 8,
+	NOT_SUPPORTED_ERR: 9,
+	INUSE_ATTRIBUTE_ERR: 10,
+	INVALID_STATE_ERR: 11,
+	SYNTAX_ERR: 12,
+	INVALID_MODIFICATION_ERR: 13,
+	NAMESPACE_ERR: 14,
+	INVALID_ACCESS_ERR: 15,
+	VALIDATION_ERR: 16,
+	TYPE_MISMATCH_ERR: 17,
+	SECURITY_ERR: 18,
+	NETWORK_ERR: 19,
+	ABORT_ERR: 20,
+	URL_MISMATCH_ERR: 21,
+	QUOTA_EXCEEDED_ERR: 22,
+	TIMEOUT_ERR: 23,
+	INVALID_NODE_TYPE_ERR: 24,
+	DATA_CLONE_ERR: 25,
+};
+
+var entries = Object.entries(ExceptionCode);
+for (var i = 0; i < entries.length; i++) {
+	var key = entries[i][0];
+	DOMException[key] = entries[i][1];
+}
 
 /**
  * Creates an error that will not be caught by XMLReader aka the SAX parser.
  *
+ * @class
  * @param {string} message
- * @param {any?} locator Optional, can provide details about the location in the source
- * @constructor
+ * @param {any} [locator]
  */
 function ParseError(message, locator) {
-	this.message = message
-	this.locator = locator
-	if(Error.captureStackTrace) Error.captureStackTrace(this, ParseError);
+	this.message = message;
+	this.locator = locator;
+	if (Error.captureStackTrace) Error.captureStackTrace(this, ParseError);
 }
-ParseError.prototype = new Error();
-ParseError.prototype.name = ParseError.name
+extendError(ParseError);
 
-function XMLReader(){
+exports.DOMException = DOMException;
+exports.DOMExceptionName = DOMExceptionName;
+exports.ExceptionCode = ExceptionCode;
+exports.ParseError = ParseError;
 
+},{"./conventions":2}],7:[function(require,module,exports){
+'use strict';
+
+/**
+ * Detects relevant unicode support for regular expressions in the runtime.
+ * Should the runtime not accepts the flag `u` or unicode ranges,
+ * character classes without unicode handling will be used.
+ *
+ * @param {typeof RegExp} [RegExpImpl=RegExp]
+ * For testing: the RegExp class.
+ * @returns {boolean}
+ * @see https://node.green/#ES2015-syntax-RegExp--y--and--u--flags
+ */
+function detectUnicodeSupport(RegExpImpl) {
+	try {
+		if (typeof RegExpImpl !== 'function') {
+			RegExpImpl = RegExp;
+		}
+		// eslint-disable-next-line es5/no-unicode-regex,es5/no-unicode-code-point-escape
+		var match = new RegExpImpl('\u{1d306}', 'u').exec('𝌆');
+		return !!match && match[0].length === 2;
+	} catch (error) {}
+	return false;
 }
+var UNICODE_SUPPORT = detectUnicodeSupport();
+
+/**
+ * Removes `[`, `]` and any trailing quantifiers from the source of a RegExp.
+ *
+ * @param {RegExp} regexp
+ */
+function chars(regexp) {
+	if (regexp.source[0] !== '[') {
+		throw new Error(regexp + ' can not be used with chars');
+	}
+	return regexp.source.slice(1, regexp.source.lastIndexOf(']'));
+}
+
+/**
+ * Creates a new character list regular expression,
+ * by removing `search` from the source of `regexp`.
+ *
+ * @param {RegExp} regexp
+ * @param {string} search
+ * The character(s) to remove.
+ * @returns {RegExp}
+ */
+function chars_without(regexp, search) {
+	if (regexp.source[0] !== '[') {
+		throw new Error('/' + regexp.source + '/ can not be used with chars_without');
+	}
+	if (!search || typeof search !== 'string') {
+		throw new Error(JSON.stringify(search) + ' is not a valid search');
+	}
+	if (regexp.source.indexOf(search) === -1) {
+		throw new Error('"' + search + '" is not is /' + regexp.source + '/');
+	}
+	if (search === '-' && regexp.source.indexOf(search) !== 1) {
+		throw new Error('"' + search + '" is not at the first postion of /' + regexp.source + '/');
+	}
+	return new RegExp(regexp.source.replace(search, ''), UNICODE_SUPPORT ? 'u' : '');
+}
+
+/**
+ * Combines and Regular expressions correctly by using `RegExp.source`.
+ *
+ * @param {...(RegExp | string)[]} args
+ * @returns {RegExp}
+ */
+function reg(args) {
+	var self = this;
+	return new RegExp(
+		Array.prototype.slice
+			.call(arguments)
+			.map(function (part) {
+				var isStr = typeof part === 'string';
+				if (isStr && self === undefined && part === '|') {
+					throw new Error('use regg instead of reg to wrap expressions with `|`!');
+				}
+				return isStr ? part : part.source;
+			})
+			.join(''),
+		UNICODE_SUPPORT ? 'mu' : 'm'
+	);
+}
+
+/**
+ * Like `reg` but wraps the expression in `(?:`,`)` to create a non tracking group.
+ *
+ * @param {...(RegExp | string)[]} args
+ * @returns {RegExp}
+ */
+function regg(args) {
+	if (arguments.length === 0) {
+		throw new Error('no parameters provided');
+	}
+	return reg.apply(regg, ['(?:'].concat(Array.prototype.slice.call(arguments), [')']));
+}
+
+// /**
+//  * Append ^ to the beginning of the expression.
+//  * @param {...(RegExp | string)[]} args
+//  * @returns {RegExp}
+//  */
+// function reg_start(args) {
+// 	if (arguments.length === 0) {
+// 		throw new Error('no parameters provided');
+// 	}
+// 	return reg.apply(reg_start, ['^'].concat(Array.prototype.slice.call(arguments)));
+// }
+
+// https://www.w3.org/TR/xml/#document
+// `[1] document ::= prolog element Misc*`
+// https://www.w3.org/TR/xml11/#NT-document
+// `[1] document ::= ( prolog element Misc* ) - ( Char* RestrictedChar Char* )`
+
+/**
+ * A character usually appearing in wrongly converted strings.
+ *
+ * @type {string}
+ * @see https://en.wikipedia.org/wiki/Specials_(Unicode_block)#Replacement_character
+ * @see https://nodejs.dev/en/api/v18/buffer/#buffers-and-character-encodings
+ * @see https://www.unicode.org/faq/utf_bom.html#BOM
+ * @readonly
+ */
+var UNICODE_REPLACEMENT_CHARACTER = '\uFFFD';
+// https://www.w3.org/TR/xml/#NT-Char
+// any Unicode character, excluding the surrogate blocks, FFFE, and FFFF.
+// `[2] Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]`
+// https://www.w3.org/TR/xml11/#NT-Char
+// `[2] Char ::= [#x1-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]`
+// https://www.w3.org/TR/xml11/#NT-RestrictedChar
+// `[2a] RestrictedChar ::= [#x1-#x8] | [#xB-#xC] | [#xE-#x1F] | [#x7F-#x84] | [#x86-#x9F]`
+// https://www.w3.org/TR/xml11/#charsets
+var Char = /[-\x09\x0A\x0D\x20-\x2C\x2E-\uD7FF\uE000-\uFFFD]/; // without \u10000-\uEFFFF
+if (UNICODE_SUPPORT) {
+	// eslint-disable-next-line es5/no-unicode-code-point-escape
+	Char = reg('[', chars(Char), '\\u{10000}-\\u{10FFFF}', ']');
+}
+// Negation of Char: matches any character that is NOT a valid XML 1.0 Char.
+// Derived directly from the Char character class above (after the unicode-support extension).
+// XML 1.0 Char production [2]: #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+// @see https://www.w3.org/TR/xml/#NT-Char
+var InvalidChar = new RegExp('[^' + chars(Char) + ']', UNICODE_SUPPORT ? 'u' : '');
+
+var _SChar = /[\x20\x09\x0D\x0A]/;
+var SChar_s = chars(_SChar);
+// https://www.w3.org/TR/xml11/#NT-S
+// `[3] S ::= (#x20 | #x9 | #xD | #xA)+`
+var S = reg(_SChar, '+');
+// optional whitespace described as `S?` in the grammar,
+// simplified to 0-n occurrences of the character class
+// instead of 0-1 occurrences of a non-capturing group around S
+var S_OPT = reg(_SChar, '*');
+
+// https://www.w3.org/TR/xml11/#NT-NameStartChar
+// `[4] NameStartChar ::= ":" | [A-Z] | "_" | [a-z] | [#xC0-#xD6] | [#xD8-#xF6] | [#xF8-#x2FF] | [#x370-#x37D] | [#x37F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]`
+var NameStartChar =
+	/[:_a-zA-Z\xC0-\xD6\xD8-\xF6\xF8-\u02FF\u0370-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/; // without \u10000-\uEFFFF
+if (UNICODE_SUPPORT) {
+	// eslint-disable-next-line es5/no-unicode-code-point-escape
+	NameStartChar = reg('[', chars(NameStartChar), '\\u{10000}-\\u{10FFFF}', ']');
+}
+var NameStartChar_s = chars(NameStartChar);
+
+// https://www.w3.org/TR/xml11/#NT-NameChar
+// `[4a] NameChar ::= NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]`
+var NameChar = reg('[', NameStartChar_s, chars(/[-.0-9\xB7]/), chars(/[\u0300-\u036F\u203F-\u2040]/), ']');
+// https://www.w3.org/TR/xml11/#NT-Name
+// `[5] Name ::= NameStartChar (NameChar)*`
+var Name = reg(NameStartChar, NameChar, '*');
+/*
+https://www.w3.org/TR/xml11/#NT-Names
+`[6] Names ::= Name (#x20 Name)*`
+*/
+
+// https://www.w3.org/TR/xml11/#NT-Nmtoken
+// `[7] Nmtoken ::= (NameChar)+`
+var Nmtoken = reg(NameChar, '+');
+/*
+https://www.w3.org/TR/xml11/#NT-Nmtokens
+`[8] Nmtokens ::= Nmtoken (#x20 Nmtoken)*`
+var Nmtokens = reg(Nmtoken, regg(/\x20/, Nmtoken), '*');
+*/
+
+// https://www.w3.org/TR/xml11/#NT-EntityRef
+// `[68] EntityRef ::= '&' Name ';'` [WFC: Entity Declared] [VC: Entity Declared] [WFC: Parsed Entity] [WFC: No Recursion]
+var EntityRef = reg('&', Name, ';');
+// https://www.w3.org/TR/xml11/#NT-CharRef
+// `[66] CharRef ::= '&#' [0-9]+ ';' | '&#x' [0-9a-fA-F]+ ';'` [WFC: Legal Character]
+var CharRef = regg(/&#[0-9]+;|&#x[0-9a-fA-F]+;/);
+
+/*
+https://www.w3.org/TR/xml11/#NT-Reference
+- `[67] Reference ::= EntityRef | CharRef`
+- `[66] CharRef ::= '&#' [0-9]+ ';' | '&#x' [0-9a-fA-F]+ ';'` [WFC: Legal Character]
+- `[68] EntityRef ::= '&' Name ';'` [WFC: Entity Declared] [VC: Entity Declared] [WFC: Parsed Entity] [WFC: No Recursion]
+*/
+var Reference = regg(EntityRef, '|', CharRef);
+
+// https://www.w3.org/TR/xml11/#NT-PEReference
+// `[69] PEReference ::= '%' Name ';'`
+// [VC: Entity Declared] [WFC: No Recursion] [WFC: In DTD]
+var PEReference = reg('%', Name, ';');
+
+// https://www.w3.org/TR/xml11/#NT-EntityValue
+// `[9] EntityValue ::= '"' ([^%&"] | PEReference | Reference)* '"' | "'" ([^%&'] | PEReference | Reference)* "'"`
+var EntityValue = regg(
+	reg('"', regg(/[^%&"]/, '|', PEReference, '|', Reference), '*', '"'),
+	'|',
+	reg("'", regg(/[^%&']/, '|', PEReference, '|', Reference), '*', "'")
+);
+
+// https://www.w3.org/TR/xml11/#NT-AttValue
+// `[10] AttValue ::= '"' ([^<&"] | Reference)* '"' | "'" ([^<&'] | Reference)* "'"`
+var AttValue = regg('"', regg(/[^<&"]/, '|', Reference), '*', '"', '|', "'", regg(/[^<&']/, '|', Reference), '*', "'");
+
+// https://www.w3.org/TR/xml-names/#ns-decl
+// https://www.w3.org/TR/xml-names/#ns-qualnames
+// NameStartChar without ":"
+var NCNameStartChar = chars_without(NameStartChar, ':');
+// https://www.w3.org/TR/xml-names/#orphans
+// `[5] NCNameChar ::= NameChar - ':'`
+// An XML NameChar, minus the ":"
+var NCNameChar = chars_without(NameChar, ':');
+// https://www.w3.org/TR/xml-names/#NT-NCName
+// `[4] NCName ::= Name - (Char* ':' Char*)`
+// An XML Name, minus the ":"
+var NCName = reg(NCNameStartChar, NCNameChar, '*');
+
+/**
+https://www.w3.org/TR/xml-names/#ns-qualnames
+
+```
+[7] QName ::= PrefixedName | UnprefixedName
+				  === (NCName ':' NCName) | NCName
+				  === NCName (':' NCName)?
+[8] PrefixedName ::= Prefix ':' LocalPart
+								 === NCName ':' NCName
+[9] UnprefixedName ::= LocalPart
+									 === NCName
+[10] Prefix ::= NCName
+[11] LocalPart ::= NCName
+```
+*/
+var QName = reg(NCName, regg(':', NCName), '?');
+var QName_exact = reg('^', QName, '$');
+var QName_group = reg('(', QName, ')');
+
+// https://www.w3.org/TR/xml11/#NT-SystemLiteral
+// `[11] SystemLiteral ::= ('"' [^"]* '"') | ("'" [^']* "'")`
+var SystemLiteral = regg(/"[^"]*"|'[^']*'/);
+
+/*
+ https://www.w3.org/TR/xml11/#NT-PI
+ ```
+ [17] PITarget    ::= Name - (('X' | 'x') ('M' | 'm') ('L' | 'l'))
+ [16] PI    ::= '<?' PITarget (S (Char* - (Char* '?>' Char*)))? '?>'
+ ```
+ target /xml/i is not excluded!
+*/
+var PI = reg(/^<\?/, '(', Name, ')', regg(S, '(', Char, '*?)'), '?', /\?>/);
+
+// https://www.w3.org/TR/xml11/#NT-PubidChar
+// `[13] PubidChar ::= #x20 | #xD | #xA | [a-zA-Z0-9] | [-'()+,./:=?;!*#@$_%]`
+var PubidChar = /[\x20\x0D\x0Aa-zA-Z0-9-'()+,./:=?;!*#@$_%]/;
+
+// https://www.w3.org/TR/xml11/#NT-PubidLiteral
+// `[12] PubidLiteral ::= '"' PubidChar* '"' | "'" (PubidChar - "'")* "'"`
+var PubidLiteral = regg('"', PubidChar, '*"', '|', "'", chars_without(PubidChar, "'"), "*'");
+
+// https://www.w3.org/TR/xml11/#NT-CharData
+// `[14] CharData    ::= [^<&]* - ([^<&]* ']]>' [^<&]*)`
+
+var COMMENT_START = '<!--';
+var COMMENT_END = '-->';
+// https://www.w3.org/TR/xml11/#NT-Comment
+// `[15] Comment ::= '<!--' ((Char - '-') | ('-' (Char - '-')))* '-->'`
+var Comment = reg(COMMENT_START, regg(chars_without(Char, '-'), '|', reg('-', chars_without(Char, '-'))), '*', COMMENT_END);
+
+var PCDATA = '#PCDATA';
+// https://www.w3.org/TR/xml11/#NT-Mixed
+// `[51] Mixed ::= '(' S? '#PCDATA' (S? '|' S? Name)* S? ')*' | '(' S? '#PCDATA' S? ')'`
+// https://www.w3.org/TR/xml-names/#NT-Mixed
+// `[51] Mixed ::= '(' S? '#PCDATA' (S? '|' S? QName)* S? ')*' | '(' S? '#PCDATA' S? ')'`
+// [VC: Proper Group/PE Nesting] [VC: No Duplicate Types]
+var Mixed = regg(
+	reg(/\(/, S_OPT, PCDATA, regg(S_OPT, /\|/, S_OPT, QName), '*', S_OPT, /\)\*/),
+	'|',
+	reg(/\(/, S_OPT, PCDATA, S_OPT, /\)/)
+);
+
+var _children_quantity = /[?*+]?/;
+/*
+ `[49] choice ::= '(' S? cp ( S? '|' S? cp )+ S? ')'` [VC: Proper Group/PE Nesting]
+ `[50] seq ::= '(' S? cp ( S? ',' S? cp )* S? ')'` [VC: Proper Group/PE Nesting]
+ simplification to solve circular referencing, but doesn't check validity constraint "Proper Group/PE Nesting"
+ var _choice_or_seq = reg('[', NameChar_s, SChar_s, chars(_children_quantity), '()|,]*');
+ ```
+ [48] cp ::= (Name | choice | seq) ('?' | '*' | '+')?
+         === (Name | '(' S? cp ( S? '|' S? cp )+ S? ')' | '(' S? cp ( S? ',' S? cp )* S? ')') ('?' | '*' | '+')?
+         !== (Name | [_choice_or_seq]*) ('?' | '*' | '+')?
+ ```
+ simplification to solve circular referencing, but doesn't check validity constraint "Proper Group/PE Nesting"
+ var cp = reg(regg(Name, '|', _choice_or_seq), _children_quantity);
+*/
+/*
+Inefficient regular expression (High)
+This part of the regular expression may cause exponential backtracking on strings starting with '(|' and containing many repetitions of '|'.
+https://github.com/xmldom/xmldom/security/code-scanning/91
+var choice = regg(/\(/, S_OPT, cp, regg(S_OPT, /\|/, S_OPT, cp), '+', S_OPT, /\)/);
+*/
+/*
+Inefficient regular expression (High)
+This part of the regular expression may cause exponential backtracking on strings starting with '(,' and containing many repetitions of ','.
+https://github.com/xmldom/xmldom/security/code-scanning/92
+var seq = regg(/\(/, S_OPT, cp, regg(S_OPT, /,/, S_OPT, cp), '*', S_OPT, /\)/);
+*/
+
+// `[47] children ::= (choice | seq) ('?' | '*' | '+')?`
+// simplification to solve circular referencing, but doesn't check validity constraint "Proper Group/PE Nesting"
+var children = reg(/\([^>]+\)/, _children_quantity /*regg(choice, '|', seq), _children_quantity*/);
+
+// https://www.w3.org/TR/xml11/#NT-contentspec
+// `[46] contentspec ::= 'EMPTY' | 'ANY' | Mixed | children`
+var contentspec = regg('EMPTY', '|', 'ANY', '|', Mixed, '|', children);
+
+var ELEMENTDECL_START = '<!ELEMENT';
+// https://www.w3.org/TR/xml11/#NT-elementdecl
+// `[45] elementdecl ::= '<!ELEMENT' S Name S contentspec S? '>'`
+// https://www.w3.org/TR/xml-names/#NT-elementdecl
+// `[17] elementdecl ::= '<!ELEMENT' S QName S contentspec S? '>'`
+// because of https://www.w3.org/TR/xml11/#NT-PEReference
+// since xmldom is not supporting replacements of PEReferences in the DTD
+// this also supports PEReference in the possible places
+var elementdecl = reg(ELEMENTDECL_START, S, regg(QName, '|', PEReference), S, regg(contentspec, '|', PEReference), S_OPT, '>');
+
+// https://www.w3.org/TR/xml11/#NT-NotationType
+// `[58] NotationType ::= 'NOTATION' S '(' S? Name (S? '|' S? Name)* S? ')'`
+// [VC: Notation Attributes] [VC: One Notation Per Element Type] [VC: No Notation on Empty Element] [VC: No Duplicate Tokens]
+var NotationType = reg('NOTATION', S, /\(/, S_OPT, Name, regg(S_OPT, /\|/, S_OPT, Name), '*', S_OPT, /\)/);
+// https://www.w3.org/TR/xml11/#NT-Enumeration
+// `[59] Enumeration ::= '(' S? Nmtoken (S? '|' S? Nmtoken)* S? ')'`
+// [VC: Enumeration] [VC: No Duplicate Tokens]
+var Enumeration = reg(/\(/, S_OPT, Nmtoken, regg(S_OPT, /\|/, S_OPT, Nmtoken), '*', S_OPT, /\)/);
+
+// https://www.w3.org/TR/xml11/#NT-EnumeratedType
+// `[57] EnumeratedType ::= NotationType | Enumeration`
+var EnumeratedType = regg(NotationType, '|', Enumeration);
+
+/*
+```
+[55] StringType ::= 'CDATA'
+[56] TokenizedType ::= 'ID' [VC: ID] [VC: One ID per Element Type] [VC: ID Attribute Default]
+   | 'IDREF' [VC: IDREF]
+   | 'IDREFS' [VC: IDREF]
+	 | 'ENTITY' [VC: Entity Name]
+	 | 'ENTITIES' [VC: Entity Name]
+	 | 'NMTOKEN' [VC: Name Token]
+	 | 'NMTOKENS' [VC: Name Token]
+ [54] AttType ::= StringType | TokenizedType | EnumeratedType
+```*/
+var AttType = regg(/CDATA|ID|IDREF|IDREFS|ENTITY|ENTITIES|NMTOKEN|NMTOKENS/, '|', EnumeratedType);
+
+// `[60] DefaultDecl ::= '#REQUIRED' | '#IMPLIED' | (('#FIXED' S)? AttValue)`
+// [WFC: No < in Attribute Values] [WFC: No External Entity References]
+// [VC: Fixed Attribute Default] [VC: Required Attribute] [VC: Attribute Default Value Syntactically Correct]
+var DefaultDecl = regg(/#REQUIRED|#IMPLIED/, '|', regg(regg('#FIXED', S), '?', AttValue));
+
+// https://www.w3.org/TR/xml11/#NT-AttDef
+// [53] AttDef ::= S Name S AttType S DefaultDecl
+// https://www.w3.org/TR/xml-names/#NT-AttDef
+// [1] NSAttName ::= PrefixedAttName | DefaultAttName
+// [2] PrefixedAttName ::= 'xmlns:' NCName [NSC: Reserved Prefixes and Namespace Names]
+// [3] DefaultAttName ::= 'xmlns'
+// [21] AttDef ::= S (QName | NSAttName) S AttType S DefaultDecl
+// 						 === S Name S AttType S DefaultDecl
+// xmldom is not distinguishing between QName and NSAttName on this level
+// to support XML without namespaces in DTD we can not restrict it to QName
+var AttDef = regg(S, Name, S, AttType, S, DefaultDecl);
+
+var ATTLIST_DECL_START = '<!ATTLIST';
+// https://www.w3.org/TR/xml11/#NT-AttlistDecl
+// `[52] AttlistDecl ::= '<!ATTLIST' S Name AttDef* S? '>'`
+// https://www.w3.org/TR/xml-names/#NT-AttlistDecl
+// `[20] AttlistDecl ::= '<!ATTLIST' S QName AttDef* S? '>'`
+// to support XML without namespaces in DTD we can not restrict it to QName
+var AttlistDecl = reg(ATTLIST_DECL_START, S, Name, AttDef, '*', S_OPT, '>');
+
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#about:legacy-compat
+var ABOUT_LEGACY_COMPAT = 'about:legacy-compat';
+var ABOUT_LEGACY_COMPAT_SystemLiteral = regg('"' + ABOUT_LEGACY_COMPAT + '"', '|', "'" + ABOUT_LEGACY_COMPAT + "'");
+var SYSTEM = 'SYSTEM';
+var PUBLIC = 'PUBLIC';
+// https://www.w3.org/TR/xml11/#NT-ExternalID
+// `[75] ExternalID ::= 'SYSTEM' S SystemLiteral | 'PUBLIC' S PubidLiteral S SystemLiteral`
+var ExternalID = regg(regg(SYSTEM, S, SystemLiteral), '|', regg(PUBLIC, S, PubidLiteral, S, SystemLiteral));
+var ExternalID_match = reg(
+	'^',
+	regg(
+		regg(SYSTEM, S, '(?<SystemLiteralOnly>', SystemLiteral, ')'),
+		'|',
+		regg(PUBLIC, S, '(?<PubidLiteral>', PubidLiteral, ')', S, '(?<SystemLiteral>', SystemLiteral, ')')
+	)
+);
+// Full-string anchored matcher for requireWellFormed serializer checks
+// https://w3c.github.io/DOM-Parsing/#xml-serializing-a-document-node
+var PubidLiteral_match = reg('^', PubidLiteral, '$');
+// Full-string anchored matcher for requireWellFormed serializer checks
+// https://w3c.github.io/DOM-Parsing/#xml-serializing-a-document-node
+var SystemLiteral_match = reg('^', SystemLiteral, '$');
+
+// https://www.w3.org/TR/xml11/#NT-NDataDecl
+// `[76] NDataDecl ::= S 'NDATA' S Name` [VC: Notation Declared]
+var NDataDecl = regg(S, 'NDATA', S, Name);
+
+// https://www.w3.org/TR/xml11/#NT-EntityDef
+// `[73] EntityDef ::= EntityValue | (ExternalID NDataDecl?)`
+var EntityDef = regg(EntityValue, '|', regg(ExternalID, NDataDecl, '?'));
+
+var ENTITY_DECL_START = '<!ENTITY';
+// https://www.w3.org/TR/xml11/#NT-GEDecl
+// `[71] GEDecl ::= '<!ENTITY' S Name S EntityDef S? '>'`
+var GEDecl = reg(ENTITY_DECL_START, S, Name, S, EntityDef, S_OPT, '>');
+// https://www.w3.org/TR/xml11/#NT-PEDef
+// `[74] PEDef ::= EntityValue | ExternalID`
+var PEDef = regg(EntityValue, '|', ExternalID);
+// https://www.w3.org/TR/xml11/#NT-PEDecl
+// `[72] PEDecl ::= '<!ENTITY' S '%' S Name S PEDef S? '>'`
+var PEDecl = reg(ENTITY_DECL_START, S, '%', S, Name, S, PEDef, S_OPT, '>');
+// https://www.w3.org/TR/xml11/#NT-EntityDecl
+// `[70] EntityDecl ::= GEDecl | PEDecl`
+var EntityDecl = regg(GEDecl, '|', PEDecl);
+
+// https://www.w3.org/TR/xml11/#NT-PublicID
+// `[83] PublicID    ::= 'PUBLIC' S PubidLiteral`
+var PublicID = reg(PUBLIC, S, PubidLiteral);
+// https://www.w3.org/TR/xml11/#NT-NotationDecl
+// `[82] NotationDecl    ::= '<!NOTATION' S Name S (ExternalID | PublicID) S? '>'` [VC: Unique Notation Name]
+var NotationDecl = reg('<!NOTATION', S, Name, S, regg(ExternalID, '|', PublicID), S_OPT, '>');
+
+// https://www.w3.org/TR/xml11/#NT-Eq
+// `[25] Eq ::= S? '=' S?`
+var Eq = reg(S_OPT, '=', S_OPT);
+// https://www.w3.org/TR/xml/#NT-VersionNum
+// `[26] VersionNum ::= '1.' [0-9]+`
+// https://www.w3.org/TR/xml11/#NT-VersionNum
+// `[26] VersionNum ::= '1.1'`
+var VersionNum = /1[.]\d+/;
+// https://www.w3.org/TR/xml11/#NT-VersionInfo
+// `[24] VersionInfo ::= S 'version' Eq ("'" VersionNum "'" | '"' VersionNum '"')`
+var VersionInfo = reg(S, 'version', Eq, regg("'", VersionNum, "'", '|', '"', VersionNum, '"'));
+// https://www.w3.org/TR/xml11/#NT-EncName
+// `[81] EncName ::= [A-Za-z] ([A-Za-z0-9._] | '-')*`
+var EncName = /[A-Za-z][-A-Za-z0-9._]*/;
+// https://www.w3.org/TR/xml11/#NT-EncDecl
+// `[80] EncodingDecl ::= S 'encoding' Eq ('"' EncName '"' | "'" EncName "'" )`
+var EncodingDecl = regg(S, 'encoding', Eq, regg('"', EncName, '"', '|', "'", EncName, "'"));
+// https://www.w3.org/TR/xml11/#NT-SDDecl
+// `[32] SDDecl ::= S 'standalone' Eq (("'" ('yes' | 'no') "'") | ('"' ('yes' | 'no') '"'))`
+var SDDecl = regg(S, 'standalone', Eq, regg("'", regg('yes', '|', 'no'), "'", '|', '"', regg('yes', '|', 'no'), '"'));
+// https://www.w3.org/TR/xml11/#NT-XMLDecl
+// [23] XMLDecl ::= '<?xml' VersionInfo EncodingDecl? SDDecl? S? '?>'
+var XMLDecl = reg(/^<\?xml/, VersionInfo, EncodingDecl, '?', SDDecl, '?', S_OPT, /\?>/);
+
+/*
+ https://www.w3.org/TR/xml/#NT-markupdecl
+ https://www.w3.org/TR/xml11/#NT-markupdecl
+ `[29] markupdecl ::= elementdecl | AttlistDecl | EntityDecl | NotationDecl | PI | Comment`
+ var markupdecl = regg(elementdecl, '|', AttlistDecl, '|', EntityDecl, '|', NotationDecl, '|', PI_unsafe, '|', Comment);
+*/
+/*
+ https://www.w3.org/TR/xml-names/#NT-doctypedecl
+`[28a] DeclSep   ::= PEReference | S`
+ https://www.w3.org/TR/xml11/#NT-intSubset
+```
+ [28b] intSubset ::= (markupdecl | DeclSep)*
+                 === (markupdecl | PEReference | S)*
+```
+ [WFC: PE Between Declarations]
+ var intSubset = reg(regg(markupdecl, '|', PEReference, '|', S), '*');
+*/
+var DOCTYPE_DECL_START = '<!DOCTYPE';
+/*
+ https://www.w3.org/TR/xml11/#NT-doctypedecl
+ `[28] doctypedecl ::= '<!DOCTYPE' S Name (S ExternalID)? S? ('[' intSubset ']' S?)? '>'`
+ https://www.afterwardsw3.org/TR/xml-names/#NT-doctypedecl
+ `[16] doctypedecl ::= '<!DOCTYPE' S QName (S ExternalID)? S? ('[' (markupdecl | PEReference | S)* ']' S?)? '>'`
+ var doctypedecl = reg('<!DOCTYPE', S, Name, regg(S, ExternalID), '?', S_OPT, regg(/\[/, intSubset, /]/, S_OPT), '?', '>');
+*/
+
+var CDATA_START = '<![CDATA[';
+var CDATA_END = ']]>';
+var CDStart = /<!\[CDATA\[/;
+var CDEnd = /\]\]>/;
+var CData = reg(Char, '*?', CDEnd);
+/*
+ https://www.w3.org/TR/xml/#dt-cdsection
+ `[18]   	CDSect	   ::=   	CDStart CData CDEnd`
+ `[19]   	CDStart	   ::=   	'<![CDATA['`
+ `[20]   	CData	   ::=   	(Char* - (Char* ']]>' Char*))`
+ `[21]   	CDEnd	   ::=   	']]>'`
+*/
+var CDSect = reg(CDStart, CData);
+
+// unit tested
+exports.chars = chars;
+exports.chars_without = chars_without;
+exports.detectUnicodeSupport = detectUnicodeSupport;
+exports.reg = reg;
+exports.regg = regg;
+exports.ABOUT_LEGACY_COMPAT = ABOUT_LEGACY_COMPAT;
+exports.ABOUT_LEGACY_COMPAT_SystemLiteral = ABOUT_LEGACY_COMPAT_SystemLiteral;
+exports.AttlistDecl = AttlistDecl;
+exports.CDATA_START = CDATA_START;
+exports.CDATA_END = CDATA_END;
+exports.CDSect = CDSect;
+exports.Char = Char;
+exports.Comment = Comment;
+exports.COMMENT_START = COMMENT_START;
+exports.COMMENT_END = COMMENT_END;
+exports.DOCTYPE_DECL_START = DOCTYPE_DECL_START;
+exports.elementdecl = elementdecl;
+exports.EntityDecl = EntityDecl;
+exports.EntityValue = EntityValue;
+exports.ExternalID = ExternalID;
+exports.ExternalID_match = ExternalID_match;
+exports.Name = Name;
+exports.NotationDecl = NotationDecl;
+exports.Reference = Reference;
+exports.PEReference = PEReference;
+exports.PI = PI;
+exports.PUBLIC = PUBLIC;
+exports.PubidLiteral = PubidLiteral;
+exports.PubidLiteral_match = PubidLiteral_match;
+exports.QName = QName;
+exports.QName_exact = QName_exact;
+exports.QName_group = QName_group;
+exports.S = S;
+exports.SChar_s = SChar_s;
+exports.S_OPT = S_OPT;
+exports.SYSTEM = SYSTEM;
+exports.SystemLiteral = SystemLiteral;
+exports.SystemLiteral_match = SystemLiteral_match;
+exports.InvalidChar = InvalidChar;
+exports.UNICODE_REPLACEMENT_CHARACTER = UNICODE_REPLACEMENT_CHARACTER;
+exports.UNICODE_SUPPORT = UNICODE_SUPPORT;
+exports.XMLDecl = XMLDecl;
+
+},{}],8:[function(require,module,exports){
+'use strict';
+var conventions = require('./conventions');
+exports.assign = conventions.assign;
+exports.hasDefaultHTMLNamespace = conventions.hasDefaultHTMLNamespace;
+exports.isHTMLMimeType = conventions.isHTMLMimeType;
+exports.isValidMimeType = conventions.isValidMimeType;
+exports.MIME_TYPE = conventions.MIME_TYPE;
+exports.NAMESPACE = conventions.NAMESPACE;
+
+var errors = require('./errors');
+exports.DOMException = errors.DOMException;
+exports.DOMExceptionName = errors.DOMExceptionName;
+exports.ExceptionCode = errors.ExceptionCode;
+exports.ParseError = errors.ParseError;
+
+var dom = require('./dom');
+exports.Attr = dom.Attr;
+exports.CDATASection = dom.CDATASection;
+exports.CharacterData = dom.CharacterData;
+exports.Comment = dom.Comment;
+exports.Document = dom.Document;
+exports.DocumentFragment = dom.DocumentFragment;
+exports.DocumentType = dom.DocumentType;
+exports.DOMImplementation = dom.DOMImplementation;
+exports.Element = dom.Element;
+exports.Entity = dom.Entity;
+exports.EntityReference = dom.EntityReference;
+exports.LiveNodeList = dom.LiveNodeList;
+exports.NamedNodeMap = dom.NamedNodeMap;
+exports.Node = dom.Node;
+exports.NodeList = dom.NodeList;
+exports.Notation = dom.Notation;
+exports.ProcessingInstruction = dom.ProcessingInstruction;
+exports.Text = dom.Text;
+exports.XMLSerializer = dom.XMLSerializer;
+
+var domParser = require('./dom-parser');
+exports.DOMParser = domParser.DOMParser;
+exports.normalizeLineEndings = domParser.normalizeLineEndings;
+exports.onErrorStopParsing = domParser.onErrorStopParsing;
+exports.onWarningStopParsing = domParser.onWarningStopParsing;
+
+},{"./conventions":2,"./dom":4,"./dom-parser":3,"./errors":6}],9:[function(require,module,exports){
+'use strict';
+
+var conventions = require('./conventions');
+var g = require('./grammar');
+var errors = require('./errors');
+
+var isHTMLEscapableRawTextElement = conventions.isHTMLEscapableRawTextElement;
+var isHTMLMimeType = conventions.isHTMLMimeType;
+var isHTMLRawTextElement = conventions.isHTMLRawTextElement;
+var hasOwn = conventions.hasOwn;
+var NAMESPACE = conventions.NAMESPACE;
+var ParseError = errors.ParseError;
+var DOMException = errors.DOMException;
+
+//var handlers = 'resolveEntity,getExternalSubset,characters,endDocument,endElement,endPrefixMapping,ignorableWhitespace,processingInstruction,setDocumentLocator,skippedEntity,startDocument,startElement,startPrefixMapping,notationDecl,unparsedEntityDecl,error,fatalError,warning,attributeDecl,elementDecl,externalEntityDecl,internalEntityDecl,comment,endCDATA,endDTD,endEntity,startCDATA,startDTD,startEntity'.split(',')
+
+//S_TAG,	S_ATTR,	S_EQ,	S_ATTR_NOQUOT_VALUE
+//S_ATTR_SPACE,	S_ATTR_END,	S_TAG_SPACE, S_TAG_CLOSE
+var S_TAG = 0; //tag name offerring
+var S_ATTR = 1; //attr name offerring
+var S_ATTR_SPACE = 2; //attr name end and space offer
+var S_EQ = 3; //=space?
+var S_ATTR_NOQUOT_VALUE = 4; //attr value(no quot value only)
+var S_ATTR_END = 5; //attr value end and no space(quot end)
+var S_TAG_SPACE = 6; //(attr value end || tag end ) && (space offer)
+var S_TAG_CLOSE = 7; //closed el<el />
+
+function XMLReader() {}
 
 XMLReader.prototype = {
-	parse:function(source,defaultNSMap,entityMap){
+	parse: function (source, defaultNSMap, entityMap) {
 		var domBuilder = this.domBuilder;
 		domBuilder.startDocument();
-		_copy(defaultNSMap ,defaultNSMap = {})
-		parse(source,defaultNSMap,entityMap,
-				domBuilder,this.errorHandler);
+		_copy(defaultNSMap, (defaultNSMap = Object.create(null)));
+		parse(source, defaultNSMap, entityMap, domBuilder, this.errorHandler);
 		domBuilder.endDocument();
+	},
+};
+
+/**
+ * Detecting everything that might be a reference,
+ * including those without ending `;`, since those are allowed in HTML.
+ * The entityReplacer takes care of verifying and transforming each occurrence,
+ * and reports to the errorHandler on those that are not OK,
+ * depending on the context.
+ */
+var ENTITY_REG = /&#?\w+;?/g;
+
+function parse(source, defaultNSMapCopy, entityMap, domBuilder, errorHandler) {
+	var isHTML = isHTMLMimeType(domBuilder.mimeType);
+	if (source.indexOf(g.UNICODE_REPLACEMENT_CHARACTER) >= 0) {
+		errorHandler.warning('Unicode replacement character detected, source encoding issues?');
 	}
-}
-function parse(source,defaultNSMapCopy,entityMap,domBuilder,errorHandler){
+
 	function fixedFromCharCode(code) {
 		// String.prototype.fromCharCode does not supports
 		// > 2 bytes unicode chars directly
 		if (code > 0xffff) {
 			code -= 0x10000;
-			var surrogate1 = 0xd800 + (code >> 10)
-				, surrogate2 = 0xdc00 + (code & 0x3ff);
+			var surrogate1 = 0xd800 + (code >> 10),
+				surrogate2 = 0xdc00 + (code & 0x3ff);
 
 			return String.fromCharCode(surrogate1, surrogate2);
 		} else {
 			return String.fromCharCode(code);
 		}
 	}
-	function entityReplacer(a){
-		var k = a.slice(1,-1);
-		if (Object.hasOwnProperty.call(entityMap, k)) {
+
+	function entityReplacer(a) {
+		var complete = a[a.length - 1] === ';' ? a : a + ';';
+		if (!isHTML && complete !== a) {
+			errorHandler.error('EntityRef: expecting ;');
+			return a;
+		}
+		var match = g.Reference.exec(complete);
+		if (!match || match[0].length !== complete.length) {
+			errorHandler.error('entity not matching Reference production: ' + a);
+			return a;
+		}
+		var k = complete.slice(1, -1);
+		if (hasOwn(entityMap, k)) {
 			return entityMap[k];
-		}else if(k.charAt(0) === '#'){
-			return fixedFromCharCode(parseInt(k.substr(1).replace('x','0x')))
-		}else{
-			errorHandler.error('entity not found:'+a);
+		} else if (k.charAt(0) === '#') {
+			return fixedFromCharCode(parseInt(k.substring(1).replace('x', '0x')));
+		} else {
+			errorHandler.error('entity not found:' + a);
 			return a;
 		}
 	}
-	function appendText(end){//has some bugs
-		if(end>start){
-			var xt = source.substring(start,end).replace(/&#?\w+;/g,entityReplacer);
-			locator&&position(start);
-			domBuilder.characters(xt,0,end-start);
-			start = end
+
+	function appendText(end) {
+		//has some bugs
+		if (end > start) {
+			var xt = source.substring(start, end).replace(ENTITY_REG, entityReplacer);
+			locator && position(start);
+			domBuilder.characters(xt, 0, end - start);
+			start = end;
 		}
 	}
-	function position(p,m){
-		while(p>=lineEnd && (m = linePattern.exec(source))){
-			lineStart = m.index;
-			lineEnd = lineStart + m[0].length;
-			locator.lineNumber++;
-			//console.log('line++:',locator,startPos,endPos)
-		}
-		locator.columnNumber = p-lineStart+1;
-	}
+
 	var lineStart = 0;
 	var lineEnd = 0;
-	var linePattern = /.*(?:\r\n?|\n)|.*$/g
+	var linePattern = /\r\n?|\n|$/g;
 	var locator = domBuilder.locator;
 
-	var parseStack = [{currentNSMap:defaultNSMapCopy}]
-	var closeMap = {};
+	function position(p, m) {
+		while (p >= lineEnd && (m = linePattern.exec(source))) {
+			lineStart = lineEnd;
+			lineEnd = m.index + m[0].length;
+			locator.lineNumber++;
+		}
+		locator.columnNumber = p - lineStart + 1;
+	}
+
+	var parseStack = [{ currentNSMap: defaultNSMapCopy }];
+	var unclosedTags = [];
 	var start = 0;
-	while(true){
-		try{
-			var tagStart = source.indexOf('<',start);
-			if(tagStart<0){
-				if(!source.substr(start).match(/^\s*$/)){
+	while (true) {
+		try {
+			var tagStart = source.indexOf('<', start);
+			if (tagStart < 0) {
+				if (!isHTML && unclosedTags.length > 0) {
+					return errorHandler.fatalError('unclosed xml tag(s): ' + unclosedTags.join(', '));
+				}
+				if (!source.substring(start).match(/^\s*$/)) {
 					var doc = domBuilder.doc;
-	    			var text = doc.createTextNode(source.substr(start));
-	    			doc.appendChild(text);
-	    			domBuilder.currentElement = text;
+					var text = doc.createTextNode(source.substring(start));
+					if (doc.documentElement) {
+						return errorHandler.error('Extra content at the end of the document');
+					}
+					doc.appendChild(text);
+					domBuilder.currentElement = text;
 				}
 				return;
 			}
-			if(tagStart>start){
+			if (tagStart > start) {
+				var fromSource = source.substring(start, tagStart);
+				if (!isHTML && unclosedTags.length === 0) {
+					fromSource = fromSource.replace(new RegExp(g.S_OPT.source, 'g'), '');
+					fromSource && errorHandler.error("Unexpected content outside root element: '" + fromSource + "'");
+				}
 				appendText(tagStart);
 			}
-			switch(source.charAt(tagStart+1)){
-			case '/':
-				var end = source.indexOf('>',tagStart+3);
-				var tagName = source.substring(tagStart + 2, end).replace(/[ \t\n\r]+$/g, '');
-				var config = parseStack.pop();
-				if(end<0){
-
-	        		tagName = source.substring(tagStart+2).replace(/[\s<].*/,'');
-	        		errorHandler.error("end tag name: "+tagName+' is not complete:'+config.tagName);
-	        		end = tagStart+1+tagName.length;
-	        	}else if(tagName.match(/\s</)){
-	        		tagName = tagName.replace(/[\s<].*/,'');
-	        		errorHandler.error("end tag name: "+tagName+' maybe not complete');
-	        		end = tagStart+1+tagName.length;
-				}
-				var localNSMap = config.localNSMap;
-				var endMatch = config.tagName == tagName;
-				var endIgnoreCaseMach = endMatch || config.tagName&&config.tagName.toLowerCase() == tagName.toLowerCase()
-		        if(endIgnoreCaseMach){
-		        	domBuilder.endElement(config.uri,config.localName,tagName);
-					if(localNSMap){
+			switch (source.charAt(tagStart + 1)) {
+				case '/':
+					var end = source.indexOf('>', tagStart + 2);
+					var tagNameRaw = source.substring(tagStart + 2, end > 0 ? end : undefined);
+					if (!tagNameRaw) {
+						return errorHandler.fatalError('end tag name missing');
+					}
+					var tagNameMatch = end > 0 && g.reg('^', g.QName_group, g.S_OPT, '$').exec(tagNameRaw);
+					if (!tagNameMatch) {
+						return errorHandler.fatalError('end tag name contains invalid characters: "' + tagNameRaw + '"');
+					}
+					if (!domBuilder.currentElement && !domBuilder.doc.documentElement) {
+						// not enough information to provide a helpful error message,
+						// but parsing will throw since there is no root element
+						return;
+					}
+					var currentTagName =
+						unclosedTags[unclosedTags.length - 1] ||
+						domBuilder.currentElement.tagName ||
+						domBuilder.doc.documentElement.tagName ||
+						'';
+					if (currentTagName !== tagNameMatch[1]) {
+						var tagNameLower = tagNameMatch[1].toLowerCase();
+						if (!isHTML || currentTagName.toLowerCase() !== tagNameLower) {
+							return errorHandler.fatalError('Opening and ending tag mismatch: "' + currentTagName + '" != "' + tagNameRaw + '"');
+						}
+					}
+					var config = parseStack.pop();
+					unclosedTags.pop();
+					var localNSMap = config.localNSMap;
+					domBuilder.endElement(config.uri, config.localName, currentTagName);
+					if (localNSMap) {
 						for (var prefix in localNSMap) {
-							if (Object.prototype.hasOwnProperty.call(localNSMap, prefix)) {
+							if (hasOwn(localNSMap, prefix)) {
 								domBuilder.endPrefixMapping(prefix);
 							}
 						}
 					}
-					if(!endMatch){
-		            	errorHandler.fatalError("end tag name: "+tagName+' is not match the current start tagName:'+config.tagName ); // No known test case
-					}
-		        }else{
-		        	parseStack.push(config)
-		        }
 
-				end++;
-				break;
-				// end elment
-			case '?':// <?...?>
-				locator&&position(tagStart);
-				end = parseInstruction(source,tagStart,domBuilder);
-				break;
-			case '!':// <!doctype,<![CDATA,<!--
-				locator&&position(tagStart);
-				end = parseDCC(source,tagStart,domBuilder,errorHandler);
-				break;
-			default:
-				locator&&position(tagStart);
-				var el = new ElementAttributes();
-				var currentNSMap = parseStack[parseStack.length-1].currentNSMap;
-				//elStartEnd
-				var end = parseElementStartPart(source,tagStart,el,currentNSMap,entityReplacer,errorHandler);
-				var len = el.length;
-
-
-				if(!el.closed && fixSelfClosed(source,end,el.tagName,closeMap)){
-					el.closed = true;
-					if(!entityMap.nbsp){
-						errorHandler.warning('unclosed xml attribute');
-					}
-				}
-				if(locator && len){
-					var locator2 = copyLocator(locator,{});
-					//try{//attribute position fixed
-					for(var i = 0;i<len;i++){
-						var a = el[i];
-						position(a.offset);
-						a.locator = copyLocator(locator,{});
-					}
-					domBuilder.locator = locator2
-					if(appendElement(el,domBuilder,currentNSMap)){
-						parseStack.push(el)
-					}
-					domBuilder.locator = locator;
-				}else{
-					if(appendElement(el,domBuilder,currentNSMap)){
-						parseStack.push(el)
-					}
-				}
-
-				if (NAMESPACE.isHTML(el.uri) && !el.closed) {
-					end = parseHtmlSpecialContent(source,end,el.tagName,entityReplacer,domBuilder)
-				} else {
 					end++;
-				}
+					break;
+				// end element
+				case '?': // <?...?>
+					locator && position(tagStart);
+					end = parseProcessingInstruction(source, tagStart, domBuilder, errorHandler);
+					break;
+				case '!': // <!doctype,<![CDATA,<!--
+					locator && position(tagStart);
+					end = parseDoctypeCommentOrCData(source, tagStart, domBuilder, errorHandler, isHTML);
+					break;
+				default:
+					locator && position(tagStart);
+					var el = new ElementAttributes();
+					var currentNSMap = parseStack[parseStack.length - 1].currentNSMap;
+					//elStartEnd
+					var end = parseElementStartPart(source, tagStart, el, currentNSMap, entityReplacer, errorHandler, isHTML);
+					var len = el.length;
+
+					if (!el.closed) {
+						if (isHTML && conventions.isHTMLVoidElement(el.tagName)) {
+							el.closed = true;
+						} else {
+							unclosedTags.push(el.tagName);
+						}
+					}
+					if (locator && len) {
+						var locator2 = copyLocator(locator, {});
+						//try{//attribute position fixed
+						for (var i = 0; i < len; i++) {
+							var a = el[i];
+							position(a.offset);
+							a.locator = copyLocator(locator, {});
+						}
+						domBuilder.locator = locator2;
+						if (appendElement(el, domBuilder, currentNSMap)) {
+							parseStack.push(el);
+						}
+						domBuilder.locator = locator;
+					} else {
+						if (appendElement(el, domBuilder, currentNSMap)) {
+							parseStack.push(el);
+						}
+					}
+
+					if (isHTML && !el.closed) {
+						end = parseHtmlSpecialContent(source, end, el.tagName, entityReplacer, domBuilder);
+					} else {
+						end++;
+					}
 			}
-		}catch(e){
+		} catch (e) {
 			if (e instanceof ParseError) {
 				throw e;
+			} else if (e instanceof DOMException) {
+				throw new ParseError(e.name + ': ' + e.message, domBuilder.locator, e);
 			}
-			errorHandler.error('element parse error: '+e)
+			errorHandler.error('element parse error: ' + e);
 			end = -1;
 		}
-		if(end>start){
+		if (end > start) {
 			start = end;
-		}else{
-			//TODO: 这里有可能sax回退，有位置错误风险
-			appendText(Math.max(tagStart,start)+1);
+		} else {
+			//Possible sax fallback here, risk of positional error
+			appendText(Math.max(tagStart, start) + 1);
 		}
 	}
 }
-function copyLocator(f,t){
+
+function copyLocator(f, t) {
 	t.lineNumber = f.lineNumber;
 	t.columnNumber = f.columnNumber;
 	return t;
 }
 
 /**
- * @see #appendElement(source,elStartEnd,el,selfClosed,entityReplacer,domBuilder,parseStack);
- * @return end of the elementStartPart(end of elementEndPart for selfClosed el)
+ * @returns
+ * end of the elementStartPart(end of elementEndPart for selfClosed el)
+ * @see {@link #appendElement}
  */
-function parseElementStartPart(source,start,el,currentNSMap,entityReplacer,errorHandler){
-
+function parseElementStartPart(source, start, el, currentNSMap, entityReplacer, errorHandler, isHTML) {
 	/**
 	 * @param {string} qname
 	 * @param {string} value
 	 * @param {number} startIndex
 	 */
 	function addAttribute(qname, value, startIndex) {
-		if (el.attributeNames.hasOwnProperty(qname)) {
-			errorHandler.fatalError('Attribute ' + qname + ' redefined')
+		if (hasOwn(el.attributeNames, qname)) {
+			return errorHandler.fatalError('Attribute ' + qname + ' redefined');
+		}
+		if (!isHTML && value.indexOf('<') >= 0) {
+			return errorHandler.fatalError("Unescaped '<' not allowed in attributes values");
 		}
 		el.addValue(
 			qname,
@@ -5012,427 +8036,656 @@ function parseElementStartPart(source,start,el,currentNSMap,entityReplacer,error
 			// since the xmldom sax parser does not "interpret" DTD the following is not implemented:
 			// - recursive replacement of (DTD) entity references
 			// - trimming and collapsing multiple spaces into a single one for attributes that are not of type CDATA
-			value.replace(/[\t\n\r]/g, ' ').replace(/&#?\w+;/g, entityReplacer),
+			value.replace(/[\t\n\r]/g, ' ').replace(ENTITY_REG, entityReplacer),
 			startIndex
-		)
+		);
 	}
+
 	var attrName;
 	var value;
 	var p = ++start;
-	var s = S_TAG;//status
-	while(true){
+	var s = S_TAG; //status
+	while (true) {
 		var c = source.charAt(p);
-		switch(c){
-		case '=':
-			if(s === S_ATTR){//attrName
-				attrName = source.slice(start,p);
-				s = S_EQ;
-			}else if(s === S_ATTR_SPACE){
-				s = S_EQ;
-			}else{
-				//fatalError: equal must after attrName or space after attrName
-				throw new Error('attribute equal must after attrName'); // No known test case
-			}
-			break;
-		case '\'':
-		case '"':
-			if(s === S_EQ || s === S_ATTR //|| s == S_ATTR_SPACE
-				){//equal
-				if(s === S_ATTR){
-					errorHandler.warning('attribute value must after "="')
-					attrName = source.slice(start,p)
+		switch (c) {
+			case '=':
+				if (s === S_ATTR) {
+					//attrName
+					attrName = source.slice(start, p);
+					s = S_EQ;
+				} else if (s === S_ATTR_SPACE) {
+					s = S_EQ;
+				} else {
+					//fatalError: equal must after attrName or space after attrName
+					throw new Error('attribute equal must after attrName'); // No known test case
 				}
-				start = p+1;
-				p = source.indexOf(c,start)
-				if(p>0){
+				break;
+			case "'":
+			case '"':
+				if (
+					s === S_EQ ||
+					s === S_ATTR //|| s == S_ATTR_SPACE
+				) {
+					//equal
+					if (s === S_ATTR) {
+						errorHandler.warning('attribute value must after "="');
+						attrName = source.slice(start, p);
+					}
+					start = p + 1;
+					p = source.indexOf(c, start);
+					if (p > 0) {
+						value = source.slice(start, p);
+						addAttribute(attrName, value, start - 1);
+						s = S_ATTR_END;
+					} else {
+						//fatalError: no end quot match
+						throw new Error("attribute value no end '" + c + "' match");
+					}
+				} else if (s == S_ATTR_NOQUOT_VALUE) {
 					value = source.slice(start, p);
-					addAttribute(attrName, value, start-1);
+					addAttribute(attrName, value, start);
+					errorHandler.warning('attribute "' + attrName + '" missed start quot(' + c + ')!!');
+					start = p + 1;
 					s = S_ATTR_END;
-				}else{
-					//fatalError: no end quot match
-					throw new Error('attribute value no end \''+c+'\' match');
+				} else {
+					//fatalError: no equal before
+					throw new Error('attribute value must after "="'); // No known test case
 				}
-			}else if(s == S_ATTR_NOQUOT_VALUE){
-				value = source.slice(start, p);
-				addAttribute(attrName, value, start);
-				errorHandler.warning('attribute "'+attrName+'" missed start quot('+c+')!!');
-				start = p+1;
-				s = S_ATTR_END
-			}else{
-				//fatalError: no equal before
-				throw new Error('attribute value must after "="'); // No known test case
-			}
-			break;
-		case '/':
-			switch(s){
-			case S_TAG:
-				el.setTagName(source.slice(start,p));
-			case S_ATTR_END:
-			case S_TAG_SPACE:
-			case S_TAG_CLOSE:
-				s =S_TAG_CLOSE;
-				el.closed = true;
-			case S_ATTR_NOQUOT_VALUE:
-			case S_ATTR:
 				break;
-				case S_ATTR_SPACE:
-					el.closed = true;
+			case '/':
+				switch (s) {
+					case S_TAG:
+						el.setTagName(source.slice(start, p));
+					case S_ATTR_END:
+					case S_TAG_SPACE:
+					case S_TAG_CLOSE:
+						s = S_TAG_CLOSE;
+						el.closed = true;
+					case S_ATTR_NOQUOT_VALUE:
+					case S_ATTR:
+						break;
+					case S_ATTR_SPACE:
+						el.closed = true;
+						break;
+					//case S_EQ:
+					default:
+						throw new Error("attribute invalid close char('/')"); // No known test case
+				}
 				break;
-			//case S_EQ:
+			case '': //end document
+				errorHandler.error('unexpected end of input');
+				if (s == S_TAG) {
+					el.setTagName(source.slice(start, p));
+				}
+				return p;
+			case '>':
+				switch (s) {
+					case S_TAG:
+						el.setTagName(source.slice(start, p));
+					case S_ATTR_END:
+					case S_TAG_SPACE:
+					case S_TAG_CLOSE:
+						break; //normal
+					case S_ATTR_NOQUOT_VALUE: //Compatible state
+					case S_ATTR:
+						value = source.slice(start, p);
+						if (value.slice(-1) === '/') {
+							el.closed = true;
+							value = value.slice(0, -1);
+						}
+					case S_ATTR_SPACE:
+						if (s === S_ATTR_SPACE) {
+							value = attrName;
+						}
+						if (s == S_ATTR_NOQUOT_VALUE) {
+							errorHandler.warning('attribute "' + value + '" missed quot(")!');
+							addAttribute(attrName, value, start);
+						} else {
+							if (!isHTML) {
+								errorHandler.warning('attribute "' + value + '" missed value!! "' + value + '" instead!!');
+							}
+							addAttribute(value, value, start);
+						}
+						break;
+					case S_EQ:
+						if (!isHTML) {
+							return errorHandler.fatalError('AttValue: \' or " expected');
+						}
+				}
+				return p;
+			/*xml space '\x20' | #x9 | #xD | #xA; */
+			case '\u0080':
+				c = ' ';
 			default:
-				throw new Error("attribute invalid close char('/')") // No known test case
-			}
-			break;
-		case ''://end document
-			errorHandler.error('unexpected end of input');
-			if(s == S_TAG){
-				el.setTagName(source.slice(start,p));
-			}
-			return p;
-		case '>':
-			switch(s){
-			case S_TAG:
-				el.setTagName(source.slice(start,p));
-			case S_ATTR_END:
-			case S_TAG_SPACE:
-			case S_TAG_CLOSE:
-				break;//normal
-			case S_ATTR_NOQUOT_VALUE://Compatible state
-			case S_ATTR:
-				value = source.slice(start,p);
-				if(value.slice(-1) === '/'){
-					el.closed  = true;
-					value = value.slice(0,-1)
-				}
-			case S_ATTR_SPACE:
-				if(s === S_ATTR_SPACE){
-					value = attrName;
-				}
-				if(s == S_ATTR_NOQUOT_VALUE){
-					errorHandler.warning('attribute "'+value+'" missed quot(")!');
-					addAttribute(attrName, value, start)
-				}else{
-					if(!NAMESPACE.isHTML(currentNSMap['']) || !value.match(/^(?:disabled|checked|selected)$/i)){
-						errorHandler.warning('attribute "'+value+'" missed value!! "'+value+'" instead!!')
+				if (c <= ' ') {
+					//space
+					switch (s) {
+						case S_TAG:
+							el.setTagName(source.slice(start, p)); //tagName
+							s = S_TAG_SPACE;
+							break;
+						case S_ATTR:
+							attrName = source.slice(start, p);
+							s = S_ATTR_SPACE;
+							break;
+						case S_ATTR_NOQUOT_VALUE:
+							var value = source.slice(start, p);
+							errorHandler.warning('attribute "' + value + '" missed quot(")!!');
+							addAttribute(attrName, value, start);
+						case S_ATTR_END:
+							s = S_TAG_SPACE;
+							break;
+						//case S_TAG_SPACE:
+						//case S_EQ:
+						//case S_ATTR_SPACE:
+						//	void();break;
+						//case S_TAG_CLOSE:
+						//ignore warning
 					}
-					addAttribute(value, value, start)
-				}
-				break;
-			case S_EQ:
-				throw new Error('attribute value missed!!');
-			}
-//			console.log(tagName,tagNamePattern,tagNamePattern.test(tagName))
-			return p;
-		/*xml space '\x20' | #x9 | #xD | #xA; */
-		case '\u0080':
-			c = ' ';
-		default:
-			if(c<= ' '){//space
-				switch(s){
-				case S_TAG:
-					el.setTagName(source.slice(start,p));//tagName
-					s = S_TAG_SPACE;
-					break;
-				case S_ATTR:
-					attrName = source.slice(start,p)
-					s = S_ATTR_SPACE;
-					break;
-				case S_ATTR_NOQUOT_VALUE:
-					var value = source.slice(start, p);
-					errorHandler.warning('attribute "'+value+'" missed quot(")!!');
-					addAttribute(attrName, value, start)
-				case S_ATTR_END:
-					s = S_TAG_SPACE;
-					break;
-				//case S_TAG_SPACE:
-				//case S_EQ:
-				//case S_ATTR_SPACE:
-				//	void();break;
-				//case S_TAG_CLOSE:
-					//ignore warning
-				}
-			}else{//not space
-//S_TAG,	S_ATTR,	S_EQ,	S_ATTR_NOQUOT_VALUE
-//S_ATTR_SPACE,	S_ATTR_END,	S_TAG_SPACE, S_TAG_CLOSE
-				switch(s){
-				//case S_TAG:void();break;
-				//case S_ATTR:void();break;
-				//case S_ATTR_NOQUOT_VALUE:void();break;
-				case S_ATTR_SPACE:
-					var tagName =  el.tagName;
-					if (!NAMESPACE.isHTML(currentNSMap['']) || !attrName.match(/^(?:disabled|checked|selected)$/i)) {
-						errorHandler.warning('attribute "'+attrName+'" missed value!! "'+attrName+'" instead2!!')
+				} else {
+					//not space
+					//S_TAG,	S_ATTR,	S_EQ,	S_ATTR_NOQUOT_VALUE
+					//S_ATTR_SPACE,	S_ATTR_END,	S_TAG_SPACE, S_TAG_CLOSE
+					switch (s) {
+						//case S_TAG:void();break;
+						//case S_ATTR:void();break;
+						//case S_ATTR_NOQUOT_VALUE:void();break;
+						case S_ATTR_SPACE:
+							if (!isHTML) {
+								errorHandler.warning('attribute "' + attrName + '" missed value!! "' + attrName + '" instead2!!');
+							}
+							addAttribute(attrName, attrName, start);
+							start = p;
+							s = S_ATTR;
+							break;
+						case S_ATTR_END:
+							errorHandler.warning('attribute space is required"' + attrName + '"!!');
+						case S_TAG_SPACE:
+							s = S_ATTR;
+							start = p;
+							break;
+						case S_EQ:
+							s = S_ATTR_NOQUOT_VALUE;
+							start = p;
+							break;
+						case S_TAG_CLOSE:
+							throw new Error("elements closed character '/' and '>' must be connected to");
 					}
-					addAttribute(attrName, attrName, start);
-					start = p;
-					s = S_ATTR;
-					break;
-				case S_ATTR_END:
-					errorHandler.warning('attribute space is required"'+attrName+'"!!')
-				case S_TAG_SPACE:
-					s = S_ATTR;
-					start = p;
-					break;
-				case S_EQ:
-					s = S_ATTR_NOQUOT_VALUE;
-					start = p;
-					break;
-				case S_TAG_CLOSE:
-					throw new Error("elements closed character '/' and '>' must be connected to");
 				}
-			}
-		}//end outer switch
-		//console.log('p++',p)
+		} //end outer switch
 		p++;
 	}
 }
+
 /**
- * @return true if has new namespace define
+ * @returns
+ * `true` if a new namespace has been defined.
  */
-function appendElement(el,domBuilder,currentNSMap){
+function appendElement(el, domBuilder, currentNSMap) {
 	var tagName = el.tagName;
 	var localNSMap = null;
-	//var currentNSMap = parseStack[parseStack.length-1].currentNSMap;
 	var i = el.length;
-	while(i--){
+	while (i--) {
 		var a = el[i];
 		var qName = a.qName;
 		var value = a.value;
 		var nsp = qName.indexOf(':');
-		if(nsp>0){
-			var prefix = a.prefix = qName.slice(0,nsp);
-			var localName = qName.slice(nsp+1);
-			var nsPrefix = prefix === 'xmlns' && localName
-		}else{
+		if (nsp > 0) {
+			var prefix = (a.prefix = qName.slice(0, nsp));
+			var localName = qName.slice(nsp + 1);
+			var nsPrefix = prefix === 'xmlns' && localName;
+		} else {
 			localName = qName;
-			prefix = null
-			nsPrefix = qName === 'xmlns' && ''
+			prefix = null;
+			nsPrefix = qName === 'xmlns' && '';
 		}
 		//can not set prefix,because prefix !== ''
-		a.localName = localName ;
+		a.localName = localName;
 		//prefix == null for no ns prefix attribute
-		if(nsPrefix !== false){//hack!!
-			if(localNSMap == null){
-				localNSMap = {}
-				//console.log(currentNSMap,0)
-				_copy(currentNSMap,currentNSMap={})
-				//console.log(currentNSMap,1)
+		if (nsPrefix !== false) {
+			//hack!!
+			if (localNSMap == null) {
+				localNSMap = Object.create(null);
+				_copy(currentNSMap, (currentNSMap = Object.create(null)));
 			}
 			currentNSMap[nsPrefix] = localNSMap[nsPrefix] = value;
-			a.uri = NAMESPACE.XMLNS
-			domBuilder.startPrefixMapping(nsPrefix, value)
+			a.uri = NAMESPACE.XMLNS;
+			domBuilder.startPrefixMapping(nsPrefix, value);
 		}
 	}
 	var i = el.length;
-	while(i--){
+	while (i--) {
 		a = el[i];
-		var prefix = a.prefix;
-		if(prefix){//no prefix attribute has no namespace
-			if(prefix === 'xml'){
+		if (a.prefix) {
+			//no prefix attribute has no namespace
+			if (a.prefix === 'xml') {
 				a.uri = NAMESPACE.XML;
-			}if(prefix !== 'xmlns'){
-				a.uri = currentNSMap[prefix || '']
-
-				//{console.log('###'+a.qName,domBuilder.locator.systemId+'',currentNSMap,a.uri)}
+			}
+			if (a.prefix !== 'xmlns') {
+				a.uri = currentNSMap[a.prefix];
 			}
 		}
 	}
 	var nsp = tagName.indexOf(':');
-	if(nsp>0){
-		prefix = el.prefix = tagName.slice(0,nsp);
-		localName = el.localName = tagName.slice(nsp+1);
-	}else{
-		prefix = null;//important!!
+	if (nsp > 0) {
+		prefix = el.prefix = tagName.slice(0, nsp);
+		localName = el.localName = tagName.slice(nsp + 1);
+	} else {
+		prefix = null; //important!!
 		localName = el.localName = tagName;
 	}
 	//no prefix element has default namespace
-	var ns = el.uri = currentNSMap[prefix || ''];
-	domBuilder.startElement(ns,localName,tagName,el);
+	var ns = (el.uri = currentNSMap[prefix || '']);
+	domBuilder.startElement(ns, localName, tagName, el);
 	//endPrefixMapping and startPrefixMapping have not any help for dom builder
 	//localNSMap = null
-	if(el.closed){
-		domBuilder.endElement(ns,localName,tagName);
-		if(localNSMap){
+	if (el.closed) {
+		domBuilder.endElement(ns, localName, tagName);
+		if (localNSMap) {
 			for (prefix in localNSMap) {
-				if (Object.prototype.hasOwnProperty.call(localNSMap, prefix)) {
+				if (hasOwn(localNSMap, prefix)) {
 					domBuilder.endPrefixMapping(prefix);
 				}
 			}
 		}
-	}else{
+	} else {
 		el.currentNSMap = currentNSMap;
 		el.localNSMap = localNSMap;
 		//parseStack.push(el);
 		return true;
 	}
 }
-function parseHtmlSpecialContent(source,elStartEnd,tagName,entityReplacer,domBuilder){
-	if(/^(?:script|textarea)$/i.test(tagName)){
-		var elEndStart =  source.indexOf('</'+tagName+'>',elStartEnd);
-		var text = source.substring(elStartEnd+1,elEndStart);
-		if(/[&<]/.test(text)){
-			if(/^script$/i.test(tagName)){
-				//if(!/\]\]>/.test(text)){
-					//lexHandler.startCDATA();
-					domBuilder.characters(text,0,text.length);
-					//lexHandler.endCDATA();
-					return elEndStart;
-				//}
-			}//}else{//text area
-				text = text.replace(/&#?\w+;/g,entityReplacer);
-				domBuilder.characters(text,0,text.length);
-				return elEndStart;
-			//}
 
+function parseHtmlSpecialContent(source, elStartEnd, tagName, entityReplacer, domBuilder) {
+	// https://html.spec.whatwg.org/#raw-text-elements
+	// https://html.spec.whatwg.org/#escapable-raw-text-elements
+	// https://html.spec.whatwg.org/#cdata-rcdata-restrictions:raw-text-elements
+	// TODO: https://html.spec.whatwg.org/#cdata-rcdata-restrictions
+	var isEscapableRaw = isHTMLEscapableRawTextElement(tagName);
+	if (isEscapableRaw || isHTMLRawTextElement(tagName)) {
+		var elEndStart = source.indexOf('</' + tagName + '>', elStartEnd);
+		var text = source.substring(elStartEnd + 1, elEndStart);
+
+		if (isEscapableRaw) {
+			text = text.replace(ENTITY_REG, entityReplacer);
 		}
+		domBuilder.characters(text, 0, text.length);
+		return elEndStart;
 	}
-	return elStartEnd+1;
-}
-function fixSelfClosed(source,elStartEnd,tagName,closeMap){
-	//if(tagName in closeMap){
-	var pos = closeMap[tagName];
-	if(pos == null){
-		//console.log(tagName)
-		pos =  source.lastIndexOf('</'+tagName+'>')
-		if(pos<elStartEnd){//忘记闭合
-			pos = source.lastIndexOf('</'+tagName)
-		}
-		closeMap[tagName] =pos
-	}
-	return pos<elStartEnd;
-	//}
+	return elStartEnd + 1;
 }
 
-function _copy (source, target) {
+function _copy(source, target) {
 	for (var n in source) {
-		if (Object.prototype.hasOwnProperty.call(source, n)) {
+		if (hasOwn(source, n)) {
 			target[n] = source[n];
 		}
 	}
 }
 
-function parseDCC(source,start,domBuilder,errorHandler){//sure start with '<!'
-	var next= source.charAt(start+2)
-	switch(next){
-	case '-':
-		if(source.charAt(start + 3) === '-'){
-			var end = source.indexOf('-->',start+4);
-			//append comment source.substring(4,end)//<!--
-			if(end>start){
-				domBuilder.comment(source,start+4,end-start-4);
-				return end+3;
-			}else{
-				errorHandler.error("Unclosed comment");
-				return -1;
+/**
+ * @typedef ParseUtils
+ * @property {function(relativeIndex: number?): string | undefined} char
+ * Provides look ahead access to a singe character relative to the current index.
+ * @property {function(): number} getIndex
+ * Provides read-only access to the current index.
+ * @property {function(reg: RegExp): string | null} getMatch
+ * Applies the provided regular expression enforcing that it starts at the current index and
+ * returns the complete matching string,
+ * and moves the current index by the length of the matching string.
+ * @property {function(): string} getSource
+ * Provides read-only access to the complete source.
+ * @property {function(places: number?): void} skip
+ * moves the current index by places (defaults to 1)
+ * @property {function(): number} skipBlanks
+ * Moves the current index by the amount of white space that directly follows the current index
+ * and returns the amount of whitespace chars skipped (0..n),
+ * or -1 if the end of the source was reached.
+ * @property {function(): string} substringFromIndex
+ * creates a substring from the current index to the end of `source`
+ * @property {function(compareWith: string): boolean} substringStartsWith
+ * Checks if `source` contains `compareWith`, starting from the current index.
+ * @property {function(compareWith: string): boolean} substringStartsWithCaseInsensitive
+ * Checks if `source` contains `compareWith`, starting from the current index,
+ * comparing the upper case of both sides.
+ * @see {@link parseUtils}
+ */
+
+/**
+ * A temporary scope for parsing and look ahead operations in `source`,
+ * starting from index `start`.
+ *
+ * Some operations move the current index by a number of positions,
+ * after which `getIndex` returns the new index.
+ *
+ * @param {string} source
+ * @param {number} start
+ * @returns {ParseUtils}
+ */
+function parseUtils(source, start) {
+	var index = start;
+
+	function char(n) {
+		n = n || 0;
+		return source.charAt(index + n);
+	}
+
+	function skip(n) {
+		n = n || 1;
+		index += n;
+	}
+
+	function skipBlanks() {
+		var blanks = 0;
+		while (index < source.length) {
+			var c = char();
+			if (c !== ' ' && c !== '\n' && c !== '\t' && c !== '\r') {
+				return blanks;
 			}
-		}else{
-			//error
-			return -1;
+			blanks++;
+			skip();
 		}
-	default:
-		if(source.substr(start+3,6) == 'CDATA['){
-			var end = source.indexOf(']]>',start+9);
-			domBuilder.startCDATA();
-			domBuilder.characters(source,start+9,end-start-9);
-			domBuilder.endCDATA()
-			return end+3;
+		return -1;
+	}
+	function substringFromIndex() {
+		return source.substring(index);
+	}
+	function substringStartsWith(text) {
+		return source.substring(index, index + text.length) === text;
+	}
+	function substringStartsWithCaseInsensitive(text) {
+		return source.substring(index, index + text.length).toUpperCase() === text.toUpperCase();
+	}
+
+	function getMatch(args) {
+		var expr = g.reg('^', args);
+		var match = expr.exec(substringFromIndex());
+		if (match) {
+			skip(match[0].length);
+			return match[0];
 		}
-		//<!DOCTYPE
-		//startDTD(java.lang.String name, java.lang.String publicId, java.lang.String systemId)
-		var matchs = split(source,start);
-		var len = matchs.length;
-		if(len>1 && /!doctype/i.test(matchs[0][0])){
-			var name = matchs[1][0];
-			var pubid = false;
-			var sysid = false;
-			if(len>3){
-				if(/^public$/i.test(matchs[2][0])){
-					pubid = matchs[3][0];
-					sysid = len>4 && matchs[4][0];
-				}else if(/^system$/i.test(matchs[2][0])){
-					sysid = matchs[3][0];
+		return null;
+	}
+	return {
+		char: char,
+		getIndex: function () {
+			return index;
+		},
+		getMatch: getMatch,
+		getSource: function () {
+			return source;
+		},
+		skip: skip,
+		skipBlanks: skipBlanks,
+		substringFromIndex: substringFromIndex,
+		substringStartsWith: substringStartsWith,
+		substringStartsWithCaseInsensitive: substringStartsWithCaseInsensitive,
+	};
+}
+
+/**
+ * @param {ParseUtils} p
+ * @param {DOMHandler} errorHandler
+ * @returns {string}
+ */
+function parseDoctypeInternalSubset(p, errorHandler) {
+	/**
+	 * @param {ParseUtils} p
+	 * @param {DOMHandler} errorHandler
+	 * @returns {string}
+	 */
+	function parsePI(p, errorHandler) {
+		var match = g.PI.exec(p.substringFromIndex());
+		if (!match) {
+			return errorHandler.fatalError('processing instruction is not well-formed at position ' + p.getIndex());
+		}
+		if (match[1].toLowerCase() === 'xml') {
+			return errorHandler.fatalError(
+				'xml declaration is only allowed at the start of the document, but found at position ' + p.getIndex()
+			);
+		}
+		p.skip(match[0].length);
+		return match[0];
+	}
+	// Parse internal subset
+	var source = p.getSource();
+	if (p.char() === '[') {
+		p.skip(1);
+		var intSubsetStart = p.getIndex();
+		while (p.getIndex() < source.length) {
+			p.skipBlanks();
+			if (p.char() === ']') {
+				var internalSubset = source.substring(intSubsetStart, p.getIndex());
+				p.skip(1);
+				return internalSubset;
+			}
+			var current = null;
+			// Only in external subset
+			// if (char() === '<' && char(1) === '!' && char(2) === '[') {
+			// 	parseConditionalSections(p, errorHandler);
+			// } else
+			if (p.char() === '<' && p.char(1) === '!') {
+				switch (p.char(2)) {
+					case 'E': // ELEMENT | ENTITY
+						if (p.char(3) === 'L') {
+							current = p.getMatch(g.elementdecl);
+						} else if (p.char(3) === 'N') {
+							current = p.getMatch(g.EntityDecl);
+						}
+						break;
+					case 'A': // ATTRIBUTE
+						current = p.getMatch(g.AttlistDecl);
+						break;
+					case 'N': // NOTATION
+						current = p.getMatch(g.NotationDecl);
+						break;
+					case '-': // COMMENT
+						current = p.getMatch(g.Comment);
+						break;
+				}
+			} else if (p.char() === '<' && p.char(1) === '?') {
+				current = parsePI(p, errorHandler);
+			} else if (p.char() === '%') {
+				current = p.getMatch(g.PEReference);
+			} else {
+				return errorHandler.fatalError('Error detected in Markup declaration');
+			}
+			if (!current) {
+				return errorHandler.fatalError('Error in internal subset at position ' + p.getIndex());
+			}
+		}
+		return errorHandler.fatalError('doctype internal subset is not well-formed, missing ]');
+	}
+}
+
+/**
+ * Called when the parser encounters an element starting with '<!'.
+ *
+ * @param {string} source
+ * The xml.
+ * @param {number} start
+ * the start index of the '<!'
+ * @param {DOMHandler} domBuilder
+ * @param {DOMHandler} errorHandler
+ * @param {boolean} isHTML
+ * @returns {number | never}
+ * The end index of the element.
+ * @throws {ParseError}
+ * In case the element is not well-formed.
+ */
+function parseDoctypeCommentOrCData(source, start, domBuilder, errorHandler, isHTML) {
+	var p = parseUtils(source, start);
+
+	switch (isHTML ? p.char(2).toUpperCase() : p.char(2)) {
+		case '-':
+			// should be a comment
+			var comment = p.getMatch(g.Comment);
+			if (comment) {
+				domBuilder.comment(comment, g.COMMENT_START.length, comment.length - g.COMMENT_START.length - g.COMMENT_END.length);
+				return p.getIndex();
+			} else {
+				return errorHandler.fatalError('comment is not well-formed at position ' + p.getIndex());
+			}
+		case '[':
+			// should be CDATA
+			var cdata = p.getMatch(g.CDSect);
+			if (cdata) {
+				if (!isHTML && !domBuilder.currentElement) {
+					return errorHandler.fatalError('CDATA outside of element');
+				}
+				domBuilder.startCDATA();
+				domBuilder.characters(cdata, g.CDATA_START.length, cdata.length - g.CDATA_START.length - g.CDATA_END.length);
+				domBuilder.endCDATA();
+				return p.getIndex();
+			} else {
+				return errorHandler.fatalError('Invalid CDATA starting at position ' + start);
+			}
+		case 'D': {
+			// should be DOCTYPE
+			if (domBuilder.doc && domBuilder.doc.documentElement) {
+				return errorHandler.fatalError('Doctype not allowed inside or after documentElement at position ' + p.getIndex());
+			}
+			if (isHTML ? !p.substringStartsWithCaseInsensitive(g.DOCTYPE_DECL_START) : !p.substringStartsWith(g.DOCTYPE_DECL_START)) {
+				return errorHandler.fatalError('Expected ' + g.DOCTYPE_DECL_START + ' at position ' + p.getIndex());
+			}
+			p.skip(g.DOCTYPE_DECL_START.length);
+			if (p.skipBlanks() < 1) {
+				return errorHandler.fatalError('Expected whitespace after ' + g.DOCTYPE_DECL_START + ' at position ' + p.getIndex());
+			}
+
+			var doctype = {
+				name: undefined,
+				publicId: undefined,
+				systemId: undefined,
+				internalSubset: undefined,
+			};
+			// Parse the DOCTYPE name
+			doctype.name = p.getMatch(g.Name);
+			if (!doctype.name)
+				return errorHandler.fatalError('doctype name missing or contains unexpected characters at position ' + p.getIndex());
+
+			if (isHTML && doctype.name.toLowerCase() !== 'html') {
+				errorHandler.warning('Unexpected DOCTYPE in HTML document at position ' + p.getIndex());
+			}
+			p.skipBlanks();
+
+			// Check for ExternalID
+			if (p.substringStartsWith(g.PUBLIC) || p.substringStartsWith(g.SYSTEM)) {
+				var match = g.ExternalID_match.exec(p.substringFromIndex());
+				if (!match) {
+					return errorHandler.fatalError('doctype external id is not well-formed at position ' + p.getIndex());
+				}
+				if (match.groups.SystemLiteralOnly !== undefined) {
+					doctype.systemId = match.groups.SystemLiteralOnly;
+				} else {
+					doctype.systemId = match.groups.SystemLiteral;
+					doctype.publicId = match.groups.PubidLiteral;
+				}
+				p.skip(match[0].length);
+			} else if (isHTML && p.substringStartsWithCaseInsensitive(g.SYSTEM)) {
+				// https://html.spec.whatwg.org/multipage/syntax.html#doctype-legacy-string
+				p.skip(g.SYSTEM.length);
+				if (p.skipBlanks() < 1) {
+					return errorHandler.fatalError('Expected whitespace after ' + g.SYSTEM + ' at position ' + p.getIndex());
+				}
+				doctype.systemId = p.getMatch(g.ABOUT_LEGACY_COMPAT_SystemLiteral);
+				if (!doctype.systemId) {
+					return errorHandler.fatalError(
+						'Expected ' + g.ABOUT_LEGACY_COMPAT + ' in single or double quotes after ' + g.SYSTEM + ' at position ' + p.getIndex()
+					);
 				}
 			}
-			var lastMatch = matchs[len-1]
-			domBuilder.startDTD(name, pubid, sysid);
+			if (isHTML && doctype.systemId && !g.ABOUT_LEGACY_COMPAT_SystemLiteral.test(doctype.systemId)) {
+				errorHandler.warning('Unexpected doctype.systemId in HTML document at position ' + p.getIndex());
+			}
+			if (!isHTML) {
+				p.skipBlanks();
+				doctype.internalSubset = parseDoctypeInternalSubset(p, errorHandler);
+			}
+			p.skipBlanks();
+			if (p.char() !== '>') {
+				return errorHandler.fatalError('doctype not terminated with > at position ' + p.getIndex());
+			}
+			p.skip(1);
+			domBuilder.startDTD(doctype.name, doctype.publicId, doctype.systemId, doctype.internalSubset);
 			domBuilder.endDTD();
+			return p.getIndex();
+		}
+		default:
+			return errorHandler.fatalError('Not well-formed XML starting with "<!" at position ' + start);
+	}
+}
 
-			return lastMatch.index+lastMatch[0].length
+function parseProcessingInstruction(source, start, domBuilder, errorHandler) {
+	var match = source.substring(start).match(g.PI);
+	if (!match) {
+		return errorHandler.fatalError('Invalid processing instruction starting at position ' + start);
+	}
+	if (match[1].toLowerCase() === 'xml') {
+		if (start > 0) {
+			return errorHandler.fatalError(
+				'processing instruction at position ' + start + ' is an xml declaration which is only at the start of the document'
+			);
+		}
+		if (!g.XMLDecl.test(source.substring(start))) {
+			return errorHandler.fatalError('xml declaration is not well-formed');
 		}
 	}
-	return -1;
+	domBuilder.processingInstruction(match[1], match[2]);
+	return start + match[0].length;
 }
 
-
-
-function parseInstruction(source,start,domBuilder){
-	var end = source.indexOf('?>',start);
-	if(end){
-		var match = source.substring(start,end).match(/^<\?(\S*)\s*([\s\S]*?)\s*$/);
-		if(match){
-			var len = match[0].length;
-			domBuilder.processingInstruction(match[1], match[2]) ;
-			return end+2;
-		}else{//error
-			return -1;
-		}
-	}
-	return -1;
+function ElementAttributes() {
+	this.attributeNames = Object.create(null);
 }
 
-function ElementAttributes(){
-	this.attributeNames = {}
-}
 ElementAttributes.prototype = {
-	setTagName:function(tagName){
-		if(!tagNamePattern.test(tagName)){
-			throw new Error('invalid tagName:'+tagName)
+	setTagName: function (tagName) {
+		if (!g.QName_exact.test(tagName)) {
+			throw new Error('invalid tagName:' + tagName);
 		}
-		this.tagName = tagName
+		this.tagName = tagName;
 	},
-	addValue:function(qName, value, offset) {
-		if(!tagNamePattern.test(qName)){
-			throw new Error('invalid attribute:'+qName)
+	addValue: function (qName, value, offset) {
+		if (!g.QName_exact.test(qName)) {
+			throw new Error('invalid attribute:' + qName);
 		}
 		this.attributeNames[qName] = this.length;
-		this[this.length++] = {qName:qName,value:value,offset:offset}
+		this[this.length++] = { qName: qName, value: value, offset: offset };
 	},
-	length:0,
-	getLocalName:function(i){return this[i].localName},
-	getLocator:function(i){return this[i].locator},
-	getQName:function(i){return this[i].qName},
-	getURI:function(i){return this[i].uri},
-	getValue:function(i){return this[i].value}
-//	,getIndex:function(uri, localName)){
-//		if(localName){
-//
-//		}else{
-//			var qName = uri
-//		}
-//	},
-//	getValue:function(){return this.getValue(this.getIndex.apply(this,arguments))},
-//	getType:function(uri,localName){}
-//	getType:function(i){},
-}
-
-
-
-function split(source,start){
-	var match;
-	var buf = [];
-	var reg = /'[^']+'|"[^"]+"|[^\s<>\/=]+=?|(\/?\s*>|<)/g;
-	reg.lastIndex = start;
-	reg.exec(source);//skip <
-	while(match = reg.exec(source)){
-		buf.push(match);
-		if(match[1])return buf;
-	}
-}
+	length: 0,
+	getLocalName: function (i) {
+		return this[i].localName;
+	},
+	getLocator: function (i) {
+		return this[i].locator;
+	},
+	getQName: function (i) {
+		return this[i].qName;
+	},
+	getURI: function (i) {
+		return this[i].uri;
+	},
+	getValue: function (i) {
+		return this[i].value;
+	},
+	//	,getIndex:function(uri, localName)){
+	//		if(localName){
+	//
+	//		}else{
+	//			var qName = uri
+	//		}
+	//	},
+	//	getValue:function(){return this.getValue(this.getIndex.apply(this,arguments))},
+	//	getType:function(uri,localName){}
+	//	getType:function(i){},
+};
 
 exports.XMLReader = XMLReader;
-exports.ParseError = ParseError;
+exports.parseUtils = parseUtils;
+exports.parseDoctypeCommentOrCData = parseDoctypeCommentOrCData;
 
-},{"./conventions":2}],8:[function(require,module,exports){
+},{"./conventions":2,"./errors":6,"./grammar":7}],10:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -5584,7 +8837,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],9:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 (function (Buffer){(function (){
 /*!
  * The buffer module from node.js, for the browser.
@@ -7365,7 +10618,7 @@ function numberIsNaN (obj) {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"base64-js":8,"buffer":9,"ieee754":10}],10:[function(require,module,exports){
+},{"base64-js":10,"buffer":11,"ieee754":12}],12:[function(require,module,exports){
 /*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
