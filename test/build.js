@@ -9,7 +9,7 @@ describe('plist', function () {
   describe('build()', function () {
 
     it('should create a plist XML string from a String', function () {
-      var xml = build('test');
+      const xml = build('test');
       assert.strictEqual(xml, `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -18,7 +18,7 @@ describe('plist', function () {
     });
 
     it('should create a plist XML integer from a whole Number', function () {
-      var xml = build(3);
+      const xml = build(3);
       assert.strictEqual(xml, `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -27,7 +27,7 @@ describe('plist', function () {
     });
 
     it('should create a plist XML real from a fractional Number', function () {
-      var xml = build(Math.PI);
+      const xml = build(Math.PI);
       assert.strictEqual(xml, `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -36,7 +36,7 @@ describe('plist', function () {
     });
 
     it('should create a plist XML real from a BigInt', function () {
-      var xml = build(BigInt('0x1fffffffffffff'));
+      const xml = build(BigInt('0x1fffffffffffff'));
       assert.strictEqual(xml, `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -45,7 +45,7 @@ describe('plist', function () {
     });
 
     it('should create a plist XML date from a Date', function () {
-      var xml = build(new Date('2010-02-08T21:41:23Z'));
+      const xml = build(new Date('2010-02-08T21:41:23Z'));
       assert.strictEqual(xml, `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -54,7 +54,7 @@ describe('plist', function () {
     });
 
     it('should create a plist XML data from a Uint8Array', function () {
-      var xml = build(new TextEncoder().encode('\u2603'));
+      const xml = build(new TextEncoder().encode('\u2603'));
       assert.strictEqual(xml, `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -63,7 +63,7 @@ describe('plist', function () {
     });
 
     it('should create a plist XML true from a `true` Boolean', function () {
-      var xml = build(true);
+      const xml = build(true);
       assert.strictEqual(xml, `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -72,7 +72,7 @@ describe('plist', function () {
     });
 
     it('should create a plist XML false from a `false` Boolean', function () {
-      var xml = build(false);
+      const xml = build(false);
       assert.strictEqual(xml, `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -81,7 +81,7 @@ describe('plist', function () {
     });
 
     it('should create a plist XML dict from an Object', function () {
-      var xml = build({ foo: 'bar' });
+      const xml = build({ foo: 'bar' });
       assert.strictEqual(xml, `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -93,7 +93,7 @@ describe('plist', function () {
     });
 
     it('should create a plist XML array from an Array', function () {
-      var xml = build([ 1, 'foo', false, new Date(1234) ]);
+      const xml = build([ 1, 'foo', false, new Date(1234) ]);
       assert.strictEqual(xml, `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -107,7 +107,7 @@ describe('plist', function () {
     });
 
     it('should properly encode an empty string', function () {
-      var xml = build({ a: '' });
+      const xml = build({ a: '' });
       assert.strictEqual(xml, `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -119,7 +119,7 @@ describe('plist', function () {
     });
 
     it('should omit undefined values', function () {
-      var xml = build({ a: undefined });
+      const xml = build({ a: undefined });
       assert.strictEqual(xml, `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -130,7 +130,7 @@ describe('plist', function () {
     });
 
     it('should not omit null values', function () {
-      var xml = build({ a: null});
+      const xml = build({ a: null});
       assert.strictEqual(xml, `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">

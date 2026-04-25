@@ -6,6 +6,8 @@
 * bump minimum node version from 10 to 18
 * switch testing from mocha to node's built in test runner
 * implement a real browser example in examples/browser/
+* converted `var` usage to block scope (`let` and `const`) everywhere
+
 
 3.1.1 / 2026-04-25
 ==================
