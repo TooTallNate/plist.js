@@ -115,26 +115,29 @@ describe('plist', () => {
 </plist>`);
     });
 
-    it('should omit undefined values', () => {
-      const xml = build({ a: undefined } as any);
-      expect(xml).toBe(`<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-  <dict>
-    <key>a</key>
-  </dict>
-</plist>`);
+    it('should skip undefined values in dict', () => {
+      const xml = build({ foo: undefined } as any);
+      expect(xml).toBe(build({}));
     });
 
-    it('should not omit null values', () => {
-      const xml = build({ a: null });
+    it('should skip null values in dict', () => {
+      const xml = build({ foo: null });
+      expect(xml).toBe(build({}));
+    });
+
+    it('should skip null values but keep other keys in dict', () => {
+      const xml = build({ foo: null, bar: 'baz' });
+      expect(xml).toBe(build({ bar: 'baz' }));
+    });
+
+    it('should skip null values in arrays', () => {
+      const xml = build([null, 'a', null]);
       expect(xml).toBe(`<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-  <dict>
-    <key>a</key>
-    <null/>
-  </dict>
+  <array>
+    <string>a</string>
+  </array>
 </plist>`);
     });
   });
