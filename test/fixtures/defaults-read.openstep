@@ -1,0 +1,19 @@
+{
+    CFBundleDevelopmentRegion = en;
+    CFBundleExecutable = "My App";
+    CFBundleIdentifier = "com.example.myapp";
+    CFBundleInfoDictionaryVersion = "6.0";
+    CFBundleName = "My App";
+    CFBundlePackageType = APPL;
+    CFBundleShortVersionString = "1.0";
+    CFBundleVersion = 1;
+    LSRequiresIPhoneOS = 1;
+    NSAppTransportSecurity = {
+        NSAllowsArbitraryLoads = 1;
+    };
+    UISupportedInterfaceOrientations = (
+        UIInterfaceOrientationPortrait,
+        UIInterfaceOrientationLandscapeLeft,
+        UIInterfaceOrientationLandscapeRight
+    );
+}
