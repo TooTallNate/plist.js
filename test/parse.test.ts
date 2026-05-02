@@ -491,5 +491,15 @@ int main(int argc, char *argv[])
     it('ensure empty strings arent valid plist', () => {
       expect(() => parse('')).toThrow();
     });
+
+    it('should throw a descriptive error for binary plist input', () => {
+      expect(() => parse('bplist00\x00')).toThrow(
+        /Binary plist detected/,
+      );
+    });
+
+    it('should throw a useful error for completely invalid XML', () => {
+      expect(() => parse('this is not xml at all')).toThrow();
+    });
   });
 });

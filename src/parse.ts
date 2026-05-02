@@ -66,6 +66,11 @@ export type PlistValue =
  * @returns the decoded value from the Plist XML
  */
 export function parse(xml: string): PlistValue {
+  if (xml.substring(0, 6) === 'bplist') {
+    throw new Error(
+      'Binary plist detected. Binary plists are not supported by parse(). Convert to XML first.',
+    );
+  }
   const doc = new DOMParser().parseFromString(xml, "text/xml");
   const root = doc.documentElement;
   invariant(
