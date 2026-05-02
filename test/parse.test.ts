@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { describe, it, expect } from 'vitest';
-import { parse, build } from '../src/index.js';
+import { parse, build, buildBinary, parseBinary } from '../src/index.js';
 
 function parseFixture(string: string) {
   const intro = `<?xml version="1.0" encoding="UTF-8"?>
@@ -529,6 +529,18 @@ int main(int argc, char *argv[])
       };
       const xml = build(original);
       const parsed = parse(xml);
+      expect(parsed).toEqual(original);
+    });
+
+    it('should roundtrip emoji through buildBinary and parseBinary', () => {
+      const original = {
+        emoji: '🎉🤖💀',
+        mixed: 'hello 🌍 world',
+        flags: '🇺🇸🇯🇵',
+        keycap: '1️⃣2️⃣3️⃣',
+      };
+      const binary = buildBinary(original);
+      const parsed = parseBinary(binary);
       expect(parsed).toEqual(original);
     });
   });
