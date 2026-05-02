@@ -1,140 +1,39 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>plist.js browser example</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <style>
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-        max-width: 720px;
-        margin: 40px auto;
-        padding: 0 20px;
-        color: #24292e;
-      }
-
-      h1 {
-        font-size: 20px;
-        margin-bottom: 20px;
-      }
-
-      #dropzone {
-        position: relative;
-        border: 2px dashed #ccc;
-        border-radius: 8px;
-        padding: 40px 20px;
-        text-align: center;
-        color: #666;
-        cursor: pointer;
-        transition: border-color 0.2s, background-color 0.2s;
-      }
-
-      #dropzone.dragover {
-        border-color: #0366d6;
-        background-color: #f1f8ff;
-      }
-
-      #dropzone input[type="file"] {
-        position: absolute;
-        inset: 0;
-        opacity: 0;
-        cursor: pointer;
-      }
-
-      #output {
-        margin-top: 20px;
-        padding: 16px;
-        background: #f6f8fa;
-        border: 1px solid #e1e4e8;
-        border-radius: 8px;
-        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-        font-size: 13px;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-        overflow: auto;
-        max-height: 70vh;
-        display: none;
-      }
-
-      #output.visible {
-        display: block;
-      }
-
-      #output.error {
-        color: #cb2431;
-        background: #ffeef0;
-        border-color: #fdaeb7;
-      }
-    </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>plist.js Browser Demo</title>
+    <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
-    <h1>plist.js browser example</h1>
-    <div id="dropzone">
-      Drop a .plist file here, or click to browse
-      <input type="file" accept=".plist,.xml">
-    </div>
-    <pre id="output"></pre>
+    <h1>plist.js Browser Demo</h1>
 
-    <script type="importmap">
-      {
-        "imports": {
-          "@xmldom/xmldom": "https://esm.sh/@xmldom/xmldom",
-          "xmlbuilder": "https://esm.sh/xmlbuilder"
-        }
-      }
-    </script>
-    <script type="module">
-      import { parse } from '../../index.js';
+    <section>
+      <h2>Parse Plist → JSON</h2>
+      <textarea id="parse-input" rows="10" placeholder="Paste XML plist, base64 binary plist, or OpenStep plist here…"><?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Name</key>
+    <string>plist.js</string>
+    <key>Version</key>
+    <integer>4</integer>
+    <key>Browser</key>
+    <true/>
+  </dict>
+</plist></textarea>
+      <button id="parse-btn">Parse</button>
+      <pre id="parse-output"></pre>
+    </section>
 
-      const dropzone = document.getElementById('dropzone');
-      const output = document.getElementById('output');
+    <section>
+      <h2>Build JSON → Plist XML</h2>
+      <textarea id="build-input" rows="6" placeholder="Paste JSON here…">{"Name":"plist.js","Version":4,"Browser":true}</textarea>
+      <button id="build-btn">Build</button>
+      <pre id="build-output"></pre>
+    </section>
 
-      function showResult(filename, text) {
-        output.textContent = `${filename}\n\n${text}`;
-        output.classList.remove('error');
-        output.classList.add('visible');
-      }
-
-      function showError(filename, message) {
-        output.textContent = `${filename}\n\n${message}`;
-        output.classList.add('error', 'visible');
-      }
-
-      function handleFile(file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          try {
-            const result = parse(reader.result);
-            showResult(file.name, JSON.stringify(result, null, 2));
-          } catch (err) {
-            showError(file.name, `Parse error: ${err.message}`);
-          }
-        };
-        reader.onerror = () => showError(file.name, 'Failed to read file.');
-        reader.readAsText(file);
-      }
-
-      dropzone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropzone.classList.add('dragover');
-      });
-
-      dropzone.addEventListener('dragleave', () => {
-        dropzone.classList.remove('dragover');
-      });
-
-      dropzone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('dragover');
-        const file = e.dataTransfer.files[0];
-        if (file) handleFile(file);
-      });
-
-      dropzone.querySelector('input').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) handleFile(file);
-      });
-    </script>
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

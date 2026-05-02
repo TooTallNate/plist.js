@@ -1,0 +1,17 @@
+{
+  "name": "plist-browser-demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "vercel-build": "cd ../.. && pnpm run build && cd examples/browser && vite build"
+  },
+  "dependencies": {
+    "plist": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "vite": "^6"
+  }
+}
