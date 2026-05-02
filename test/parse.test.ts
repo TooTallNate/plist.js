@@ -1,3 +1,4 @@
+import { readFileSync } from 'fs';
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src/index.js';
 
@@ -501,5 +502,17 @@ int main(int argc, char *argv[])
     it('should throw a useful error for completely invalid XML', () => {
       expect(() => parse('this is not xml at all')).toThrow();
     });
+  });
+
+  describe('performance', () => {
+    it('should parse deeply nested plist files without hanging (issue #85)', () => {
+      const xml = readFileSync(
+        new URL('./fixtures/TestSummaries.plist', import.meta.url),
+        'utf8',
+      );
+      const parsed = parse(xml) as Record<string, unknown>;
+      expect(parsed.FormatVersion).toBe('1.1');
+      expect(Array.isArray(parsed.TestableSummaries)).toBe(true);
+    }, 10000);
   });
 });
