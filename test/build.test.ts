@@ -130,6 +130,16 @@ describe('plist', () => {
       expect(xml).toBe(build({ bar: 'baz' }));
     });
 
+    it('should build a plist with emoji strings', () => {
+      const xml = build({ emoji: '🎉🤖💀' });
+      expect(xml).toContain('<string>🎉🤖💀</string>');
+    });
+
+    it('should build a plist with flag emoji', () => {
+      const xml = build({ flags: '🇺🇸🇯🇵' });
+      expect(xml).toContain('<string>🇺🇸🇯🇵</string>');
+    });
+
     it('should skip null values in arrays', () => {
       const xml = build([null, 'a', null]);
       expect(xml).toBe(`<?xml version="1.0" encoding="UTF-8"?>
