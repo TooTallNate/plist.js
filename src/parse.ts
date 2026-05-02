@@ -129,9 +129,7 @@ function parsePlistXML(node: Node): PlistValue {
       } else {
         invariant(
           node.childNodes[i].nodeName !== "key",
-          'Unexpected key "' +
-            parsePlistXML(node.childNodes[i]) +
-            '" while parsing <dict/>.',
+          "Unexpected <key> while parsing <dict/>. Keys and values must alternate.",
         );
         new_obj[key!] = parsePlistXML(node.childNodes[i]);
       }
