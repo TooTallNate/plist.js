@@ -1,5 +1,6 @@
 import { DOMParser } from '@xmldom/xmldom';
 import { parseBinary } from './parse-binary.js';
+import { parseOpenStep } from './parse-openstep.js';
 
 /**
  * Decode a base64 string into a Uint8Array.
@@ -77,6 +78,19 @@ export function parse(xml: string | Uint8Array | ArrayBuffer): PlistValue {
   if (typeof xml === 'string' && xml.startsWith('bplist')) {
     const encoder = new TextEncoder();
     return parseBinary(encoder.encode(xml));
+  }
+
+  // Detect OpenStep/ASCII plist format
+  if (typeof xml === 'string') {
+    const trimmed = xml.trimStart();
+    if (
+      (trimmed[0] === '{' || trimmed[0] === '(') &&
+      !trimmed.startsWith('<?xml') &&
+      !trimmed.startsWith('<!DOCTYPE') &&
+      !trimmed.startsWith('<plist')
+    ) {
+      return parseOpenStep(xml);
+    }
   }
 
   const doc = new DOMParser().parseFromString(xml, "text/xml");
