@@ -76,8 +76,10 @@ function walk_obj(next: unknown, next_child: xmlbuilder.XMLElement): void {
     next_child = next_child.ele('dict');
     for (const prop in next as Record<string, unknown>) {
       if (Object.hasOwn(next as Record<string, unknown>, prop)) {
+        const val = (next as Record<string, unknown>)[prop];
+        if (val === undefined || val === null) continue;
         next_child.ele('key').txt(prop);
-        walk_obj((next as Record<string, unknown>)[prop], next_child);
+        walk_obj(val, next_child);
       }
     }
   } else if (typeof next === 'number') {
@@ -93,7 +95,5 @@ function walk_obj(next: unknown, next_child: xmlbuilder.XMLElement): void {
     next_child.ele(next ? 'true' : 'false');
   } else if (typeof next === 'string') {
     next_child.ele('string').txt(next);
-  } else if (next === null) {
-    next_child.ele('null').txt('');
   }
 }
