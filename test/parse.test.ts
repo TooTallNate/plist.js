@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { describe, it, expect } from 'vitest';
-import { parse } from '../src/index.js';
+import { parse, build } from '../src/index.js';
 
 function parseFixture(string: string) {
   const intro = `<?xml version="1.0" encoding="UTF-8"?>
@@ -501,6 +501,35 @@ int main(int argc, char *argv[])
 
     it('should throw a useful error for completely invalid XML', () => {
       expect(() => parse('this is not xml at all')).toThrow();
+    });
+  });
+
+  describe('emoji', () => {
+    it('should parse emoji strings', () => {
+      const parsed = parseFixture('<string>🎉🤖💀</string>');
+      expect(parsed).toBe('🎉🤖💀');
+    });
+
+    it('should parse flag emoji', () => {
+      const parsed = parseFixture('<string>🇺🇸🇯🇵</string>');
+      expect(parsed).toBe('🇺🇸🇯🇵');
+    });
+
+    it('should parse mixed text and emoji', () => {
+      const parsed = parseFixture('<string>hello 🌍 world</string>');
+      expect(parsed).toBe('hello 🌍 world');
+    });
+
+    it('should roundtrip emoji through build and parse', () => {
+      const original = {
+        emoji: '🎉🤖💀',
+        mixed: 'hello 🌍 world',
+        flags: '🇺🇸🇯🇵',
+        keycap: '1️⃣2️⃣3️⃣',
+      };
+      const xml = build(original);
+      const parsed = parse(xml);
+      expect(parsed).toEqual(original);
     });
   });
 
