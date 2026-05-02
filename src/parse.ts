@@ -1,4 +1,5 @@
 import { DOMParser } from '@xmldom/xmldom';
+import { parseBinary } from './parse-binary.js';
 
 /**
  * Decode a base64 string into a Uint8Array.
@@ -65,7 +66,19 @@ export type PlistValue =
  * @param xml - the XML String to decode
  * @returns the decoded value from the Plist XML
  */
-export function parse(xml: string): PlistValue {
+export function parse(xml: string | Uint8Array | ArrayBuffer): PlistValue {
+  // Handle binary plist input
+  if (xml instanceof ArrayBuffer) {
+    return parseBinary(new Uint8Array(xml));
+  }
+  if (xml instanceof Uint8Array) {
+    return parseBinary(xml);
+  }
+  if (typeof xml === 'string' && xml.startsWith('bplist')) {
+    const encoder = new TextEncoder();
+    return parseBinary(encoder.encode(xml));
+  }
+
   const doc = new DOMParser().parseFromString(xml, "text/xml");
   const root = doc.documentElement;
   invariant(

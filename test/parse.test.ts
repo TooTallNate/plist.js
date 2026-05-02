@@ -491,5 +491,15 @@ int main(int argc, char *argv[])
     it('ensure empty strings arent valid plist', () => {
       expect(() => parse('')).toThrow();
     });
+
+    it('should parse binary plist string via parseBinary()', () => {
+      // A string starting with "bplist" should be routed to parseBinary()
+      // rather than throwing a cryptic XML parsing error
+      expect(() => parse('bplist00\x00')).toThrow();
+    });
+
+    it('should throw a useful error for completely invalid XML', () => {
+      expect(() => parse('this is not xml at all')).toThrow();
+    });
   });
 });
