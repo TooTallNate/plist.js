@@ -2,13 +2,8 @@ import { DOMParser } from '@xmldom/xmldom';
 
 /**
  * Decode a base64 string into a Uint8Array.
- *
- * @param {String} base64 - base64 encoded string
- * @returns {Uint8Array}
- * @api private
  */
-
-function base64ToUint8Array(base64) {
+function base64ToUint8Array(base64: string): Uint8Array {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
@@ -24,13 +19,8 @@ const COMMENT_NODE = 8;
 /**
  * We ignore raw text (usually whitespace), <!-- xml comments -->,
  * and raw CDATA nodes.
- *
- * @param {Element} node
- * @returns {Boolean}
- * @api private
  */
-
-function shouldIgnoreNode(node) {
+function shouldIgnoreNode(node: Node): boolean {
   return (
     node.nodeType === TEXT_NODE ||
     node.nodeType === COMMENT_NODE ||
@@ -41,14 +31,11 @@ function shouldIgnoreNode(node) {
 /**
  * Check if the node is empty. Some plist file has such node:
  * <key />
- * this node shoud be ignored.
+ * this node should be ignored.
  *
  * @see https://github.com/TooTallNate/plist.js/issues/66
- * @param {Element} node
- * @returns {Boolean}
- * @api private
  */
-function isEmptyNode(node) {
+function isEmptyNode(node: Node): boolean {
   if (!node.childNodes || node.childNodes.length === 0) {
     return true;
   } else {
@@ -56,48 +43,52 @@ function isEmptyNode(node) {
   }
 }
 
-function invariant(test, message) {
+function invariant(test: boolean, message: string): asserts test {
   if (!test) {
     throw new Error(message);
   }
 }
 
+export type PlistValue =
+  | string
+  | number
+  | boolean
+  | Date
+  | Uint8Array
+  | PlistValue[]
+  | { [key: string]: PlistValue }
+  | null;
+
 /**
  * Parses a Plist XML string. Returns an Object.
  *
- * @param {String} xml - the XML String to decode
- * @returns {Mixed} the decoded value from the Plist XML
- * @api public
+ * @param xml - the XML String to decode
+ * @returns the decoded value from the Plist XML
  */
-
-export function parse(xml) {
+export function parse(xml: string): PlistValue {
   const doc = new DOMParser().parseFromString(xml, "text/xml");
+  const root = doc.documentElement;
   invariant(
-    doc.documentElement.nodeName === "plist",
+    root !== null && root.nodeName === "plist",
     "malformed document. First element should be <plist>",
   );
-  let plist = parsePlistXML(doc.documentElement);
+  let plist = parsePlistXML(root as unknown as Node);
 
   // the root <plist> node gets interpreted as an Array,
   // so pull out the inner data first
-  if (plist.length == 1) plist = plist[0];
+  if (Array.isArray(plist) && plist.length == 1) plist = plist[0];
 
   return plist;
 }
 
 /**
  * Convert an XML based plist document into a JSON representation.
- *
- * @param {Object} xml_node - current XML node in the plist
- * @returns {Mixed} built up JSON object
- * @api private
  */
-
-function parsePlistXML(node) {
+function parsePlistXML(node: Node): PlistValue {
   if (!node) return null;
 
   if (node.nodeName === "plist") {
-    const new_arr = [];
+    const new_arr: PlistValue[] = [];
     if (isEmptyNode(node)) {
       return new_arr;
     }
@@ -108,8 +99,8 @@ function parsePlistXML(node) {
     }
     return new_arr;
   } else if (node.nodeName === "dict") {
-    const new_obj = {};
-    let key = null;
+    const new_obj: { [key: string]: PlistValue } = {};
+    let key: string | null = null;
     let counter = 0;
     if (isEmptyNode(node)) {
       return new_obj;
@@ -121,7 +112,7 @@ function parsePlistXML(node) {
           node.childNodes[i].nodeName === "key",
           "Missing key while parsing <dict/>.",
         );
-        key = parsePlistXML(node.childNodes[i]);
+        key = parsePlistXML(node.childNodes[i]) as string;
       } else {
         invariant(
           node.childNodes[i].nodeName !== "key",
@@ -129,17 +120,17 @@ function parsePlistXML(node) {
             parsePlistXML(node.childNodes[i]) +
             '" while parsing <dict/>.',
         );
-        new_obj[key] = parsePlistXML(node.childNodes[i]);
+        new_obj[key!] = parsePlistXML(node.childNodes[i]);
       }
       counter += 1;
     }
     if (counter % 2 === 1) {
-      new_obj[key] = "";
+      new_obj[key!] = "";
     }
 
     return new_obj;
   } else if (node.nodeName === "array") {
-    const new_arr = [];
+    const new_arr: PlistValue[] = [];
     if (isEmptyNode(node)) {
       return new_arr;
     }
@@ -177,7 +168,7 @@ function parsePlistXML(node) {
     return res;
   } else if (node.nodeName === "integer") {
     invariant(!isEmptyNode(node), 'Cannot parse "" as integer.');
-    return parseInt(node.childNodes[0].nodeValue, 10);
+    return parseInt(node.childNodes[0].nodeValue!, 10);
   } else if (node.nodeName === "real") {
     invariant(!isEmptyNode(node), 'Cannot parse "" as real.');
     let res = "";
@@ -194,13 +185,13 @@ function parsePlistXML(node) {
     }
     for (let i = 0; i < node.childNodes.length; i++) {
       if (node.childNodes[i].nodeType === TEXT_NODE) {
-        res += node.childNodes[i].nodeValue.replace(/\s+/g, "");
+        res += node.childNodes[i].nodeValue!.replace(/\s+/g, "");
       }
     }
     return base64ToUint8Array(res);
   } else if (node.nodeName === "date") {
     invariant(!isEmptyNode(node), 'Cannot parse "" as Date.');
-    return new Date(node.childNodes[0].nodeValue);
+    return new Date(node.childNodes[0].nodeValue!);
   } else if (node.nodeName === "null") {
     return null;
   } else if (node.nodeName === "true") {
@@ -210,4 +201,6 @@ function parsePlistXML(node) {
   } else {
     throw new Error("Invalid PLIST tag " + node.nodeName);
   }
+
+  return null;
 }
