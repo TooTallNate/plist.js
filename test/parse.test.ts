@@ -154,6 +154,13 @@ U=</data>
       expect(parsed).toEqual({ '': '1' });
     });
 
+    it('should parse empty <key /> and <string /> tags mixed with real entries (#66)', () => {
+      const parsed = parseFixture(
+        '<dict><key /><string /><key>foo</key><string>bar</string></dict>'
+      );
+      expect(parsed).toEqual({ '': '', foo: 'bar' });
+    });
+
     it('should parse an empty value', () => {
       const parsed = parseFixture('<dict><key>a</key><string/></dict>');
       expect(parsed).toEqual({ 'a': '' });
