@@ -54,7 +54,8 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "prepublishOnly": "pnpm run build"
+    "prepublishOnly": "pnpm run build",
+    "ci:publish": "pnpm publish --provenance --access public && pnpm changeset tag"
   },
   "engines": {
     "node": ">=18"

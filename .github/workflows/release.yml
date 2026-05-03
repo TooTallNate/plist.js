@@ -2,8 +2,12 @@ name: Release
 on:
   push:
     branches: [master]
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
 jobs:
   release:
+    name: Release
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -11,17 +15,20 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'pnpm'
           registry-url: 'https://registry.npmjs.org'
+      - name: Update npm to latest
+        run: npm install -g npm@latest
       - run: pnpm install
       - run: pnpm run build
       - uses: changesets/action@v1
         with:
-          publish: pnpm changeset publish
+          publish: pnpm ci:publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
