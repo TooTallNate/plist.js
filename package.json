@@ -55,7 +55,7 @@
     "build": "tsc",
     "test": "vitest run",
     "prepublishOnly": "pnpm run build",
-    "ci:publish": "pnpm publish --provenance --access public && pnpm changeset tag"
+    "ci:publish": "changeset publish"
   },
   "engines": {
     "node": ">=18"
