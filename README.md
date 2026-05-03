@@ -1,151 +1,216 @@
-plist.js
-========
-### Apple's Property list parser/builder for Node.js and browsers
+# plist.js
 
-[![ci](https://github.com/TooTallNate/plist.js/actions/workflows/ci.yml/badge.svg)](https://github.com/TooTallNate/plist.js/actions/workflows/ci.yml)
+Apple property list parser/builder for Node.js and browsers. Supports **XML**, **binary** (bplist00), and **OpenStep** formats.
 
-Provides facilities for reading and writing Plist (property list) files.
-These are often used in programming OS X and iOS applications, as well
-as the iTunes configuration XML file.
+[![CI](https://github.com/TooTallNate/plist.js/actions/workflows/ci.yml/badge.svg)](https://github.com/TooTallNate/plist.js/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/plist)](https://www.npmjs.com/package/plist)
+[![npm bundle size](https://img.shields.io/bundlephobia/minzip/plist)](https://bundlephobia.com/package/plist)
 
-Plist files represent stored programming "object"s. They are very similar
-to JSON. A valid Plist file is representable as a native JavaScript Object
-and vice-versa.
+**[Try it in the browser →](https://plist.n8.io/)**
 
+## Features
 
-## Usage
+- **Parse** XML, binary, and OpenStep plists — format is auto-detected
+- **Build** XML and binary plists from JavaScript objects
+- **TypeScript** — written in TypeScript with full type declarations
+- **Browser-optimized** — uses native `DOMParser` in browsers (zero dependencies)
+- **Lightweight** — ~4 KB gzipped in the browser
 
-### Node.js
+## Install
 
-Install using `npm`:
-
-``` bash
-$ npm install plist
+```bash
+npm install plist
 ```
 
-Then import the `parse()` and `build()` functions:
+## Quick Start
 
-``` js
+```ts
 import { parse, build } from 'plist';
 
-const val = parse('<plist><string>Hello World!</string></plist>');
-console.log(val);  // "Hello World!"
+// Parse any plist format (auto-detected)
+const obj = parse('<plist version="1.0"><string>Hello!</string></plist>');
+console.log(obj); // "Hello!"
+
+// Build an XML plist from a JS object
+const xml = build({ name: 'My App', version: 42 });
+console.log(xml);
 ```
 
+## Parsing
 
-### Browser
+### XML Plists
 
-Use an [import map](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap)
-to resolve the bare module specifiers used by plist and its dependencies,
-then import directly from the source:
-
-``` html
-<script type="importmap">
-  {
-    "imports": {
-      "@xmldom/xmldom": "https://esm.sh/@xmldom/xmldom",
-      "xmlbuilder": "https://esm.sh/xmlbuilder"
-    }
-  }
-</script>
-<script type="module">
-  import { parse, build } from './node_modules/plist/index.js';
-
-  const val = parse('<plist><string>Hello World!</string></plist>');
-  console.log(val);  // "Hello World!"
-</script>
-```
-
-See the [browser example](./examples/browser/) for a drag-and-drop demo.
-
-
-## API
-
-### Parsing
-
-Parsing a plist from filename:
-
-``` js
+```ts
 import { readFileSync } from 'node:fs';
 import { parse } from 'plist';
 
-const obj = parse(readFileSync('myPlist.plist', 'utf8'));
-console.log(JSON.stringify(obj));
+const xml = readFileSync('Info.plist', 'utf8');
+const obj = parse(xml);
 ```
 
-Parsing a plist from string payload:
+### Binary Plists
 
-``` js
-import { parse } from 'plist';
+Binary plists (bplist00) are auto-detected when passed as a `Uint8Array` or `ArrayBuffer`. You can also use `parseBinary()` directly:
 
-const xml =
-  '<?xml version="1.0" encoding="UTF-8"?>' +
-  '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' +
-  '<plist version="1.0">' +
-    '<key>metadata</key>' +
-    '<dict>' +
-      '<key>bundle-identifier</key>' +
-      '<string>com.company.app</string>' +
-      '<key>bundle-version</key>' +
-      '<string>0.1.1</string>' +
-      '<key>kind</key>' +
-      '<string>software</string>' +
-      '<key>title</key>' +
-      '<string>AppName</string>' +
-    '</dict>' +
-  '</plist>';
+```ts
+import { readFileSync } from 'node:fs';
+import { parse, parseBinary } from 'plist';
 
-console.log(parse(xml));
+// Auto-detected from binary data
+const buf = readFileSync('Info.plist');
+const obj = parse(new Uint8Array(buf));
 
-// [
-//   "metadata",
-//   {
-//     "bundle-identifier": "com.company.app",
-//     "bundle-version": "0.1.1",
-//     "kind": "software",
-//     "title": "AppName"
-//   }
-// ]
+// Or use parseBinary() directly
+const obj2 = parseBinary(new Uint8Array(buf));
 ```
 
-### Building
+### OpenStep Plists
 
-Given an existing JavaScript Object, you can turn it into an XML document
-that complies with the plist DTD:
+The old-style ASCII format (used by `defaults read` on macOS) is auto-detected when the input starts with `{` or `(`:
 
-``` js
+```ts
+import { parse, parseOpenStep } from 'plist';
+
+// Auto-detected
+const obj = parse('{ CFBundleName = "My App"; CFBundleVersion = 42; }');
+
+// Or use parseOpenStep() directly
+const obj2 = parseOpenStep('( item1, item2, item3 )');
+```
+
+## Building
+
+### XML Output
+
+```ts
 import { build } from 'plist';
 
-const obj = [
-  "metadata",
-  {
-    "bundle-identifier": "com.company.app",
-    "bundle-version": "0.1.1",
-    "kind": "software",
-    "title": "AppName"
-  }
-];
-
-console.log(build(obj));
-
-// <?xml version="1.0" encoding="UTF-8"?>
-// <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-// <plist version="1.0">
-//   <key>metadata</key>
-//   <dict>
-//     <key>bundle-identifier</key>
-//     <string>com.company.app</string>
-//     <key>bundle-version</key>
-//     <string>0.1.1</string>
-//     <key>kind</key>
-//     <string>software</string>
-//     <key>title</key>
-//     <string>AppName</string>
-//   </dict>
-// </plist>
+const xml = build({
+  CFBundleName: 'My App',
+  CFBundleVersion: '1.0',
+  LSRequiresIPhoneOS: true,
+  UISupportedInterfaceOrientations: [
+    'UIInterfaceOrientationPortrait',
+    'UIInterfaceOrientationLandscapeLeft',
+  ],
+});
 ```
 
+Output:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>CFBundleName</key>
+    <string>My App</string>
+    <key>CFBundleVersion</key>
+    <string>1.0</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+      <string>UIInterfaceOrientationPortrait</string>
+      <string>UIInterfaceOrientationLandscapeLeft</string>
+    </array>
+  </dict>
+</plist>
+```
+
+### Binary Output
+
+```ts
+import { writeFileSync } from 'node:fs';
+import { buildBinary } from 'plist';
+
+const data = buildBinary({
+  CFBundleName: 'My App',
+  CFBundleVersion: '1.0',
+});
+
+writeFileSync('Info.plist', data);
+```
+
+## Type Mapping
+
+| Plist Type | JavaScript Type |
+|---|---|
+| `<string>` | `string` |
+| `<integer>` | `number` |
+| `<real>` | `number` |
+| `<true/>` / `<false/>` | `boolean` |
+| `<date>` | `Date` |
+| `<data>` | `Uint8Array` |
+| `<array>` | `Array` |
+| `<dict>` | `Object` |
+
+## Browser Usage
+
+In bundled applications (Vite, webpack, etc.), just import normally — the browser-optimized build is selected automatically via [conditional exports](https://nodejs.org/api/packages.html#conditional-exports):
+
+```ts
+import { parse, build } from 'plist';
+```
+
+The browser build uses native `DOMParser` and string-based XML building, so `@xmldom/xmldom` and `xmlbuilder` are not included in the bundle.
+
+**[Try the interactive playground →](https://plist.n8.io/)**
+
+## API
+
+### `parse(input)`
+
+Parse a plist. Format is auto-detected.
+
+- **input**: `string | Uint8Array | ArrayBuffer`
+- **returns**: `PlistValue`
+
+### `parseBinary(data)`
+
+Parse a binary plist (bplist00).
+
+- **data**: `Uint8Array`
+- **returns**: `PlistValue`
+
+### `parseOpenStep(input)`
+
+Parse an OpenStep/ASCII plist.
+
+- **input**: `string`
+- **returns**: `PlistValue`
+
+### `build(obj, opts?)`
+
+Build an XML plist string.
+
+- **obj**: `PlistValue`
+- **opts.pretty**: `boolean` (default: `true`) — pretty-print with indentation
+- **opts.indent**: `string` (default: `"  "`) — indentation string
+- **opts.newline**: `string` (default: `"\n"`) — newline string
+- **returns**: `string`
+
+### `buildBinary(obj)`
+
+Build a binary plist (bplist00).
+
+- **obj**: `PlistValue`
+- **returns**: `Uint8Array`
+
+### `PlistValue`
+
+```ts
+type PlistValue =
+  | string
+  | number
+  | boolean
+  | Date
+  | Uint8Array
+  | PlistValue[]
+  | { [key: string]: PlistValue }
+  | null;
+```
 
 ## License
 
-[(The MIT License)](LICENSE)
+[MIT](LICENSE)
