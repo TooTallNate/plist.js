@@ -8,9 +8,21 @@
     "vercel-build": "cd ../.. && pnpm run build && cd examples/browser && vite build"
   },
   "dependencies": {
-    "plist": "workspace:*"
+    "plist": "workspace:*",
+    "@monaco-editor/react": "^4.7.0",
+    "react": "^19",
+    "react-dom": "^19",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.5.0",
+    "lucide-react": "^0.577.0"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.2.1",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^4",
+    "tailwindcss": "^4.2.1",
     "typescript": "^5",
     "vite": "^6"
   }

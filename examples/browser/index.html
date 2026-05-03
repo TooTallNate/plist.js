@@ -1,39 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>plist.js Browser Demo</title>
-    <link rel="stylesheet" href="/src/style.css" />
+    <title>plist.js Playground</title>
   </head>
-  <body>
-    <h1>plist.js Browser Demo</h1>
-
-    <section>
-      <h2>Parse Plist → JSON</h2>
-      <textarea id="parse-input" rows="10" placeholder="Paste XML plist, base64 binary plist, or OpenStep plist here…"><?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-  <dict>
-    <key>Name</key>
-    <string>plist.js</string>
-    <key>Version</key>
-    <integer>4</integer>
-    <key>Browser</key>
-    <true/>
-  </dict>
-</plist></textarea>
-      <button id="parse-btn">Parse</button>
-      <pre id="parse-output"></pre>
-    </section>
-
-    <section>
-      <h2>Build JSON → Plist XML</h2>
-      <textarea id="build-input" rows="6" placeholder="Paste JSON here…">{"Name":"plist.js","Version":4,"Browser":true}</textarea>
-      <button id="build-btn">Build</button>
-      <pre id="build-output"></pre>
-    </section>
-
-    <script type="module" src="/src/main.ts"></script>
+  <body class="bg-zinc-950 text-zinc-100">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
