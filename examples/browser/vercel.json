@@ -1,0 +1,4 @@
+{
+  "buildCommand": "pnpm run vercel-build",
+  "outputDirectory": "dist"
+}
