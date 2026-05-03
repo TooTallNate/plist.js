@@ -12,21 +12,21 @@ function uint8ArrayToBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
-export interface BuildOptions {
-  pretty?: boolean;
-  indent?: string;
-  newline?: string;
-  [key: string]: unknown;
-}
-
 /**
  * Generate an XML plist string from the input object `obj`.
  *
  * @param obj - the object to convert
- * @param opts - optional options object
+ * @param xmlToStringOpts - optional XMLToStringOptions object
+ * @param createOpts - optional CreateOptions object
  * @returns converted plist XML string
  */
-export function build(obj: PlistValue, opts?: BuildOptions): string {
+export function build(
+  obj: PlistValue,
+  xmlToStringOpts: xmlbuilder.XMLToStringOptions = {},
+  createOpts: xmlbuilder.CreateOptions = {}
+): string {
+  xmlToStringOpts.pretty = xmlToStringOpts.pretty !== false;
+
   const XMLHDR = {
     version: '1.0',
     encoding: 'UTF-8',
@@ -37,7 +37,7 @@ export function build(obj: PlistValue, opts?: BuildOptions): string {
     sysid: 'http://www.apple.com/DTDs/PropertyList-1.0.dtd',
   };
 
-  const doc = xmlbuilder.create('plist');
+  const doc = xmlbuilder.create('plist', createOpts);
 
   doc.dec(XMLHDR.version, XMLHDR.encoding);
   doc.dtd(XMLDTD.pubid, XMLDTD.sysid);
@@ -45,10 +45,7 @@ export function build(obj: PlistValue, opts?: BuildOptions): string {
 
   walk_obj(obj, doc);
 
-  if (!opts) opts = {};
-  // default `pretty` to `true`
-  opts.pretty = opts.pretty !== false;
-  return doc.end(opts);
+  return doc.end(xmlToStringOpts);
 }
 
 /**
