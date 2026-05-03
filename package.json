@@ -1,7 +1,7 @@
 {
   "name": "plist",
   "description": "Apple's property list parser/builder for Node.js and browsers",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "type": "module",
   "author": "Nathan Rajlich <nathan@tootallnate.net>",
   "contributors": [
