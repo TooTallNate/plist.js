@@ -1,5 +1,12 @@
 # plist
 
+## 5.0.1
+
+### Patch Changes
+
+- 2a85a82: Fix double indentation in browser `build()` output
+- e76f1ec: Add `default` condition to `exports` map for VSCode compatibility
+
 ## 5.0.0
 
 ### Major Changes
