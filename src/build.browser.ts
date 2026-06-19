@@ -15,6 +15,7 @@ export interface BuildOptions {
   pretty?: boolean;
   indent?: string;
   newline?: string;
+  headless?: boolean;
   [key: string]: unknown;
 }
 
@@ -94,13 +95,11 @@ export function build(obj: PlistValue, opts?: BuildOptions): string {
   const sep = pretty ? newline : '';
   const innerContent = lines.join(sep);
 
-  const parts = [
-    XML_DECLARATION,
-    DOCTYPE,
-    '<plist version="1.0">',
-    innerContent,
-    '</plist>',
-  ];
+  const parts: string[] = [];
+  if (!opts?.headless) {
+    parts.push(XML_DECLARATION, DOCTYPE);
+  }
+  parts.push('<plist version="1.0">', innerContent, '</plist>');
 
   return parts.join(sep);
 }
