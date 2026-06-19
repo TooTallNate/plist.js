@@ -89,7 +89,7 @@ export function build(obj: PlistValue, opts?: BuildOptions): string {
     }
   }
 
-  walk(obj, 2);
+  walk(obj, 1);
 
   const sep = pretty ? newline : '';
   const innerContent = lines.join(sep);
