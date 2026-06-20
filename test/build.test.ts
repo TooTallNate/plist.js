@@ -140,6 +140,23 @@ describe('plist', () => {
       expect(xml).toContain('<string>🇺🇸🇯🇵</string>');
     });
 
+    it('should omit XML declaration and DOCTYPE when headless is true', () => {
+      const xml = build('test', { headless: true });
+      expect(xml).toBe(`<plist version="1.0">
+  <string>test</string>
+</plist>`);
+    });
+
+    it('should omit XML declaration and DOCTYPE for dict when headless is true', () => {
+      const xml = build({ foo: 'bar' }, { headless: true });
+      expect(xml).toBe(`<plist version="1.0">
+  <dict>
+    <key>foo</key>
+    <string>bar</string>
+  </dict>
+</plist>`);
+    });
+
     it('should skip null values in arrays', () => {
       const xml = build([null, 'a', null]);
       expect(xml).toBe(`<?xml version="1.0" encoding="UTF-8"?>
