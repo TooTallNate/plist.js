@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { build } from '../src/index.js';
+import { build, parse } from '../src/index.js';
+import { build as browserBuild } from '../src/build.browser.js';
 
 describe('plist', () => {
 
@@ -150,6 +151,32 @@ describe('plist', () => {
   </array>
 </plist>`);
     });
+  });
+
+  describe('browser build()', () => {
+
+    // A literal CR (or CR LF) in text content is normalized to a single LF
+    // when the plist is parsed back, so a CR must be encoded as `&#xD;` to
+    // round-trip. The Node `build()` already does this (via `xmlbuilder`).
+
+    it('should escape a carriage return so it survives a round-trip', () => {
+      const value = { note: 'line1\rline2' };
+      const xml = browserBuild(value);
+      expect(xml).toContain('line1&#xD;line2');
+      expect(parse(xml)).toEqual(value);
+    });
+
+    it('should escape a carriage return in a key', () => {
+      const value = { 'a\rb': 'c' };
+      expect(parse(browserBuild(value))).toEqual(value);
+    });
+
+    it('should match Node build() round-trip for a string containing CR LF', () => {
+      const value = { note: 'a\r\nb' };
+      expect(parse(browserBuild(value))).toEqual(value);
+      expect(parse(browserBuild(value))).toEqual(parse(build(value)));
+    });
+
   });
 
 });

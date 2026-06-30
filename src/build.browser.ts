@@ -109,5 +109,10 @@ function escapeXml(str: string): string {
   return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/>/g, '&gt;')
+    // A literal carriage return in text content is normalized to a line feed
+    // when the plist is parsed back (XML line-ending normalization), so encode
+    // it as a character reference to keep `parse(build(x))` lossless. This
+    // matches the Node `build()`, which emits `&#xD;` via `xmlbuilder`.
+    .replace(/\r/g, '&#xD;');
 }
