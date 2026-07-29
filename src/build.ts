@@ -90,7 +90,7 @@ function walk_obj(next: unknown, next_child: xmlbuilder.XMLElement): void {
   } else if (next instanceof Date) {
     next_child
       .ele('date')
-      .txt(new Date(next).toISOString().replace(/\.\d{3}Z$/, 'Z'));
+      .txt(new Date(next).toISOString().replace(/\.000Z$/, 'Z'));
   } else if (typeof next === 'boolean') {
     next_child.ele(next ? 'true' : 'false');
   } else if (typeof next === 'string') {
