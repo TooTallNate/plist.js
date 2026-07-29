@@ -80,7 +80,7 @@ export function build(obj: PlistValue, opts?: BuildOptions): string {
     } else if (value instanceof Date) {
       emit(
         depth,
-        '<date>' + new Date(value).toISOString().replace(/\.\d{3}Z$/, 'Z') + '</date>',
+        '<date>' + new Date(value).toISOString().replace(/\.000Z$/, 'Z') + '</date>',
       );
     } else if (typeof value === 'boolean') {
       emit(depth, value ? '<true/>' : '<false/>');
