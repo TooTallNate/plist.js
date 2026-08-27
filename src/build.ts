@@ -83,7 +83,8 @@ function walk_obj(next: unknown, next_child: xmlbuilder.XMLElement): void {
       }
     }
   } else if (typeof next === 'number') {
-    const tag_type = next % 1 === 0 ? 'integer' : 'real';
+    const tag_type =
+      Number.isInteger(next) && Math.abs(next) < 1e21 ? 'integer' : 'real';
     next_child.ele(tag_type).txt(next.toString());
   } else if (typeof next === 'bigint') {
     next_child.ele('integer').txt(next.toString());

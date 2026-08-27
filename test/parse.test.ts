@@ -40,6 +40,12 @@ describe('parse()', () => {
       const parsed = parseFixture('<integer>14</integer>');
       expect(parsed).toBe(14);
     });
+
+    it('should round-trip integer-valued numbers >= 1e21', () => {
+      expect(parse(build(1e21))).toBe(1e21);
+      expect(parse(build(-1e21))).toBe(-1e21);
+      expect(parse(build(1.23e30))).toBe(1.23e30);
+    });
   });
 
   describe('real', () => {
