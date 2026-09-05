@@ -1,9 +1,15 @@
 import { describe, it, expect } from 'vitest';
-import { build } from '../src/index.js';
+import { build as buildBrowser } from '../src/index.browser.js';
+import { build as buildNode } from '../src/index.js';
+
+const buildImplementations = [
+  ['node', buildNode],
+  ['browser', buildBrowser],
+] as const;
 
 describe('plist', () => {
 
-  describe('build()', () => {
+  describe.each(buildImplementations)('%s build()', (_, build) => {
 
     it('should create a plist XML string from a String', () => {
       const xml = build('test');

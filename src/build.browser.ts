@@ -85,7 +85,8 @@ export function build(obj: PlistValue, opts?: BuildOptions): string {
     } else if (typeof value === 'boolean') {
       emit(depth, value ? '<true/>' : '<false/>');
     } else if (typeof value === 'string') {
-      emit(depth, '<string>' + escapeXml(value) + '</string>');
+      const escaped = escapeXml(value);
+      emit(depth, escaped ? '<string>' + escaped + '</string>' : '<string/>');
     }
   }
 
