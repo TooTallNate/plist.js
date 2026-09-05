@@ -16,7 +16,7 @@ export interface BuildOptions {
   pretty?: boolean;
   indent?: string;
   newline?: string;
-  [key: string]: unknown;
+  invalidCharReplacement?: string;
 }
 
 /**
@@ -37,7 +37,12 @@ export function build(obj: PlistValue, opts?: BuildOptions): string {
     sysid: 'http://www.apple.com/DTDs/PropertyList-1.0.dtd',
   };
 
-  const doc = xmlbuilder.create('plist');
+  const createOptions: xmlbuilder.CreateOptions = {};
+  if (opts?.invalidCharReplacement !== undefined) {
+    createOptions.invalidCharReplacement = opts.invalidCharReplacement;
+  }
+
+  const doc = xmlbuilder.create('plist', createOptions);
 
   doc.dec(XMLHDR.version, XMLHDR.encoding);
   doc.dtd(XMLDTD.pubid, XMLDTD.sysid);
@@ -45,10 +50,14 @@ export function build(obj: PlistValue, opts?: BuildOptions): string {
 
   walk_obj(obj, doc);
 
-  if (!opts) opts = {};
   // default `pretty` to `true`
-  opts.pretty = opts.pretty !== false;
-  return doc.end(opts);
+  const xmlToStringOptions: xmlbuilder.XMLToStringOptions = {
+    pretty: opts?.pretty !== false,
+    ...(opts?.indent !== undefined && { indent: opts.indent }),
+    ...(opts?.newline !== undefined && { newline: opts.newline }),
+  };
+
+  return doc.end(xmlToStringOptions);
 }
 
 /**

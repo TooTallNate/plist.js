@@ -188,6 +188,7 @@ Build an XML plist string.
 - **opts.pretty**: `boolean` (default: `true`) — pretty-print with indentation
 - **opts.indent**: `string` (default: `"  "`) — indentation string
 - **opts.newline**: `string` (default: `"\n"`) — newline string
+- **opts.invalidCharReplacement**: `string` — replace characters that are not valid in XML output. By default, invalid XML characters throw.
 - **returns**: `string`
 
 ### `buildBinary(obj)`

@@ -15,12 +15,14 @@ export interface BuildOptions {
   pretty?: boolean;
   indent?: string;
   newline?: string;
-  [key: string]: unknown;
+  invalidCharReplacement?: string;
 }
 
 const XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>';
 const DOCTYPE =
   '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">';
+const INVALID_XML_CHARS =
+  /[\0-\x08\x0B\f\x0E-\x1F\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/g;
 
 /**
  * Generate an XML plist string from the input object `obj`.
@@ -33,6 +35,7 @@ export function build(obj: PlistValue, opts?: BuildOptions): string {
   const pretty = !opts || opts.pretty !== false;
   const indent = opts?.indent ?? '  ';
   const newline = opts?.newline ?? '\n';
+  const invalidCharReplacement = opts?.invalidCharReplacement;
 
   const lines: string[] = [];
 
@@ -67,7 +70,7 @@ export function build(obj: PlistValue, opts?: BuildOptions): string {
         if (Object.hasOwn(value as Record<string, unknown>, prop)) {
           const val = (value as Record<string, unknown>)[prop];
           if (val === undefined || val === null) continue;
-          emit(depth + 1, '<key>' + escapeXml(prop) + '</key>');
+          emit(depth + 1, '<key>' + escapeXml(prop, invalidCharReplacement) + '</key>');
           walk(val, depth + 1);
         }
       }
@@ -85,7 +88,7 @@ export function build(obj: PlistValue, opts?: BuildOptions): string {
     } else if (typeof value === 'boolean') {
       emit(depth, value ? '<true/>' : '<false/>');
     } else if (typeof value === 'string') {
-      emit(depth, '<string>' + escapeXml(value) + '</string>');
+      emit(depth, '<string>' + escapeXml(value, invalidCharReplacement) + '</string>');
     }
   }
 
@@ -105,9 +108,19 @@ export function build(obj: PlistValue, opts?: BuildOptions): string {
   return parts.join(sep);
 }
 
-function escapeXml(str: string): string {
-  return str
+function escapeXml(str: string, invalidCharReplacement?: string): string {
+  const escaped = str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
+
+  if (invalidCharReplacement !== undefined) {
+    return escaped.replace(INVALID_XML_CHARS, invalidCharReplacement);
+  }
+
+  if (escaped.match(INVALID_XML_CHARS)) {
+    throw new Error(`Invalid character in string: ${escaped}`);
+  }
+
+  return escaped;
 }
