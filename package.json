@@ -52,7 +52,7 @@
   "devDependencies": {
     "@changesets/cli": "^2.31.0",
     "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.11"
   },
   "packageManager": "pnpm@10.11.0",
   "scripts": {
