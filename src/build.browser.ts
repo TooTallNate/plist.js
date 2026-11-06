@@ -73,7 +73,8 @@ export function build(obj: PlistValue, opts?: BuildOptions): string {
       }
       emit(depth, '</dict>');
     } else if (typeof value === 'number') {
-      const tag = value % 1 === 0 ? 'integer' : 'real';
+      const tag =
+        Number.isInteger(value) && Math.abs(value) < 1e21 ? 'integer' : 'real';
       emit(depth, '<' + tag + '>' + value.toString() + '</' + tag + '>');
     } else if (typeof value === 'bigint') {
       emit(depth, '<integer>' + value.toString() + '</integer>');
