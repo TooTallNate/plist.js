@@ -73,14 +73,15 @@ export function build(obj: PlistValue, opts?: BuildOptions): string {
       }
       emit(depth, '</dict>');
     } else if (typeof value === 'number') {
-      const tag = value % 1 === 0 ? 'integer' : 'real';
+      const tag =
+        Number.isInteger(value) && Math.abs(value) < 1e21 ? 'integer' : 'real';
       emit(depth, '<' + tag + '>' + value.toString() + '</' + tag + '>');
     } else if (typeof value === 'bigint') {
       emit(depth, '<integer>' + value.toString() + '</integer>');
     } else if (value instanceof Date) {
       emit(
         depth,
-        '<date>' + new Date(value).toISOString().replace(/\.\d{3}Z$/, 'Z') + '</date>',
+        '<date>' + new Date(value).toISOString().replace(/\.000Z$/, 'Z') + '</date>',
       );
     } else if (typeof value === 'boolean') {
       emit(depth, value ? '<true/>' : '<false/>');
@@ -110,5 +111,10 @@ function escapeXml(str: string): string {
   return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/>/g, '&gt;')
+    // A literal carriage return in text content is normalized to a line feed
+    // when the plist is parsed back (XML line-ending normalization), so encode
+    // it as a character reference to keep `parse(build(x))` lossless. This
+    // matches the Node `build()`, which emits `&#xD;` via `xmlbuilder`.
+    .replace(/\r/g, '&#xD;');
 }
