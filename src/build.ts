@@ -17,6 +17,7 @@ export interface BuildOptions {
   indent?: string;
   newline?: string;
   headless?: boolean;
+  invalidCharReplacement?: string;
   [key: string]: unknown;
 }
 
@@ -39,7 +40,12 @@ export function build(obj: PlistValue, opts?: BuildOptions): string {
   };
 
   const headless = opts?.headless === true;
-  const doc = xmlbuilder.create('plist', { headless });
+  const createOptions: xmlbuilder.CreateOptions = { headless };
+  if (opts?.invalidCharReplacement !== undefined) {
+    createOptions.invalidCharReplacement = opts.invalidCharReplacement;
+  }
+
+  const doc = xmlbuilder.create('plist', createOptions);
 
   if (!headless) {
     doc.dec(XMLHDR.version, XMLHDR.encoding);
@@ -49,10 +55,13 @@ export function build(obj: PlistValue, opts?: BuildOptions): string {
 
   walk_obj(obj, doc);
 
-  if (!opts) opts = {};
-  // default `pretty` to `true`
-  opts.pretty = opts.pretty !== false;
-  return doc.end(opts);
+  // Pass through any additional options to xmlbuilder, and default `pretty` to `true`
+  const xmlToStringOptions: xmlbuilder.XMLToStringOptions = {
+    ...opts,
+    pretty: opts?.pretty !== false,
+  };
+
+  return doc.end(xmlToStringOptions);
 }
 
 /**

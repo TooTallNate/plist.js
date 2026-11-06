@@ -146,6 +146,20 @@ describe('plist', () => {
       expect(xml).toContain('<string>🇺🇸🇯🇵</string>');
     });
 
+    it('should reject invalid XML characters by default', () => {
+      const content = { ['bad\u0001key']: 'hello\u0001world' };
+
+      expect(() => build(content)).toThrow(/Invalid character in string/);
+    });
+
+    it('should replace invalid XML characters with build options', () => {
+      const content = { ['bad\u0001key']: 'hello\u0001world' };
+
+      const xml = build(content, { invalidCharReplacement: '�' });
+      expect(xml).toContain('<key>bad�key</key>');
+      expect(xml).toContain('<string>hello�world</string>');
+    });
+
     it('should omit XML declaration and DOCTYPE when headless is true', () => {
       const xml = build('test', { headless: true });
       expect(xml).toBe(`<plist version="1.0">
@@ -201,6 +215,13 @@ describe('plist', () => {
 
   });
 
+});
+
+describe('node build() options', () => {
+  it('should pass through additional options to xmlbuilder', () => {
+    const xml = build({ a: '' }, { spaceBeforeSlash: true });
+    expect(xml).toContain('<string />');
+  });
 });
 
 describe('Date sub-second precision', () => {
