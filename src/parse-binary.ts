@@ -31,6 +31,10 @@ export function parseBinary(data: Uint8Array): PlistValue {
     throw new Error('Invalid binary plist: bad magic');
   }
 
+  if (len < 8 + 32) {
+    throw new Error('Invalid binary plist: file too short');
+  }
+
   // Read trailer (last 32 bytes)
   const trailerOffset = len - 32;
   const offsetTableOffsetSize = view.getUint8(trailerOffset + 6);
@@ -39,13 +43,63 @@ export function parseBinary(data: Uint8Array): PlistValue {
   const topObject = readSizedInt(view, trailerOffset + 16, 8);
   const offsetTableOffset = readSizedInt(view, trailerOffset + 24, 8);
 
+  if (![1, 2, 4, 8].includes(offsetTableOffsetSize) || ![1, 2, 4, 8].includes(objectRefSize)) {
+    throw new Error('Invalid binary plist: bad trailer int size');
+  }
+  if (
+    numObjects < 1 ||
+    topObject >= numObjects ||
+    offsetTableOffset < 8 ||
+    offsetTableOffset + numObjects * offsetTableOffsetSize > trailerOffset
+  ) {
+    throw new Error('Invalid binary plist: bad trailer');
+  }
+
   // Read offset table
   const offsets: number[] = [];
   for (let i = 0; i < numObjects; i++) {
-    offsets.push(readSizedInt(view, offsetTableOffset + i * offsetTableOffsetSize, offsetTableOffsetSize));
+    const objOffset = readSizedInt(view, offsetTableOffset + i * offsetTableOffsetSize, offsetTableOffsetSize);
+    if (objOffset < 8 || objOffset >= offsetTableOffset) {
+      throw new Error(`Invalid binary plist: bad offset for object ${i}`);
+    }
+    offsets.push(objOffset);
+  }
+
+  // Each object is parsed at most once. Without this, objects referenced
+  // from multiple places would be re-parsed every time, allowing a small
+  // input to expand exponentially. `inProgress` detects reference cycles.
+  const cache = new Map<number, PlistValue>();
+  const inProgress = new Set<number>();
+
+  function readRef(offset: number): number {
+    const ref = readSizedInt(view, offset, objectRefSize);
+    if (ref >= numObjects) {
+      throw new Error(`Invalid binary plist: object ref ${ref} out of range`);
+    }
+    return ref;
   }
 
   function parseObject(index: number): PlistValue {
+    const cached = cache.get(index);
+    if (cached !== undefined) return cached;
+    if (inProgress.has(index)) {
+      throw new Error('Invalid binary plist: circular object reference');
+    }
+    inProgress.add(index);
+    try {
+      const value = parseObjectUncached(index);
+      // Date and data objects are mutable and cheap to recreate, so don't
+      // share instances between references to avoid surprising aliasing
+      if (!(value instanceof Date) && !(value instanceof Uint8Array)) {
+        cache.set(index, value);
+      }
+      return value;
+    } finally {
+      inProgress.delete(index);
+    }
+  }
+
+  function parseObjectUncached(index: number): PlistValue {
     let offset = offsets[index];
     const marker = view.getUint8(offset);
     const type = marker >> 4;
@@ -119,7 +173,7 @@ export function parseBinary(data: Uint8Array): PlistValue {
       case 0xa: { // array
         const arr: PlistValue[] = [];
         for (let i = 0; i < size; i++) {
-          const ref = readSizedInt(view, offset + i * objectRefSize, objectRefSize);
+          const ref = readRef(offset + i * objectRefSize);
           arr.push(parseObject(ref));
         }
         return arr;
@@ -128,8 +182,8 @@ export function parseBinary(data: Uint8Array): PlistValue {
       case 0xd: { // dict
         const dict: { [key: string]: PlistValue } = {};
         for (let i = 0; i < size; i++) {
-          const keyRef = readSizedInt(view, offset + i * objectRefSize, objectRefSize);
-          const valRef = readSizedInt(view, offset + (size + i) * objectRefSize, objectRefSize);
+          const keyRef = readRef(offset + i * objectRefSize);
+          const valRef = readRef(offset + (size + i) * objectRefSize);
           const key = parseObject(keyRef) as string;
           dict[key] = parseObject(valRef);
         }
