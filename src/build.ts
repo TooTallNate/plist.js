@@ -16,7 +16,9 @@ export interface BuildOptions {
   pretty?: boolean;
   indent?: string;
   newline?: string;
+  headless?: boolean;
   invalidCharReplacement?: string;
+  [key: string]: unknown;
 }
 
 /**
@@ -37,24 +39,26 @@ export function build(obj: PlistValue, opts?: BuildOptions): string {
     sysid: 'http://www.apple.com/DTDs/PropertyList-1.0.dtd',
   };
 
-  const createOptions: xmlbuilder.CreateOptions = {};
+  const headless = opts?.headless === true;
+  const createOptions: xmlbuilder.CreateOptions = { headless };
   if (opts?.invalidCharReplacement !== undefined) {
     createOptions.invalidCharReplacement = opts.invalidCharReplacement;
   }
 
   const doc = xmlbuilder.create('plist', createOptions);
 
-  doc.dec(XMLHDR.version, XMLHDR.encoding);
-  doc.dtd(XMLDTD.pubid, XMLDTD.sysid);
+  if (!headless) {
+    doc.dec(XMLHDR.version, XMLHDR.encoding);
+    doc.dtd(XMLDTD.pubid, XMLDTD.sysid);
+  }
   doc.att('version', '1.0');
 
   walk_obj(obj, doc);
 
-  // default `pretty` to `true`
+  // Pass through any additional options to xmlbuilder, and default `pretty` to `true`
   const xmlToStringOptions: xmlbuilder.XMLToStringOptions = {
+    ...opts,
     pretty: opts?.pretty !== false,
-    ...(opts?.indent !== undefined && { indent: opts.indent }),
-    ...(opts?.newline !== undefined && { newline: opts.newline }),
   };
 
   return doc.end(xmlToStringOptions);
@@ -92,14 +96,15 @@ function walk_obj(next: unknown, next_child: xmlbuilder.XMLElement): void {
       }
     }
   } else if (typeof next === 'number') {
-    const tag_type = next % 1 === 0 ? 'integer' : 'real';
+    const tag_type =
+      Number.isInteger(next) && Math.abs(next) < 1e21 ? 'integer' : 'real';
     next_child.ele(tag_type).txt(next.toString());
   } else if (typeof next === 'bigint') {
     next_child.ele('integer').txt(next.toString());
   } else if (next instanceof Date) {
     next_child
       .ele('date')
-      .txt(new Date(next).toISOString().replace(/\.\d{3}Z$/, 'Z'));
+      .txt(new Date(next).toISOString().replace(/\.000Z$/, 'Z'));
   } else if (typeof next === 'boolean') {
     next_child.ele(next ? 'true' : 'false');
   } else if (typeof next === 'string') {

@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 import { describe, it, expect } from 'vitest';
 import { parse, build, buildBinary, parseBinary } from '../src/index.js';
+import { build as buildBrowser } from '../src/build.browser.js';
 
 function parseFixture(string: string) {
   const intro = `<?xml version="1.0" encoding="UTF-8"?>
@@ -39,6 +40,18 @@ describe('parse()', () => {
     it('should parse an <integer> node into a Number', () => {
       const parsed = parseFixture('<integer>14</integer>');
       expect(parsed).toBe(14);
+    });
+
+    it('should round-trip integer-valued numbers >= 1e21', () => {
+      expect(parse(build(1e21))).toBe(1e21);
+      expect(parse(build(-1e21))).toBe(-1e21);
+      expect(parse(build(1.23e30))).toBe(1.23e30);
+    });
+
+    it('should round-trip integer-valued numbers >= 1e21 (browser build)', () => {
+      expect(parse(buildBrowser(1e21))).toBe(1e21);
+      expect(parse(buildBrowser(-1e21))).toBe(-1e21);
+      expect(parse(buildBrowser(1.23e30))).toBe(1.23e30);
     });
   });
 

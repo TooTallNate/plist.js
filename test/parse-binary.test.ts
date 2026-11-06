@@ -199,4 +199,55 @@ describe('fixture files', () => {
 		expect(result.array).toEqual([1, 'two', true]);
 		expect(result.dict).toEqual({ nested_key: 'nested_value' });
 	});
+
+	describe('malicious input', () => {
+		// Build a bplist with 1-byte offsets/refs from raw object bytes
+		function rawBplist(objects: number[][], topObject = 0): Uint8Array {
+			const bytes: number[] = [...'bplist00'].map((c) => c.charCodeAt(0));
+			const offsets: number[] = [];
+			for (const obj of objects) {
+				offsets.push(bytes.length);
+				bytes.push(...obj);
+			}
+			const offsetTableOffset = bytes.length;
+			bytes.push(...offsets);
+			const u64 = (n: number) => [0, 0, 0, 0, 0, 0, 0, n];
+			bytes.push(0, 0, 0, 0, 0, 0, 1, 1, ...u64(objects.length), ...u64(topObject), ...u64(offsetTableOffset));
+			return new Uint8Array(bytes);
+		}
+
+		it('should not expand exponentially on shared references', () => {
+			// Object i is a 2-element array referencing object i+1 twice
+			const n = 40;
+			const objects: number[][] = [];
+			for (let i = 0; i < n - 1; i++) objects.push([0xa2, i + 1, i + 1]);
+			objects.push([0x00]);
+			const start = Date.now();
+			let result = parseBinary(rawBplist(objects)) as PlistValue[];
+			expect(Date.now() - start).toBeLessThan(1000);
+			for (let i = 0; i < n - 1; i++) {
+				expect(result).toHaveLength(2);
+				expect(result[0]).toBe(result[1]);
+				result = result[0] as PlistValue[];
+			}
+			expect(result).toBeNull();
+		});
+
+		it('should reject circular references', () => {
+			expect(() => parseBinary(rawBplist([[0xa1, 0]]))).toThrow(/circular/);
+			expect(() => parseBinary(rawBplist([[0xa1, 1], [0xa1, 0]]))).toThrow(/circular/);
+		});
+
+		it('should reject out-of-range object refs', () => {
+			expect(() => parseBinary(rawBplist([[0xa1, 5]]))).toThrow(/out of range/);
+		});
+
+		it('should reject an out-of-range top object', () => {
+			expect(() => parseBinary(rawBplist([[0x00]], 3))).toThrow(/bad trailer/);
+		});
+
+		it('should reject truncated input', () => {
+			expect(() => parseBinary(new TextEncoder().encode('bplist00'))).toThrow(/too short/);
+		});
+	});
 });

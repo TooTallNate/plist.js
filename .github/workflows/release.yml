@@ -23,8 +23,8 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
           registry-url: 'https://registry.npmjs.org'
-      - name: Update npm to latest
-        run: npm install -g npm@latest
+      - name: Update npm to v11 (npm 12 rejects pnpm's `--git-checks` flag)
+        run: npm install -g npm@11
       - run: pnpm install
       - run: pnpm run build
       - uses: changesets/action@v1
