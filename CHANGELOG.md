@@ -1,5 +1,12 @@
 # plist
 
+## 5.1.0
+
+### Minor Changes
+
+- 821e16c: Add `headless` option to `build()` to omit XML declaration and DOCTYPE
+- e7c4025: Add `invalidCharReplacement` option to `build()` to replace characters that are not valid in XML. The browser `build()` now also throws on invalid XML characters by default, matching the Node `build()`.
+
 ## 5.0.1
 
 ### Patch Changes
