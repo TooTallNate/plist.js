@@ -153,6 +153,32 @@ describe('plist', () => {
     });
   });
 
+  describe('browser build()', () => {
+
+    // A literal CR (or CR LF) in text content is normalized to a single LF
+    // when the plist is parsed back, so a CR must be encoded as `&#xD;` to
+    // round-trip. The Node `build()` already does this (via `xmlbuilder`).
+
+    it('should escape a carriage return so it survives a round-trip', () => {
+      const value = { note: 'line1\rline2' };
+      const xml = buildBrowser(value);
+      expect(xml).toContain('line1&#xD;line2');
+      expect(parse(xml)).toEqual(value);
+    });
+
+    it('should escape a carriage return in a key', () => {
+      const value = { 'a\rb': 'c' };
+      expect(parse(buildBrowser(value))).toEqual(value);
+    });
+
+    it('should match Node build() round-trip for a string containing CR LF', () => {
+      const value = { note: 'a\r\nb' };
+      expect(parse(buildBrowser(value))).toEqual(value);
+      expect(parse(buildBrowser(value))).toEqual(parse(build(value)));
+    });
+
+  });
+
 });
 
 describe('Date sub-second precision', () => {
