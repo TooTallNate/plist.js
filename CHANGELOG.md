@@ -1,5 +1,23 @@
 # plist
 
+## 5.0.1
+
+### Patch Changes
+
+- 7780aec: Emit empty strings as `<string/>` in the browser `build()` to match the Node `build()` output
+- 5d5a064: Escape carriage returns in the browser `build()` so strings and keys containing CR survive a round-trip
+- ac871e6: Fix uncontrolled resource consumption in binary plist parser. Objects referenced multiple times are now parsed only once, circular references are rejected, and trailer/offset table/object references are validated against the input bounds.
+- fcf0a9f: Preserve sub-second precision when serializing `Date` values in XML `build()`
+
+  Both XML builders stripped any fractional-second group from a `Date`, so
+  non-zero milliseconds were silently dropped. The binary format keeps them, so
+  `build(parseBinary(bplist))` and `parse(build(date))` lost up to 999 ms.
+  Whole-second dates are still emitted without a `.000` fraction, unchanged.
+
+- 2a85a82: Fix double indentation in browser `build()` output
+- e76f1ec: Add `default` condition to `exports` map for VSCode compatibility
+- ce9b503: Emit large integer-valued numbers (`|x| >= 1e21`) as `<real>` instead of `<integer>`. `Number.prototype.toString()` renders them in exponential notation (`(1e21).toString() === "1e+21"`), which the `<integer>` parse path truncated at the `e`, silently corrupting the value on a `build` → `parse` round-trip.
+
 ## 5.0.0
 
 ### Major Changes
