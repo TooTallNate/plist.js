@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { build } from '../src/index.js';
+import { build, parse, buildBinary, parseBinary } from '../src/index.js';
+import { build as buildBrowser } from '../src/build.browser.js';
 
 describe('plist', () => {
 
@@ -98,7 +99,7 @@ describe('plist', () => {
     <integer>1</integer>
     <string>foo</string>
     <false/>
-    <date>1970-01-01T00:00:01Z</date>
+    <date>1970-01-01T00:00:01.234Z</date>
   </array>
 </plist>`);
     });
@@ -152,4 +153,53 @@ describe('plist', () => {
     });
   });
 
+});
+
+describe('Date sub-second precision', () => {
+  // The binary format stores a Date as an exact float64 and preserves
+  // sub-second precision. The XML builders previously stripped any
+  // fractional-second group, so build()/parse() disagreed with
+  // buildBinary()/parseBinary() on the same value and silently dropped
+  // up to 999 ms on a binary -> XML conversion.
+  const cases = [0, 1, 250, 999];
+
+  for (const ms of cases) {
+    const d = new Date(Date.UTC(2020, 2, 4, 5, 6, 7, ms));
+
+    it(`XML build()/parse() round-trips ${ms} ms`, () => {
+      const back = parse(build(d)) as Date;
+      expect(back.getTime()).toBe(d.getTime());
+    });
+
+    it(`browser build()/parse() round-trips ${ms} ms`, () => {
+      const back = parse(buildBrowser(d)) as Date;
+      expect(back.getTime()).toBe(d.getTime());
+    });
+
+    it(`binary buildBinary()/parseBinary() round-trips ${ms} ms`, () => {
+      const back = parseBinary(buildBinary(d)) as Date;
+      expect(back.getTime()).toBe(d.getTime());
+    });
+
+    it(`XML and binary agree on ${ms} ms`, () => {
+      const viaXml = (parse(build(d)) as Date).getTime();
+      const viaBin = (parseBinary(buildBinary(d)) as Date).getTime();
+      expect(viaXml).toBe(viaBin);
+      expect(viaXml).toBe(d.getTime());
+    });
+  }
+
+  // A whole-second date must serialize byte-for-byte as it did before
+  // (a trailing `Z`, no `.000`) in both XML builders.
+  it('emits whole-second dates without a fractional part', () => {
+    const d = new Date('2010-02-08T21:41:23Z');
+    expect(build(d)).toContain('<date>2010-02-08T21:41:23Z</date>');
+    expect(buildBrowser(d)).toContain('<date>2010-02-08T21:41:23Z</date>');
+  });
+
+  it('emits sub-second dates with the fractional part intact', () => {
+    const d = new Date('2020-03-04T05:06:07.250Z');
+    expect(build(d)).toContain('<date>2020-03-04T05:06:07.250Z</date>');
+    expect(buildBrowser(d)).toContain('<date>2020-03-04T05:06:07.250Z</date>');
+  });
 });
