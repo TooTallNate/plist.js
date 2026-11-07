@@ -1,4 +1,11 @@
 import { DOMParser } from '@xmldom/xmldom';
+
+// Plists are XML 1.0, where only CR LF and CR are normalized to LF. xmldom
+// defaults to XML 1.1 rules, which also convert U+0085, U+2028 and U+2029.
+// https://www.w3.org/TR/xml/#sec-line-ends
+function normalizeLineEndings(input: string): string {
+  return input.replace(/\r\n?/g, '\n');
+}
 import { parseBinary } from './parse-binary.js';
 import { parseOpenStep } from './parse-openstep.js';
 
@@ -93,7 +100,7 @@ export function parse(xml: string | Uint8Array | ArrayBuffer): PlistValue {
     }
   }
 
-  const doc = new DOMParser().parseFromString(xml, "text/xml");
+  const doc = new DOMParser({ normalizeLineEndings }).parseFromString(xml, "text/xml");
   const root = doc.documentElement;
   invariant(
     root !== null && root.nodeName === "plist",

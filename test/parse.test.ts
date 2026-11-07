@@ -67,6 +67,16 @@ describe('parse()', () => {
   });
 
   describe('string', () => {
+    it('should preserve U+0085, U+2028 and U+2029', () => {
+      const parsed = parseFixture('<dict><key>k\u0085</key><string>a\u2028b\u2029c</string></dict>');
+      expect(parsed).toEqual({ 'k\u0085': 'a\u2028b\u2029c' });
+    });
+
+    it('should normalize CR LF and CR to LF', () => {
+      const parsed = parseFixture('<string>a\r\nb\rc</string>');
+      expect(parsed).toBe('a\nb\nc');
+    });
+
     it('should parse a self closing string', () => {
       const parsed = parseFixture('<string/>');
       expect(parsed).toBe('');
