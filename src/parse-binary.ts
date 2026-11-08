@@ -1,4 +1,5 @@
 import type { PlistValue } from './parse.js';
+import { assertSafeKey } from './safe-key.js';
 
 const EPOCH_2001 = 978307200000; // ms between 1970-01-01 and 2001-01-01
 
@@ -184,7 +185,8 @@ export function parseBinary(data: Uint8Array): PlistValue {
         for (let i = 0; i < size; i++) {
           const keyRef = readRef(offset + i * objectRefSize);
           const valRef = readRef(offset + (size + i) * objectRefSize);
-          const key = parseObject(keyRef) as string;
+          const key = parseObject(keyRef);
+          assertSafeKey(key);
           dict[key] = parseObject(valRef);
         }
         return dict;

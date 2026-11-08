@@ -4,6 +4,14 @@ import { parseBinary, parse, buildBinary } from '../src/index.js';
 import type { PlistValue } from '../src/index.js';
 
 describe('parseBinary', () => {
+	/* CVE-2022-22912: the XML parser guards __proto__ keys; the binary parser must too. */
+	it('should throw if a dict key is __proto__', () => {
+		// JSON.parse creates a real own "__proto__" property, unlike an object literal.
+		const evil = JSON.parse('{"__proto__": {"polluted": true}}') as PlistValue;
+		const buf = buildBinary(evil);
+		expect(() => parseBinary(buf)).toThrow(/__proto__/);
+	});
+
 	it('should parse booleans', () => {
 		const plist = buildBinary([true, false]);
 		expect(parseBinary(plist)).toEqual([true, false]);

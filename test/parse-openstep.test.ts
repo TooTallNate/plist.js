@@ -153,4 +153,15 @@ describe('parse() auto-detection of OpenStep', () => {
 </plist>`;
     expect(parse(xml)).toBe('hello');
   });
+
+  /* CVE-2022-22912: the XML parser guards __proto__ keys; the OpenStep parser must too. */
+  it('should throw if a dict key is __proto__', () => {
+    expect(() =>
+      parseOpenStep('{ __proto__ = { polluted = YES; }; }')
+    ).toThrow(/__proto__/);
+  });
+
+  it('should throw if a dict key is a non-string (array coercing to __proto__)', () => {
+    expect(() => parseOpenStep('{ (__proto__) = 1; }')).toThrow();
+  });
 });
