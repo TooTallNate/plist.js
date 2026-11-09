@@ -1,4 +1,5 @@
 import type { PlistValue } from './parse.js';
+import { assertSafeKey } from './safe-key.js';
 
 class OpenStepParser {
   input: string;
@@ -65,7 +66,8 @@ class OpenStepParser {
         this.pos++;
         return obj;
       }
-      const key = this.parseValue() as string;
+      const key = this.parseValue();
+      assertSafeKey(key);
       this.skipWhitespaceAndComments();
       if (this.pos >= this.input.length || this.input[this.pos] !== '=')
         throw new Error(
