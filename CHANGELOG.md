@@ -1,5 +1,11 @@
 # plist
 
+## 5.1.1
+
+### Patch Changes
+
+- 1e9776b: Reject `__proto__` and non-string dictionary keys in the OpenStep and binary parsers, extending the CVE-2022-22912 guard that previously only covered XML input
+
 ## 5.1.0
 
 ### Minor Changes
