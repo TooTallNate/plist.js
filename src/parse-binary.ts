@@ -68,9 +68,30 @@ export function parseBinary(data: Uint8Array): PlistValue {
 
   // Each object is parsed at most once. Without this, objects referenced
   // from multiple places would be re-parsed every time, allowing a small
-  // input to expand exponentially. `inProgress` detects reference cycles.
+  // input to expand exponentially. The cache is keyed by byte offset rather
+  // than object index, since several offset table entries may point at the
+  // same offset. `inProgress` detects reference cycles.
   const cache = new Map<number, PlistValue>();
   const inProgress = new Set<number>();
+
+  // Objects at distinct offsets can still overlap one another's bytes, so a
+  // crafted file could describe many large strings or collections that share
+  // the same payload and expand quadratically. Every object (collection refs,
+  // string characters) must lie within the object area, and a well-formed
+  // file never materializes more payload bytes than that area holds, so
+  // anything beyond it is rejected.
+  const objectAreaEnd = offsetTableOffset;
+  let budget = objectAreaEnd - 8;
+
+  function claim(offset: number, byteLength: number): void {
+    if (!Number.isSafeInteger(byteLength) || byteLength > objectAreaEnd - offset) {
+      throw new Error('Invalid binary plist: object extends past object area');
+    }
+    budget -= byteLength;
+    if (budget < 0) {
+      throw new Error('Invalid binary plist: overlapping objects');
+    }
+  }
 
   function readRef(offset: number): number {
     const ref = readSizedInt(view, offset, objectRefSize);
@@ -81,27 +102,28 @@ export function parseBinary(data: Uint8Array): PlistValue {
   }
 
   function parseObject(index: number): PlistValue {
-    const cached = cache.get(index);
+    const objOffset = offsets[index];
+    const cached = cache.get(objOffset);
     if (cached !== undefined) return cached;
-    if (inProgress.has(index)) {
+    if (inProgress.has(objOffset)) {
       throw new Error('Invalid binary plist: circular object reference');
     }
-    inProgress.add(index);
+    inProgress.add(objOffset);
     try {
-      const value = parseObjectUncached(index);
+      const value = parseObjectUncached(objOffset);
       // Date and data objects are mutable and cheap to recreate, so don't
       // share instances between references to avoid surprising aliasing
       if (!(value instanceof Date) && !(value instanceof Uint8Array)) {
-        cache.set(index, value);
+        cache.set(objOffset, value);
       }
       return value;
     } finally {
-      inProgress.delete(index);
+      inProgress.delete(objOffset);
     }
   }
 
-  function parseObjectUncached(index: number): PlistValue {
-    let offset = offsets[index];
+  function parseObjectUncached(objOffset: number): PlistValue {
+    let offset = objOffset;
     const marker = view.getUint8(offset);
     const type = marker >> 4;
     let size = marker & 0x0f;
@@ -147,10 +169,15 @@ export function parseBinary(data: Uint8Array): PlistValue {
       }
 
       case 0x4: { // data
+        // A view onto the input, not a copy, so not charged to the budget
+        if (size > objectAreaEnd - offset) {
+          throw new Error('Invalid binary plist: object extends past object area');
+        }
         return new Uint8Array(data.buffer, data.byteOffset + offset, size);
       }
 
       case 0x5: { // ASCII string
+        claim(offset, size);
         let s = '';
         for (let i = 0; i < size; i++) {
           s += String.fromCharCode(view.getUint8(offset + i));
@@ -159,6 +186,7 @@ export function parseBinary(data: Uint8Array): PlistValue {
       }
 
       case 0x6: { // UTF-16BE string
+        claim(offset, size * 2);
         let s = '';
         for (let i = 0; i < size; i++) {
           s += String.fromCharCode(view.getUint16(offset + i * 2));
@@ -172,6 +200,7 @@ export function parseBinary(data: Uint8Array): PlistValue {
       }
 
       case 0xa: { // array
+        claim(offset, size * objectRefSize);
         const arr: PlistValue[] = [];
         for (let i = 0; i < size; i++) {
           const ref = readRef(offset + i * objectRefSize);
@@ -181,6 +210,7 @@ export function parseBinary(data: Uint8Array): PlistValue {
       }
 
       case 0xd: { // dict
+        claim(offset, size * 2 * objectRefSize);
         const dict: { [key: string]: PlistValue } = {};
         for (let i = 0; i < size; i++) {
           const keyRef = readRef(offset + i * objectRefSize);

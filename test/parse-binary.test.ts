@@ -241,6 +241,53 @@ describe('fixture files', () => {
 			expect(result).toBeNull();
 		});
 
+		// Like rawBplist, but with an explicit offset table (2-byte,
+		// body-relative offsets), so several objects may share or overlap bytes
+		function rawBplistWithOffsets(body: number[], offsets: number[], topObject: number): Uint8Array {
+			const bytes: number[] = [...'bplist00'].map((c) => c.charCodeAt(0));
+			bytes.push(...body);
+			const offsetTableOffset = bytes.length;
+			for (const o of offsets) bytes.push((o + 8) >> 8, (o + 8) & 0xff);
+			const u64 = (n: number) => [0, 0, 0, 0, 0, 0, n >> 8, n & 0xff];
+			bytes.push(0, 0, 0, 0, 0, 0, 2, 1, ...u64(offsets.length), ...u64(topObject), ...u64(offsetTableOffset));
+			return new Uint8Array(bytes);
+		}
+
+		it('should parse objects aliased to one offset only once', () => {
+			// Indices 1..200 all point at one 200-element array of nulls, and
+			// the top array references each of them
+			const n = 200;
+			const body = [0x00, 0xaf, 0x10, n, ...new Array(n).fill(0)];
+			const topOffset = body.length;
+			body.push(0xaf, 0x10, n);
+			for (let i = 1; i <= n; i++) body.push(i);
+			const offsets = [0, ...new Array(n).fill(1), topOffset];
+			const result = parseBinary(rawBplistWithOffsets(body, offsets, n + 1)) as PlistValue[][];
+			expect(result).toHaveLength(n);
+			expect(result[0]).toHaveLength(n);
+			expect(result[0][0]).toBeNull();
+			for (const item of result) expect(item).toBe(result[0]);
+		});
+
+		it('should reject overlapping objects at distinct offsets', () => {
+			// 200 bytes of 0x5d: every offset reads as a 13-char string made of
+			// the following bytes, so 180 strings share ~190 payload bytes
+			const n = 180;
+			const body = new Array(200).fill(0x5d);
+			const topOffset = body.length;
+			body.push(0xaf, 0x10, n);
+			for (let i = 0; i < n; i++) body.push(i);
+			const offsets = [...Array.from({ length: n }, (_, i) => i), topOffset];
+			expect(() => parseBinary(rawBplistWithOffsets(body, offsets, n))).toThrow(/overlapping/);
+		});
+
+		it('should reject objects extending past the object area', () => {
+			expect(() => parseBinary(rawBplist([[0xa5, 0]]))).toThrow(/past object area/);
+			expect(() => parseBinary(rawBplist([[0x55, 0x61]]))).toThrow(/past object area/);
+			expect(() => parseBinary(rawBplist([[0x45, 0x61]]))).toThrow(/past object area/);
+			expect(() => parseBinary(rawBplist([[0xaf, 0x13, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]]))).toThrow(/past object area/);
+		});
+
 		it('should reject circular references', () => {
 			expect(() => parseBinary(rawBplist([[0xa1, 0]]))).toThrow(/circular/);
 			expect(() => parseBinary(rawBplist([[0xa1, 1], [0xa1, 0]]))).toThrow(/circular/);
