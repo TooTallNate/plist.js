@@ -136,6 +136,34 @@ function flattenObjects(root: PlistValue): ObjEntry[] {
 	return objects;
 }
 
+/**
+ * Write an int object the way CoreFoundation and Python's plistlib do:
+ * non-negative values below 2^32 as an unsigned 1, 2 or 4 byte int, negative
+ * values and values below 2^63 as a signed 8 byte int, and values from 2^63
+ * up to 2^64 - 1 as a 16 byte int.
+ */
+function serializeInteger(value: bigint): Uint8Array {
+	if (value < -(1n << 63n) || value >= 1n << 64n) {
+		throw new RangeError(`Integer ${value} does not fit in a binary plist int`);
+	}
+	const pow =
+		value < 0n ? 3
+			: value <= 0xffn ? 0
+			: value <= 0xffffn ? 1
+			: value <= 0xffffffffn ? 2
+			: value < 1n << 63n ? 3
+			: 4;
+	const byteCount = 1 << pow;
+	const buf = new Uint8Array(1 + byteCount);
+	buf[0] = 0x10 | pow;
+	let bits = BigInt.asUintN(byteCount * 8, value);
+	for (let i = byteCount; i >= 1; i--) {
+		buf[i] = Number(bits & 0xffn);
+		bits >>= 8n;
+	}
+	return buf;
+}
+
 function serializeObject(
 	entry: ObjEntry,
 	refSize: number,
@@ -146,36 +174,14 @@ function serializeObject(
 	if (typeof val === 'boolean') return new Uint8Array([val ? 0x09 : 0x08]);
 
 	if (typeof val === 'bigint') {
-		// Always use 8-byte int for bigint
-		const buf = new Uint8Array(9);
-		const v = new DataView(buf.buffer);
-		buf[0] = 0x13; // int, pow=3 (8 bytes)
-		const n = Number(val);
-		v.setInt32(1, Math.floor(n / 0x100000000));
-		v.setUint32(5, n >>> 0);
-		return buf;
+		return serializeInteger(val);
 	}
 
 	if (typeof val === 'number') {
-		// Check if integer
-		if (Number.isInteger(val) && val >= -2147483648 && val <= 4294967295) {
-			const pow = val < 0 || val > 0xff
-				? (val < 0 || val > 0xffff ? (val < 0 || val > 0xffffffff ? 3 : 2) : 1)
-				: 0;
-			const byteCount = 1 << pow;
-			const buf = new Uint8Array(1 + byteCount);
-			const v = new DataView(buf.buffer);
-			buf[0] = 0x10 | pow;
-			if (byteCount === 1) v.setUint8(1, val);
-			else if (byteCount === 2) v.setUint16(1, val);
-			else if (byteCount === 4) {
-				if (val < 0) v.setInt32(1, val);
-				else v.setUint32(1, val);
-			} else {
-				v.setInt32(1, Math.floor(val / 0x100000000));
-				v.setUint32(5, val >>> 0);
-			}
-			return buf;
+		// Integers that fit the 64-bit int types stay integers; anything else
+		// (fractions, NaN, Infinity, |x| beyond 64 bits) is written as a real
+		if (Number.isInteger(val) && val >= -(2 ** 63) && val < 2 ** 64) {
+			return serializeInteger(BigInt(val));
 		}
 		// Float64
 		const buf = new Uint8Array(9);
