@@ -150,10 +150,19 @@ export function parseBinary(data: Uint8Array): PlistValue {
         if (byteCount <= 4) {
           return readSizedInt(view, offset, byteCount);
         }
-        // 8-byte int
-        const hi = view.getInt32(offset);
-        const lo = view.getUint32(offset + 4);
-        return hi * 0x100000000 + lo;
+        if (byteCount === 8) {
+          const hi = view.getInt32(offset);
+          const lo = view.getUint32(offset + 4);
+          return hi * 0x100000000 + lo;
+        }
+        if (byteCount === 16) {
+          // Written for values from 2^63 up to 2^64 - 1 (CoreFoundation,
+          // plistlib); read as a signed 128 bit int like they do
+          const hi = view.getBigInt64(offset);
+          const lo = view.getBigUint64(offset + 8);
+          return Number((hi << 64n) | lo);
+        }
+        throw new Error(`Unsupported int size: ${byteCount}`);
       }
 
       case 0x2: { // real

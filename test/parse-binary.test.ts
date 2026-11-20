@@ -27,6 +27,15 @@ describe('parseBinary', () => {
 		expect(parseBinary(plist)).toEqual([100000, 1000000000]);
 	});
 
+	it('should parse 16-byte integers', () => {
+		// Python: plistlib.dumps([2**64 - 1, -1, 2**40], fmt=plistlib.FMT_BINARY)
+		const hex =
+			'62706c6973743030a3010203140000000000000000ffffffffffffffff13ffffffffffffffff1300000100000000' +
+			'00080c1d26000000000000010100000000000000040000000000000000000000000000002f';
+		const plist = Uint8Array.from(hex.match(/../g)!, (b) => parseInt(b, 16));
+		expect(parseBinary(plist)).toEqual([2 ** 64 - 1, -1, 2 ** 40]);
+	});
+
 	it('should parse float64 reals', () => {
 		const plist = buildBinary(3.141592653589793);
 		expect(parseBinary(plist)).toBeCloseTo(3.141592653589793, 10);
@@ -109,6 +118,25 @@ describe('buildBinary roundtrip', () => {
 		for (const n of [0, 1, 127, 255, 256, 65535, 65536, 1000000]) {
 			expect(parseBinary(buildBinary(n))).toBe(n);
 		}
+	});
+
+	it('should write integers beyond 32 bits as ints, not reals', () => {
+		for (const n of [2 ** 32, 2 ** 40, -1, -(2 ** 31) - 1, -(2 ** 40), Number.MAX_SAFE_INTEGER, -(2 ** 63)]) {
+			const plist = buildBinary(n);
+			// the top object is the first one, right after the 8-byte header
+			expect(plist[8]).toBe(0x13);
+			expect(parseBinary(plist)).toBe(n);
+		}
+	});
+
+	it('should write bigints without losing precision', () => {
+		const bytes = (value: bigint) => [...buildBinary(value as unknown as PlistValue).subarray(8, 25)];
+		expect(bytes(9007199254740993n).slice(0, 9)).toEqual([0x13, 0, 0x20, 0, 0, 0, 0, 0, 1]);
+		expect(bytes(-9007199254740993n).slice(0, 9)).toEqual([0x13, 0xff, 0xdf, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]);
+		// values from 2^63 up need the 16-byte int, as CoreFoundation and plistlib write them
+		expect(bytes(2n ** 64n - 1n)).toEqual([0x14, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]);
+		expect(() => buildBinary((2n ** 64n) as unknown as PlistValue)).toThrow(RangeError);
+		expect(() => buildBinary((-(2n ** 63n) - 1n) as unknown as PlistValue)).toThrow(RangeError);
 	});
 
 	it('should roundtrip floats', () => {
